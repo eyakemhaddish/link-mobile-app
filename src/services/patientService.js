@@ -57,7 +57,7 @@ export const getSyncedRecords = async (limit = 80) => {
  */
 export const getVisitDetails = async (visitId) => {
     try {
-        const response = await api.get(`/patients/visits/${visitId}/detail`);
+        const response = await api.get(`/visits/${visitId}`);
         return response;
     } catch (error) {
         console.error("Failed to fetch visit details:", error);
@@ -118,7 +118,7 @@ export const createAppointment = async (data) => {
 
 export const logSymptomCheck = async (data) => {
     try {
-        const response = await api.post("/patient-portal/symptoms", data);
+        const response = await api.post("/patient-portal/symptom-logs", data);
         return response;
     } catch (error) {
         console.error("Failed to log symptom check:", error);

@@ -39,8 +39,11 @@ This audit compares the mobile app in `link-mobile-app` against the backend cont
 
 3. Contract drift in auth and search
 - The app uses `/auth/profile` and `/auth/user`.
-- Swagger points to `/api/v1/patient-auth/profile`, `/api/v1/patient-auth/me`, and `/api/v1/users/me`.
-- HEW search uses `/patients/search`, while swagger documents `/api/v1/patients/search-patients`.
+- Swagger already contains related identity routes, but not under those exact client paths:
+  - `/api/v1/patient-auth/me` exists as `GET`
+  - `/api/v1/patient-auth/profile` exists as `PATCH`
+  - `/api/v1/users/me` is the likely user-scope replacement for `/auth/user`
+- HEW search uses `/patients/search`, while swagger already documents `/api/v1/patients/search-patients`.
 
 4. Clinician module is not fully backend-backed
 - Diagnosis, treatment, and referral flows are still primarily local/manual.
@@ -72,24 +75,27 @@ This audit compares the mobile app in `link-mobile-app` against the backend cont
 
 These are conceptually present in swagger, but the app still calls unversioned forms.
 
-### Route name mismatches
+### Route name or method mismatches
 
 - `/patients/search`
   - app: [src/services/hewService.js](C:/Users/hp/desktop/projects/link/link-mobile-app/src/services/hewService.js)
-  - swagger: `/api/v1/patients/search-patients`
+  - swagger already has: `/api/v1/patients/search-patients`
 
 - `/auth/profile`
   - app: [src/context/AuthContext.js](C:/Users/hp/desktop/projects/link/link-mobile-app/src/context/AuthContext.js), [src/screens/LoginScreen.js](C:/Users/hp/desktop/projects/link/link-mobile-app/src/screens/LoginScreen.js)
-  - swagger uses patient-auth profile routes instead
+  - swagger already has: `/api/v1/patient-auth/profile`
+  - mismatch: swagger route is `PATCH`, while the app expects a profile-fetch `GET`
 
 - `/auth/user`
   - app: [src/services/syncService.js](C:/Users/hp/desktop/projects/link/link-mobile-app/src/services/syncService.js)
-  - swagger likely equivalent: `/api/v1/users/me`
+  - canonical backend replacement: `GET /api/v1/patient-auth/me`
 
-### Expected by app but not found clearly in swagger
+### Expected by app under non-canonical routes
 
 - `/patients/visits/{visitId}/detail`
+  - canonical backend replacement: `GET /api/v1/visits/{id}`
 - `/patient-portal/symptoms`
+  - canonical backend replacement: `POST /api/v1/patient-portal/symptom-logs`
 
 ### Present in swagger but still called unversioned by app
 

@@ -184,7 +184,7 @@ const WEB_MOCK_RESPONSES = {
 
   // ── HEW: Patient Search & Caseload (Zelalem Hospital) ──────────────────
   // All patients registered at Zelalem Hospital, accessible to HEW Birtukan
-  "/patients/search": {
+  "/patients/search-patients": {
     patients: [
       { id: "demo-patient-abebe-001", full_name: "Abebe Metaferia Alemey", first_name: "Abebe", last_name: "Alemey", phone: "+251911000001", date_of_birth: "1985-06-20", sex: "male", kebele: "Kebele 03", woreda: "Kirkos", facility_id: "demo-facility-zelalem-001", facility_name: "Zelalem Hospital" },
       { id: "p-tigist-001", full_name: "Tigist Alemu", first_name: "Tigist", last_name: "Alemu", phone: "+251911100010", date_of_birth: "1992-01-12", sex: "female", kebele: "Kebele 05", woreda: "Kirkos", facility_id: "demo-facility-zelalem-001", facility_name: "Zelalem Hospital" },
@@ -395,9 +395,12 @@ const withTimeout = (promise, timeoutMs) => {
 
 const buildUrl = (path) => {
   if (path.startsWith("http")) return path;
-  const base = API_BASE_URL.endsWith("/api")
-    ? API_BASE_URL
-    : `${API_BASE_URL.replace(/\/$/, "")}/api`;
+  const normalizedBase = API_BASE_URL.replace(/\/$/, "");
+  const base = normalizedBase.endsWith("/api/v1")
+    ? normalizedBase
+    : normalizedBase.endsWith("/api")
+      ? `${normalizedBase}/v1`
+      : `${normalizedBase}/api/v1`;
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 };
 

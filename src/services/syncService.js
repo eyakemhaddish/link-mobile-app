@@ -69,8 +69,8 @@ const loadCachedScope = async () => {
 
 const resolveScopeFromAuth = async () => {
   try {
-    const response = await api.get('/auth/user');
-    const scope = toScope(response?.user);
+    const response = await api.get('/patient-auth/me');
+    const scope = toScope(response?.user || response?.patient || response);
     if (scope) {
       await cacheScope(scope);
     }

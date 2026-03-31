@@ -23,7 +23,7 @@ import { evaluateOfflineHewDangerAssessment } from './offlineCdssService';
 export async function searchPatients(query) {
   if (!query || query.trim().length < 2) return [];
   const res = await api.get(
-    `/patients/search?q=${encodeURIComponent(query.trim())}&limit=8`
+    `/patients/search-patients?q=${encodeURIComponent(query.trim())}&limit=8`
   );
   return res?.patients ?? [];
 }
