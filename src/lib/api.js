@@ -4,19 +4,97 @@ import { error as logError } from "./logger";
 import { getAuthToken } from "./auth";
 
 const isWeb = Platform.OS === "web";
+const useWebMock =
+  isWeb &&
+  String(process.env.EXPO_PUBLIC_USE_WEB_MOCK || "")
+    .trim()
+    .toLowerCase() === "true";
 const DEFAULT_TIMEOUT_MS = 15000;
 
 // ── Web mock data — Abebe Metaferia Alemey @ Zelalem Hospital ────────────
 // Returns realistic clinical data without hitting the real API (blocked by CORS on web).
 const WEB_MOCK_RESPONSES = {
-  "/auth/profile": {
-    id: "demo-patient-abebe-001",
+  "/patient-auth/request-otp": {
+    success: true,
+    message: "OTP sent",
+  },
+  "/patient-auth/verify-otp": {
+    session_token: "demo-session-token-patient",
+    sessionToken: "demo-session-token-patient",
+    access_token: "demo-session-token-patient",
+    token: "demo-session-token-patient",
+    patient: {
+      id: "demo-patient-abebe-001",
+      role: "patient",
+      full_name: "Abebe Metaferia Alemey",
+      first_name: "Abebe",
+      last_name: "Alemey",
+      phone_number: "+251911000001",
+      facility_id: "demo-facility-zelalem-001",
+      facility_name: "Zelalem Hospital",
+    },
+  },
+  "/patient-auth/dev-login": {
+    session_token: "demo-session-token-patient",
+    sessionToken: "demo-session-token-patient",
+    access_token: "demo-session-token-patient",
+    token: "demo-session-token-patient",
+    patient: {
+      id: "demo-patient-abebe-001",
+      role: "patient",
+      full_name: "Abebe Metaferia Alemey",
+      first_name: "Abebe",
+      last_name: "Alemey",
+      phone_number: "+251911000001",
+      facility_id: "demo-facility-zelalem-001",
+      facility_name: "Zelalem Hospital",
+    },
+  },
+  "/patient-auth/register": {
+    session_token: "demo-session-token-patient",
+    sessionToken: "demo-session-token-patient",
+    access_token: "demo-session-token-patient",
+    token: "demo-session-token-patient",
+    patient: {
+      id: "demo-patient-abebe-001",
+      role: "patient",
+      full_name: "Abebe Metaferia Alemey",
+      first_name: "Abebe",
+      last_name: "Alemey",
+      phone_number: "+251911000001",
+      facility_id: "demo-facility-zelalem-001",
+      facility_name: "Zelalem Hospital",
+    },
+  },
+  "/patient-auth/me": {
+    patient: {
+      id: "demo-patient-abebe-001",
+      role: "patient",
+      full_name: "Abebe Metaferia Alemey",
+      first_name: "Abebe",
+      last_name: "Alemey",
+      email: "abebe.metaferia@linkhc.org",
+      phone_number: "+251911000001",
+      facility_id: "demo-facility-zelalem-001",
+      facility_name: "Zelalem Hospital",
+    },
+  },
+  "/patient-auth/logout": {
+    success: true,
+  },
+  "/auth/login": {
+    access_token: "demo-session-token-clinician",
+    token: "demo-session-token-clinician",
+  },
+  "/users/me": {
+    id: "demo-user-001",
     role: "patient",
+    user_role: "patient",
     full_name: "Abebe Metaferia Alemey",
     first_name: "Abebe",
     last_name: "Alemey",
-    email: "abebe.metaferia@linkhc.org",
-    phone: "+251911000001",
+    phone_number: "+251911000001",
+    tenant_id: "demo-tenant-001",
     facility_id: "demo-facility-zelalem-001",
     facility_name: "Zelalem Hospital",
   },
@@ -184,7 +262,7 @@ const WEB_MOCK_RESPONSES = {
 
   // ── HEW: Patient Search & Caseload (Zelalem Hospital) ──────────────────
   // All patients registered at Zelalem Hospital, accessible to HEW Birtukan
-  "/patients/search": {
+  "/patients/search-patients": {
     patients: [
       { id: "demo-patient-abebe-001", full_name: "Abebe Metaferia Alemey", first_name: "Abebe", last_name: "Alemey", phone: "+251911000001", date_of_birth: "1985-06-20", sex: "male", kebele: "Kebele 03", woreda: "Kirkos", facility_id: "demo-facility-zelalem-001", facility_name: "Zelalem Hospital" },
       { id: "p-tigist-001", full_name: "Tigist Alemu", first_name: "Tigist", last_name: "Alemu", phone: "+251911100010", date_of_birth: "1992-01-12", sex: "female", kebele: "Kebele 05", woreda: "Kirkos", facility_id: "demo-facility-zelalem-001", facility_name: "Zelalem Hospital" },
@@ -311,6 +389,10 @@ const WEB_MOCK_RESPONSES = {
   },
 
   // ── Patient Portal: Consent ─────────────────────────────────────────────
+  "/patient-portal/symptom-logs": {
+    success: true,
+    created: true,
+  },
   "/patient-portal/consents/grant": { success: true, created: true, consentId: "consent-new-001" },
   "/patient-portal/consents/revoke": { success: true, revoked: true },
   "/patient-portal/consents/history": {
@@ -372,6 +454,16 @@ const WEB_MOCK_RESPONSES = {
 const webMockRequest = (path) => {
   // Strip query params for matching
   const cleanPath = path.split("?")[0];
+  if (/^\/visits\/[^/]+$/i.test(cleanPath)) {
+    return Promise.resolve({
+      id: cleanPath.split("/").pop(),
+      status: "at_pharmacy",
+      visit_date: new Date().toISOString(),
+      facility_id: "demo-facility-zelalem-001",
+      facility_name: "Zelalem Hospital",
+      provider: "Dr. Kebede",
+    });
+  }
   const mock = WEB_MOCK_RESPONSES[cleanPath];
   if (mock) {
     console.log(`[API-Web-Mock] ${path} → returning stub data`);
@@ -395,9 +487,7 @@ const withTimeout = (promise, timeoutMs) => {
 
 const buildUrl = (path) => {
   if (path.startsWith("http")) return path;
-  const base = API_BASE_URL.endsWith("/api")
-    ? API_BASE_URL
-    : `${API_BASE_URL.replace(/\/$/, "")}/api`;
+  const base = API_BASE_URL.replace(/\/$/, "");
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 };
 
@@ -478,7 +568,7 @@ const retryable = async (fn, attempts = 2) => {
   throw lastError;
 };
 
-export const api = isWeb
+export const api = useWebMock
   ? {
       // On web, all calls return mock data (no CORS issues)
       get: (path) => webMockRequest(path),
