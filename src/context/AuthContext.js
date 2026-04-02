@@ -20,6 +20,13 @@ const WEB_DEV_PROFILE = {
 
 const AuthContext = React.createContext(null);
 
+const pickFirstTruthy = (...values) => {
+  for (const value of values) {
+    if (value) return value;
+  }
+  return null;
+};
+
 const normalizeWorkspace = (workspace) => {
   if (!workspace || typeof workspace !== 'object') return null;
   return {
@@ -40,10 +47,46 @@ const normalizeProfilePayload = (payload) => {
     : payload;
   const role = source.role || source.user_role || payload.role || payload.user_role || null;
   const workspace = normalizeWorkspace(source.workspace || payload.workspace);
+  const normalizedRole = role || null;
+
+  if (normalizedRole === 'patient') {
+    const patientId = pickFirstTruthy(
+      source.patient_id,
+      source.patient_account_id,
+      source.id
+    );
+    const userId = pickFirstTruthy(
+      source.user_id,
+      source.auth_user_id,
+      source.id
+    );
+    const fullName = pickFirstTruthy(
+      source.name,
+      source.full_name,
+      source.fullName
+    );
+    const fallbackName = [source.first_name, source.last_name].filter(Boolean).join(' ').trim();
+    const resolvedFullName = fullName || fallbackName || 'Patient';
+    const nameParts = String(resolvedFullName).split(/\s+/).filter(Boolean);
+
+    return {
+      ...source,
+      role: 'patient',
+      workspace,
+      id: patientId || userId || source.id || null,
+      patient_id: patientId || null,
+      user_id: userId || null,
+      full_name: resolvedFullName,
+      first_name: source.first_name || nameParts[0] || 'Patient',
+      last_name: source.last_name || nameParts.slice(1).join(' '),
+      phone: source.phone || source.phone_number || null,
+      phone_number: source.phone_number || source.phone || null,
+    };
+  }
 
   return {
     ...source,
-    role,
+    role: normalizedRole,
     workspace,
   };
 };
@@ -51,11 +94,39 @@ const normalizeProfilePayload = (payload) => {
 const normalizePatientPayload = (payload) => {
   if (!payload || typeof payload !== 'object') return null;
 
-  const patient = payload.patient && typeof payload.patient === 'object'
+  const userPart = payload.user && typeof payload.user === 'object'
+    ? payload.user
+    : null;
+  const patientPart = payload.patient && typeof payload.patient === 'object'
     ? payload.patient
-    : payload;
+    : null;
+  const flatPatientPart = !userPart && !patientPart ? payload : null;
 
-  if (!patient || typeof patient !== 'object' || !patient.id) return null;
+  const patientId = pickFirstTruthy(
+    patientPart?.id,
+    patientPart?.patient_id,
+    patientPart?.patient_account_id,
+    userPart?.patient_id,
+    userPart?.patient_account_id,
+    flatPatientPart?.patient_id,
+    flatPatientPart?.id
+  );
+  const userId = pickFirstTruthy(
+    userPart?.id,
+    userPart?.user_id,
+    patientPart?.user_id,
+    flatPatientPart?.user_id,
+    flatPatientPart?.id
+  );
+
+  const patient = {
+    ...(userPart || {}),
+    ...(patientPart || {}),
+    ...(flatPatientPart || {}),
+    ...(userPart?.id && !patientPart?.id ? { id: userPart.id } : {}),
+  };
+
+  if (!patient || typeof patient !== 'object' || !(patientId || userId || patient.id)) return null;
 
   const fallbackName = [patient.first_name, patient.last_name].filter(Boolean).join(' ').trim();
   const fullName = patient.name || patient.full_name || fallbackName || 'Patient';
@@ -65,11 +136,15 @@ const normalizePatientPayload = (payload) => {
 
   return {
     ...patient,
+    id: patientId || userId || patient.id,
+    patient_id: patientId || null,
+    user_id: userId || null,
     role: 'patient',
     full_name: fullName,
     first_name: firstName,
     last_name: lastName,
     phone: patient.phone || patient.phone_number || null,
+    phone_number: patient.phone_number || patient.phone || null,
   };
 };
 
@@ -82,17 +157,17 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = React.useCallback(async () => {
     try {
-      const profileResponse = await api.get('/auth/profile');
-      const normalizedProfile = normalizeProfilePayload(profileResponse);
-      if (normalizedProfile) return normalizedProfile;
-    } catch {
-      // Fall through to patient profile lookup.
-    }
-
-    try {
       const patientResponse = await api.get('/patient-auth/me');
       const normalizedPatient = normalizePatientPayload(patientResponse);
       if (normalizedPatient) return normalizedPatient;
+    } catch {
+      // Fall through to user profile lookup.
+    }
+
+    try {
+      const userResponse = await api.get('/users/me');
+      const normalizedUser = normalizeProfilePayload(userResponse);
+      if (normalizedUser) return normalizedUser;
     } catch {
       // Keep existing behavior: token can still be retained without profile payload.
     }
@@ -157,6 +232,11 @@ export const AuthProvider = ({ children }) => {
 
   // ── Sign out ──────────────────────────────────────────────────────────
   const signOut = async () => {
+    try {
+      await api.post('/patient-auth/logout');
+    } catch {
+      // Non-fatal: clear local auth state regardless.
+    }
     await clearAuthToken();
     setToken(null);
     setUser(null);

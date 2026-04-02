@@ -5,10 +5,10 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { colors, spacing, typography } from "../theme/tokens";
-import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { api } from "../lib/api";
+import { PATIENT_TENANT_ID } from "../lib/env";
 
 const isWeb = Platform.OS === "web";
 
@@ -48,20 +48,68 @@ const DEMO_USERS = {
 
 const normalizePhoneNumber = (value) => (value || "").replace(/\s+/g, "").trim();
 
-const buildPatientProfile = (patient, fallbackPhone) => {
-  const source = patient && typeof patient === "object" ? patient : {};
-  const fullName = source.name || source.full_name || "Patient";
+const pickFirstTruthy = (...values) => {
+  for (const value of values) {
+    if (value) return value;
+  }
+  return null;
+};
+
+const buildPatientProfile = (authResponse, fallbackPhone) => {
+  const userSource =
+    authResponse?.user && typeof authResponse.user === "object" ? authResponse.user : {};
+  const patientSource =
+    authResponse?.patient && typeof authResponse.patient === "object" ? authResponse.patient : {};
+  const source = { ...userSource, ...patientSource };
+
+  const patientId = pickFirstTruthy(
+    patientSource.id,
+    patientSource.patient_id,
+    patientSource.patient_account_id,
+    userSource.patient_id,
+    userSource.patient_account_id,
+    source.id
+  );
+  const userId = pickFirstTruthy(
+    userSource.id,
+    patientSource.user_id,
+    source.user_id,
+    source.id
+  );
+  const fullName = pickFirstTruthy(
+    userSource.name,
+    userSource.full_name,
+    userSource.fullName,
+    patientSource.name,
+    patientSource.full_name,
+    patientSource.fullName
+  ) || "Patient";
   const [firstName, ...lastNameParts] = String(fullName).trim().split(/\s+/);
+
   return {
     ...source,
-    id: source.id || "patient",
+    id: patientId || userId || "patient",
+    patient_id: patientId || null,
+    user_id: userId || null,
     role: "patient",
     full_name: fullName,
-    first_name: source.first_name || firstName || "Patient",
-    last_name: source.last_name || lastNameParts.join(" "),
-    phone: source.phone || source.phone_number || fallbackPhone || "",
+    first_name: pickFirstTruthy(userSource.first_name, patientSource.first_name, firstName) || "Patient",
+    last_name: pickFirstTruthy(userSource.last_name, patientSource.last_name, lastNameParts.join(" ")),
+    phone: pickFirstTruthy(userSource.phone, userSource.phone_number, patientSource.phone, patientSource.phone_number, fallbackPhone) || "",
+    phone_number: pickFirstTruthy(userSource.phone_number, patientSource.phone_number, userSource.phone, patientSource.phone, fallbackPhone) || "",
+    facility_id: pickFirstTruthy(patientSource.facility_id, userSource.facility_id, source.facility_id),
+    facility_name: pickFirstTruthy(patientSource.facility_name, userSource.facility_name, source.facility_name),
+    tenant_id: pickFirstTruthy(patientSource.tenant_id, userSource.tenant_id, source.tenant_id),
   };
 };
+
+const getAuthTokenFromResponse = (response) =>
+  response?.sessionToken ||
+  response?.session_token ||
+  response?.access_token ||
+  response?.token ||
+  response?.accessToken ||
+  null;
 
 const LoginScreen = () => {
   const { signInWithToken } = useAuth();
@@ -98,13 +146,14 @@ const LoginScreen = () => {
     setError("");
   }, []);
 
-  const completePatientSignIn = React.useCallback(async ({ sessionToken, patient, fallbackPhone }) => {
+  const completePatientSignIn = React.useCallback(async ({ authResponse, fallbackPhone }) => {
+    const sessionToken = getAuthTokenFromResponse(authResponse);
     if (!sessionToken) {
       setError("Unable to start patient session. Please try again.");
       return;
     }
 
-    const profile = buildPatientProfile(patient, fallbackPhone);
+    const profile = buildPatientProfile(authResponse, fallbackPhone);
     await signInWithToken(sessionToken, profile);
     showToast(`Welcome, ${profile.first_name}!`, "success");
   }, [showToast, signInWithToken]);
@@ -123,7 +172,7 @@ const LoginScreen = () => {
     try {
       await api.post(
         "/patient-auth/request-otp",
-        { phoneNumber: normalizedPhone },
+        { phone_number: normalizedPhone },
         { auth: false }
       );
       setOtpRequested(true);
@@ -154,12 +203,11 @@ const LoginScreen = () => {
     try {
       const response = await api.post(
         "/patient-auth/verify-otp",
-        { phoneNumber: normalizedPhone, otp },
+        { phone_number: normalizedPhone, otp },
         { auth: false }
       );
       await completePatientSignIn({
-        sessionToken: response?.sessionToken,
-        patient: response?.patient,
+        authResponse: response,
         fallbackPhone: normalizedPhone,
       });
     } catch (err) {
@@ -199,23 +247,25 @@ const LoginScreen = () => {
       const response = await api.post(
         "/patient-auth/register",
         {
-          phoneNumber: normalizedPhone,
+          phone_number: normalizedPhone,
           otp,
           name: name.trim(),
-          dateOfBirth: dateOfBirth.trim() || undefined,
+          date_of_birth: dateOfBirth.trim() || undefined,
           gender: gender.trim() || undefined,
-          emergencyContactName: emergencyContactName.trim() || undefined,
-          emergencyContactPhone: normalizedEmergencyPhone || undefined,
+          emergency_contact_name: emergencyContactName.trim() || undefined,
+          emergency_contact_phone: normalizedEmergencyPhone || undefined,
+          tenant_id: PATIENT_TENANT_ID || undefined,
         },
         { auth: false }
       );
       await completePatientSignIn({
-        sessionToken: response?.sessionToken,
-        patient: response?.patient,
+        authResponse: response,
         fallbackPhone: normalizedPhone,
       });
     } catch (err) {
-      if (err?.status === 409 && err?.payload?.error === "patient_exists") {
+      if (err?.status === 409 && err?.payload?.error === "phone_number_in_use_by_non_patient_user") {
+        setError("This phone number is already used by a non-patient account. Contact support.");
+      } else if (err?.status === 409 && err?.payload?.error === "patient_exists") {
         setRequiresRegistration(false);
         setError("Patient already exists. Verify the OTP to sign in.");
       } else {
@@ -244,10 +294,25 @@ const LoginScreen = () => {
     setLoading(true);
     setError("");
     try {
-      showToast(`Welcome, ${match.profile.first_name}! (${match.label})`, "success");
-      await signInWithToken(match.token, match.profile);
+      const response = await api.post(
+        "/patient-auth/dev-login",
+        { phone_number: match.profile.phone },
+        { auth: false }
+      );
+
+      const token = getAuthTokenFromResponse(response) || match.token;
+      const profile = buildPatientProfile(
+        {
+          user: response?.user || match.profile,
+          patient: response?.patient || match.profile,
+        },
+        match.profile.phone
+      );
+
+      showToast(`Welcome, ${profile.first_name}! (${match.label})`, "success");
+      await signInWithToken(token, profile);
     } catch (err) {
-      setError("Login failed. Please try again.");
+      setError(err?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -265,26 +330,30 @@ const LoginScreen = () => {
     setLoading(true);
     setError("");
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const response = await api.post(
+        "/auth/login",
+        {
+          username: email.trim(),
+          password,
+        },
+        { auth: false }
+      );
 
-      if (authError) {
-        setError(authError.message);
-        return;
-      }
-
-      const token = data?.session?.access_token;
+      const token = getAuthTokenFromResponse(response);
       if (!token) {
         setError("Unable to start session. Please try again.");
         return;
       }
 
       await signInWithToken(token);
-      await api.get("/auth/profile");
+      await api.get("/users/me").catch(() => null);
     } catch (err) {
-      setError(err?.message || "Sign in failed.");
+      const payloadMessage =
+        err?.payload?.message ||
+        err?.payload?.error ||
+        err?.message ||
+        "Sign in failed.";
+      setError(payloadMessage);
     } finally {
       setLoading(false);
     }
