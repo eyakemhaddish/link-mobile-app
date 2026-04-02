@@ -22,8 +22,9 @@ import { evaluateOfflineHewDangerAssessment } from './offlineCdssService';
  */
 export async function searchPatients(query) {
   if (!query || query.trim().length < 2) return [];
+  const normalized = encodeURIComponent(query.trim());
   const res = await api.get(
-    `/patients/search?q=${encodeURIComponent(query.trim())}&limit=8`
+    `/patients/search-patients?name=${normalized}&phone_number=${normalized}&limit=8`
   );
   return res?.patients ?? [];
 }
@@ -126,10 +127,9 @@ export async function flushOfflineQueue() {
  * @param {number} limit
  */
 export async function getPatientNotes(patientId, limit = 3) {
-  const res = await api.get(
-    `/hew/patients/${patientId}/notes?limit=${limit}`
-  );
-  return res?.notes ?? [];
+  const res = await api.get(`/hew/patients/${patientId}/notes`);
+  const notes = Array.isArray(res?.notes) ? res.notes : [];
+  return notes.slice(0, Math.max(0, limit));
 }
 
 const normalizeUrgency = (value) => {

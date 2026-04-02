@@ -68,9 +68,34 @@ const loadCachedScope = async () => {
 };
 
 const resolveScopeFromAuth = async () => {
+  const candidateEndpoints = ['/patient-auth/me', '/users/me'];
+
+  for (const endpoint of candidateEndpoints) {
+    try {
+      const response = await api.get(endpoint);
+      const scope = toScope(
+        response?.user ||
+        response?.patient ||
+        response
+      );
+      if (scope) {
+        await cacheScope(scope);
+        return scope;
+      }
+    } catch {
+      // Try next endpoint
+    }
+  }
+
+  return null;
+};
+
+const resolveScopeFromQueue = async () => {
   try {
-    const response = await api.get('/auth/user');
-    const scope = toScope(response?.user);
+    const next = await syncQueueRepo.getNextBatch({ limit: 1 });
+    if (!next.length) return null;
+    const payload = next[0]?.payload;
+    const scope = toScope(payload);
     if (scope) {
       await cacheScope(scope);
     }
@@ -78,17 +103,6 @@ const resolveScopeFromAuth = async () => {
   } catch {
     return null;
   }
-};
-
-const resolveScopeFromQueue = async () => {
-  const next = await syncQueueRepo.getNextBatch({ limit: 1 });
-  if (!next.length) return null;
-  const payload = next[0]?.payload;
-  const scope = toScope(payload);
-  if (scope) {
-    await cacheScope(scope);
-  }
-  return scope;
 };
 
 const resolveSyncScope = async () => {
@@ -176,6 +190,15 @@ const buildPushOps = (rows) =>
     clientCreatedAt: String(row.updated_at || row.created_at || now()),
   }));
 
+const toSyncChanges = (ops) =>
+  ops.map((op) => ({
+    entity: op.entityType,
+    operation: op.opType,
+    payload: op.data ?? null,
+    client_change_id: op.opId,
+    occurred_at: op.clientCreatedAt,
+  }));
+
 const markBatchFailed = async (rows, reason) => {
   for (const row of rows) {
     await syncQueueRepo.markFailed(row.op_id, reason);
@@ -193,7 +216,13 @@ const pushOneBatch = async ({
   }
 
   const ops = buildPushOps(rows);
+  const changes = toSyncChanges(ops);
   const payload = {
+    tenant_id: scope.tenantId,
+    facility_id: scope.facilityId,
+    device_id: deviceId,
+    changes,
+    // Backward compatibility for servers still expecting legacy sync payload.
     facilityId: scope.facilityId,
     deviceId,
     ops,
@@ -380,10 +409,16 @@ export const pullSyncDeltas = async ({
 
   while (pages < maxPages) {
     const query = new URLSearchParams({
-      facilityId: resolvedScope.facilityId,
+      facility_id: resolvedScope.facilityId,
+      tenant_id: resolvedScope.tenantId,
       limit: String(limit),
+      // Backward compatibility for servers still expecting legacy pull query keys.
+      facilityId: resolvedScope.facilityId,
     });
-    if (cursor) query.set('cursor', cursor);
+    if (cursor) {
+      query.set('since', cursor);
+      query.set('cursor', cursor);
+    }
 
     let response;
     let pullAttempt = 0;
