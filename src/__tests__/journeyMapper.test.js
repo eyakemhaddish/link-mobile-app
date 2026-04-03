@@ -64,4 +64,29 @@ describe("journeyMapper", () => {
     expect(labStep?.status).toBe("active");
     expect(labStep?.time).not.toBe("--");
   });
+
+  it("humanizes snake_case payment stages from journey_timeline", () => {
+    const visit = {
+      id: "visit-3",
+      status: "paying_consultation",
+      journey_timeline: [
+        {
+          stage: "registered",
+          timestamp: "2026-04-02T12:52:23.554755Z",
+        },
+        {
+          stage: "paying_consultation",
+          timestamp: "2026-04-03T07:48:30.6965974Z",
+        },
+      ],
+    };
+
+    const formatted = formatVisitForDisplay(visit);
+    const latestStep =
+      formatted.journeySteps[formatted.journeySteps.length - 1];
+
+    expect(formatted.currentStageRaw).toBe("paying_consultation");
+    expect(latestStep?.label).toBe("Paying Consultation");
+    expect(latestStep?.status).toBe("active");
+  });
 });

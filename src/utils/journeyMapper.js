@@ -10,9 +10,9 @@ const STAGE_LABELS = {
   at_lab: "Lab / Diagnostic",
   at_imaging: "Imaging",
   at_pharmacy: "Pharmacy",
-  paying_consultation: "Payment",
-  paying_diagnosis: "Payment",
-  paying_pharmacy: "Payment",
+  paying_consultation: "Paying Consultation",
+  paying_diagnosis: "Paying Diagnosis",
+  paying_pharmacy: "Paying Pharmacy",
   completed: "Completed",
 };
 
@@ -41,9 +41,9 @@ const STATUS_MAP = {
   at_imaging: "at_imaging",
   pharmacy: "at_pharmacy",
   at_pharmacy: "at_pharmacy",
-  paying_consultation: "with_doctor",
-  paying_diagnosis: "at_lab",
-  paying_pharmacy: "at_pharmacy",
+  paying_consultation: "paying_consultation",
+  paying_diagnosis: "paying_diagnosis",
+  paying_pharmacy: "paying_pharmacy",
   completed: "completed",
 };
 
@@ -130,48 +130,47 @@ export const mapVisitToJourneySteps = (visit) => {
   if (!visit) return [];
 
   const timelineEntries = getTimelineEntries(visit);
-  const latestTimelineEntry =
-    timelineEntries.length > 0
-      ? timelineEntries[timelineEntries.length - 1]
-      : null;
+  if (timelineEntries.length > 0) {
+    const latestTimelineEntry = timelineEntries[timelineEntries.length - 1];
+    const isVisitCompleted =
+      latestTimelineEntry?.stage === "completed" ||
+      normalizeStage(visit.status) === "completed";
+
+    return timelineEntries.map((entry, index) => {
+      const isLatest = index === timelineEntries.length - 1;
+      return {
+        id: index + 1,
+        label: getStageLabel(entry.stage),
+        time: formatDateTime(entry.timestamp),
+        status: isLatest && !isVisitCompleted ? "active" : "completed",
+        stage: entry.stage,
+        timestamp: entry.timestamp || null,
+      };
+    });
+  }
 
   const fallbackStage = normalizeStage(
     visit.current_journey_stage || visit.status || "registered",
   );
-  const currentStage =
-    latestTimelineEntry?.stage || fallbackStage || "registered";
+  const currentStage = fallbackStage || "registered";
   const currentStageIndex = STAGE_ORDER.indexOf(currentStage);
   const isVisitCompleted =
     currentStage === "completed" ||
     normalizeStage(visit.status) === "completed";
 
-  // Keep last timestamp per stage in case timeline includes repeated stage hops.
-  const timelineByStage = new Map();
-  timelineEntries.forEach((entry) => {
-    timelineByStage.set(entry.stage, entry);
-  });
-
   const steps = [];
   let stepId = 1;
 
   STAGE_ORDER.forEach((stage, index) => {
-    const timelineEntry = timelineByStage.get(stage) || null;
-    const hasTimelineEntry = Boolean(timelineEntry);
-    const isCurrent = stage === currentStage;
-
     let status = "pending";
-    if (hasTimelineEntry) {
-      status = isCurrent && !isVisitCompleted ? "active" : "completed";
-    } else if (currentStageIndex >= 0) {
+    if (currentStageIndex >= 0) {
       if (index < currentStageIndex) status = "completed";
       else if (index === currentStageIndex && !isVisitCompleted)
         status = "active";
     }
 
     let time = "--";
-    if (hasTimelineEntry) {
-      time = formatDateTime(timelineEntry.timestamp);
-    } else if (status === "active") {
+    if (status === "active") {
       time = "In Progress";
     }
 
@@ -181,7 +180,7 @@ export const mapVisitToJourneySteps = (visit) => {
       time,
       status,
       stage,
-      timestamp: timelineEntry?.timestamp || null,
+      timestamp: null,
     });
   });
 
@@ -190,10 +189,10 @@ export const mapVisitToJourneySteps = (visit) => {
     steps.push({
       id: stepId++,
       label: getStageLabel(currentStage),
-      time: formatDateTime(latestTimelineEntry?.timestamp),
+      time: "In Progress",
       status: isVisitCompleted ? "completed" : "active",
       stage: currentStage,
-      timestamp: latestTimelineEntry?.timestamp || null,
+      timestamp: null,
     });
   }
 
