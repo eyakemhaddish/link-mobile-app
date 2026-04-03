@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Care Hub - Ethiopia Patient Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Public_Sans:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed": "#ffdcc5",
+            "surface": "#f7faf9",
+            "on-tertiary": "#ffffff",
+            "on-error-container": "#93000a",
+            "inverse-on-surface": "#eef1f0",
+            "surface-container-low": "#f1f4f3",
+            "surface-container": "#ebeeed",
+            "outline": "#727782",
+            "on-primary-container": "#b1d1ff",
+            "surface-container-lowest": "#ffffff",
+            "surface-variant": "#e0e3e2",
+            "primary-fixed-dim": "#a2c9ff",
+            "on-error": "#ffffff",
+            "error": "#ba1a1a",
+            "surface-container-highest": "#e0e3e2",
+            "on-secondary-container": "#316e52",
+            "inverse-primary": "#a2c9ff",
+            "on-surface": "#181c1c",
+            "surface-tint": "#1260a5",
+            "on-primary-fixed": "#001c38",
+            "tertiary-fixed-dim": "#ffb783",
+            "outline-variant": "#c1c7d2",
+            "on-background": "#181c1c",
+            "secondary": "#2c694e",
+            "error-container": "#ffdad6",
+            "tertiary-container": "#8b4500",
+            "primary-container": "#005a9e",
+            "secondary-fixed": "#b1f0ce",
+            "on-secondary-fixed": "#002114",
+            "on-surface-variant": "#414750",
+            "inverse-surface": "#2d3131",
+            "on-primary": "#ffffff",
+            "on-tertiary-fixed-variant": "#713700",
+            "surface-bright": "#f7faf9",
+            "on-tertiary-fixed": "#301400",
+            "tertiary": "#683200",
+            "background": "#f7faf9",
+            "on-secondary": "#ffffff",
+            "on-primary-fixed-variant": "#004881",
+            "primary": "#004277",
+            "primary-fixed": "#d3e4ff",
+            "surface-container-high": "#e6e9e8",
+            "secondary-container": "#aeeecb",
+            "on-tertiary-container": "#ffc298",
+            "on-secondary-fixed-variant": "#0e5138",
+            "secondary-fixed-dim": "#95d4b3",
+            "surface-dim": "#d7dbda"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Manrope", "sans-serif"],
+            "body": ["Public Sans", "sans-serif"],
+            "label": ["Public Sans", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .tonal-transition {
+      background: linear-gradient(to bottom, #f1f4f3, #f7faf9);
+    }
+    .glass-nav {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .hero-gradient {
+      background: linear-gradient(135deg, #004277 0%, #005a9e 100%);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-fixed">
+<!-- TopAppBar from JSON -->
+<header class="bg-surface-container-low docked full-width top-0 z-40 sticky">
+<div class="flex justify-between items-center w-full px-6 py-4 max-w-screen-xl mx-auto">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-fixed ring-2 ring-white">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="portrait of a smiling Ethiopian man in professional attire with soft natural lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPnVoo82SMQojk9fwEhwc3leKrpBWZNgmFSx-CFL9qEGZL4LrdOrggwz2tzCkKNUfX2pjFHyyzQzDzNpZKA93EPdHK4AzqgNQgTKNoAOD_cTC4dfQ-Ne4nVe8NoFBU_CGrv9WlHq8l7CLmZDavf_hEeVIa0fel2846nfwEUcjLd8ct3X2CGCzgQR-56CLRSc3McDjti4qXADpqCocPBRdJjka5D3J0Yp6Pmk43r8sDBOIP0ZQDTOoVoUU3KZSQc1XC4iyhogUIaQq6"/>
+</div>
+<h1 class="font-['Manrope'] font-bold text-lg leading-relaxed text-[#005A9E] dark:text-blue-400">Good morning, Abebe</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors scale-95 duration-200 ease-in-out">
+<span class="material-symbols-outlined text-[#005A9E] dark:text-blue-400" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<main class="px-6 pt-4 pb-32 max-w-screen-xl mx-auto space-y-8">
+<!-- Hero Action Card: Check Symptoms -->
+<section class="relative overflow-hidden rounded-xl hero-gradient p-8 text-on-primary shadow-lg">
+<div class="relative z-10 max-w-md">
+<h2 class="font-headline font-extrabold text-3xl tracking-tight mb-2">Check Symptoms</h2>
+<p class="text-on-primary/90 text-lg mb-6 leading-relaxed">Not feeling well? Describe your symptoms for instant guidance based on Ethiopian health standards.</p>
+<button class="bg-secondary-container text-on-secondary-container px-8 py-4 rounded-lg font-bold flex items-center gap-3 active:scale-95 transition-transform">
+          Start Assessment / ምርመራ ይጀምሩ
+          <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="absolute top-0 right-0 h-full w-1/2 opacity-20 pointer-events-none">
+<img class="w-full h-full object-cover" data-alt="abstract close-up of a medical stethoscope with soft blue lighting and blurred clinical background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-iqnFDxd80VSgmPbmm7DF1fxL5pGeu-HTt4-B0VTmAt4rzmP_QPdOqv9iYwvebGhriIeWmPjrfHkzKLEvOF9L6nNRwmuJWr_bsTq6Px1PsPgX0oLYyjrMN0Hxb2Lemvvm1yepvLm2CBI9xUKa372NmQ5rfqPWifgwbB7XVBGbr8gsBqx5iYvUNeaD8A-83wvimr9tUxsmEa9CPAi5JRwcvFADqNPAzczT9cdP6-Cd08YNK3xMBRHwHHkOB1as4ygTGmgb-_mRKp4I"/>
+</div>
+</section>
+<!-- Asymmetric Bento Grid for Facility Discovery & Guidance -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Find a Clinic Facility Discovery -->
+<section class="md:col-span-7 bg-surface-container-lowest rounded-xl p-6 flex flex-col gap-6 shadow-[0_8px_24px_rgba(0,66,119,0.04)]">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline font-bold text-xl text-primary">Find a Clinic</h3>
+<p class="text-on-surface-variant">የአቅራቢያዎ የሕክምና ተቋማትን ይፈልጉ</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="location_on">location_on</span>
+</div>
+<div class="relative rounded-lg overflow-hidden h-48 group">
+<img class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" data-alt="stylized map view of Addis Ababa city streets with clean interface design markers" data-location="Addis Ababa" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnNrMiT9v9HekGqpBxDI9wczWM-pALwwjcK9w8-FHcC5R7k26xFrSJMMRYc0APIIDaoeRkeFj89covGDR1XeE1IzIiSK0o5np1MB_PkAIJHRGynac-Hbpcl43DQqNwz3T2dgN6qDdc2QRfurk_cLDuxDm7zi5s6fiAfcjmo3zSoNvUlApfBEEwcFqX9CeCk10QrTar7Df0LqpUW2vGpbUw4MB0VVoi8xDniiTiSYbcl6InJTXJEFg8PcodlDd-3vZtG9lKnvI2LT2A"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+<button class="bg-white/90 backdrop-blur-md text-primary font-bold px-4 py-2 rounded-full text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="near_me">near_me</span>
+              Show nearby facilities
+            </button>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-4 p-3 rounded-lg bg-surface-container-low">
+<div class="w-12 h-12 rounded-lg bg-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-fixed" data-icon="local_hospital">local_hospital</span>
+</div>
+<div class="flex-1">
+<p class="font-bold text-on-surface">Black Lion Hospital</p>
+<p class="text-sm text-on-surface-variant">0.8 km • Emergency Open 24/7</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Care-seeking Guidance (Urgency Coding) -->
+<section class="md:col-span-5 bg-tertiary-fixed rounded-xl p-6 flex flex-col shadow-[0_8px_24px_rgba(0,66,119,0.04)]">
+<div class="mb-4">
+<h3 class="font-headline font-bold text-xl text-tertiary">Quick Guidance</h3>
+<p class="text-on-tertiary-fixed-variant text-sm">ወቅታዊ የጤና መረጃዎች</p>
+</div>
+<div class="space-y-4 flex-1">
+<div class="p-4 rounded-lg bg-white/60 border-l-4 border-tertiary">
+<h4 class="font-bold text-tertiary flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="warning">warning</span>
+              Urgent Concerns
+            </h4>
+<p class="text-sm text-on-tertiary-fixed mt-1">Difficulty breathing or chest pain requires immediate hospital visit.</p>
+</div>
+<div class="p-4 rounded-lg bg-secondary-fixed/40 border-l-4 border-secondary">
+<h4 class="font-bold text-secondary flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+              Routine Care
+            </h4>
+<p class="text-sm text-on-secondary-fixed-variant mt-1">Fever or minor aches can be managed via tele-consultation first.</p>
+</div>
+</div>
+<button class="mt-6 w-full py-4 rounded-lg border-2 border-tertiary/20 text-tertiary font-bold hover:bg-tertiary hover:text-white transition-colors">
+          View Emergency Guide
+        </button>
+</section>
+</div>
+<!-- Route-to-care Handoff Buttons -->
+<section class="space-y-4">
+<h3 class="font-headline font-bold text-lg px-2 text-primary">How would you like to proceed?</h3>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow group border border-transparent hover:border-primary-fixed">
+<div class="w-14 h-14 rounded-full bg-primary-fixed flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="video_call">video_call</span>
+</div>
+<div class="text-center">
+<p class="font-bold text-on-surface">Video Call</p>
+<p class="text-xs text-on-surface-variant">Connect in 15 mins</p>
+</div>
+</button>
+<button class="flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow group border border-transparent hover:border-secondary-fixed">
+<div class="w-14 h-14 rounded-full bg-secondary-fixed flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="chat">chat</span>
+</div>
+<div class="text-center">
+<p class="font-bold text-on-surface">Chat with Nurse</p>
+<p class="text-xs text-on-surface-variant">Text-based support</p>
+</div>
+</button>
+</div>
+</section>
+<!-- Support Section -->
+<section class="bg-surface-container p-6 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="phone_in_talk">phone_in_talk</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">24/7 Health Hotline</p>
+<p class="text-sm text-on-surface-variant">Call 8335 for free health advice</p>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-full text-sm font-bold">Call Now</button>
+</section>
+</main>
+<!-- BottomNavBar from JSON -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-t-[2rem] border-t border-slate-100 dark:border-slate-800 shadow-[0_-8px_24px_rgba(0,66,119,0.06)]">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1 hover:text-[#005A9E] transition-transform active:scale-90 tap-highlight-none" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Home</span>
+</a>
+<!-- Records -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1 hover:text-[#005A9E] transition-transform active:scale-90 tap-highlight-none" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Records</span>
+</a>
+<!-- Appointments -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1 hover:text-[#005A9E] transition-transform active:scale-90 tap-highlight-none" href="#">
+<span class="material-symbols-outlined" data-icon="event_available">event_available</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Appointments</span>
+</a>
+<!-- Care (ACTIVE) -->
+<a class="flex flex-col items-center justify-center text-[#005A9E] dark:text-blue-300 bg-[#f1f4f3] dark:bg-blue-900/30 rounded-2xl px-3 py-1 transition-transform active:scale-90 tap-highlight-none" href="#">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Care</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1 hover:text-[#005A9E] transition-transform active:scale-90 tap-highlight-none" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Profile</span>
+</a>
+</nav>
+</body></html>

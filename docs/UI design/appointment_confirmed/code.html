@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Appointment Confirmation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Public_Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d7dbda",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#a2c9ff",
+                        "primary-fixed": "#d3e4ff",
+                        "inverse-on-surface": "#eef1f0",
+                        "background": "#f7faf9",
+                        "secondary-container": "#aeeecb",
+                        "outline": "#727782",
+                        "on-surface": "#181c1c",
+                        "on-surface-variant": "#414750",
+                        "on-tertiary-fixed": "#301400",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#95d4b3",
+                        "on-error-container": "#93000a",
+                        "on-background": "#181c1c",
+                        "outline-variant": "#c1c7d2",
+                        "secondary-fixed": "#b1f0ce",
+                        "inverse-primary": "#a2c9ff",
+                        "tertiary": "#683200",
+                        "surface-tint": "#1260a5",
+                        "inverse-surface": "#2d3131",
+                        "surface-container-highest": "#e0e3e2",
+                        "on-tertiary-container": "#ffc298",
+                        "surface-container-low": "#f1f4f3",
+                        "on-primary-container": "#b1d1ff",
+                        "surface-bright": "#f7faf9",
+                        "on-primary-fixed": "#001c38",
+                        "surface-container": "#ebeeed",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#0e5138",
+                        "tertiary-fixed": "#ffdcc5",
+                        "surface": "#f7faf9",
+                        "on-secondary-fixed": "#002114",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#004277",
+                        "on-secondary-container": "#316e52",
+                        "surface-container-high": "#e6e9e8",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#8b4500",
+                        "secondary": "#2c694e",
+                        "primary-container": "#005a9e",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#e0e3e2",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#004881"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "1rem",
+                        "xl": "1.25rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Public Sans"],
+                        "label": ["Public Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .glass-panel {
+            background: rgba(247, 250, 249, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-surface min-h-screen flex flex-col items-center">
+<header class="fixed top-0 w-full z-50 bg-[#f7faf9]/80 backdrop-blur-xl">
+<div class="flex justify-between items-center h-16 px-6 w-full max-w-md mx-auto">
+<div class="flex items-center gap-4">
+<button class="text-on-surface active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline font-bold text-lg tracking-tight text-[#005A9E]">Patient Portal</h1>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="close-up portrait of a kind Ethiopian man with a gentle smile and professional attire" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtSX3QEtyKhtDln8HF4qNM6KtADggl0VVs62ii9Bq-M8IMavsloKEnt0h29F8UcatGnTIma_3HJhH-fSX28-f7ONTg5u_7C-OTJ8_QFy0_Egsm0M2ttw7zKN_mo2op_mqtZgNjY6guO-Au7w-fZWHid_dmybhPrFO3JW44cBgZUGAyl717flfHjMOXJ-OWkxBmukfaha00fzFe9I0Rpt3Zt6JIwC8Rn_9RcXmgCNA2_i5FtEg2ZqHhx6bUP6QUCRwx8PWIdshIavwZ"/>
+</div>
+</div>
+</header>
+<main class="w-full max-w-md px-6 pt-24 pb-12 flex-1 flex flex-col items-center">
+<div class="mt-8 mb-10 relative flex flex-col items-center">
+<div class="w-24 h-24 rounded-full bg-secondary-container flex items-center justify-center mb-6 relative">
+<div class="absolute inset-0 rounded-full bg-secondary-container animate-pulse opacity-50"></div>
+<span class="material-symbols-outlined text-on-secondary-container !text-5xl" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h2 class="font-headline font-extrabold text-3xl text-center text-on-surface mb-3 tracking-tight">Request Sent!</h2>
+<p class="text-on-surface-variant text-center px-4 leading-relaxed">
+                Black Lion Hospital will confirm your visit shortly. Keep an eye on your notifications.
+            </p>
+</div>
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-[0_8px_24px_rgba(0,66,119,0.06)] p-6 mb-10 overflow-hidden relative">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-fixed-dim/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="local_hospital">local_hospital</span>
+</div>
+<div>
+<span class="text-label-md text-on-surface-variant font-medium text-xs uppercase tracking-widest">Facility</span>
+<h3 class="font-headline font-bold text-on-surface">Black Lion Hospital</h3>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-outline-variant mt-1" data-icon="event">event</span>
+<div>
+<p class="text-sm text-on-surface-variant">Proposed Date</p>
+<p class="font-semibold text-on-surface">Tuesday, October 24, 2023</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-outline-variant mt-1" data-icon="schedule">schedule</span>
+<div>
+<p class="text-sm text-on-surface-variant">Preferred Time</p>
+<p class="font-semibold text-on-surface">09:30 AM — 10:15 AM</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-outline-variant mt-1" data-icon="person_search">person_search</span>
+<div>
+<p class="text-sm text-on-surface-variant">Department</p>
+<p class="font-semibold text-on-surface">General Internal Medicine</p>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t-2 border-surface-container-low border-dashed">
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="professional medical doctor avatar with warm lighting and stethoscope visible" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZkfqsYj8P4WnbqD_4rbArpNc746rcoNUDjnq1Rgs4GeH9t5NhlaJx43P_JN2hsti7q8bq055ePII5H1Z5pg3aUpbZYMVQdasJ9Au6aeRj5dBtl7MJd5xEkv_wjfU2YKKW3Ul761TYM4VTEkCWVCIYvBZDVY0-RqBDM3Skknf6hlwpBIDIeT5KMzwK0d-RLHG-lARgejyQcilWR9GbDNEuSUXqWlft_WN-Rk4uLh1XYiy6FUNwPw98b7OZIJkj9JdH0g3sD_rS_KZi"/>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center border-2 border-surface-container-lowest text-[10px] font-bold text-on-primary-fixed">
+                            +2
+                        </div>
+</div>
+<span class="text-xs font-semibold text-primary px-3 py-1 bg-primary/10 rounded-full">Primary Care Team</span>
+</div>
+</div>
+</div>
+<div class="w-full space-y-4">
+<button class="w-full h-14 bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold rounded-lg shadow-lg active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="calendar_add_on">calendar_add_on</span>
+                Add to Calendar
+            </button>
+<button class="w-full h-14 bg-secondary-container text-on-secondary-container font-bold rounded-lg active:scale-95 transition-all duration-200 flex items-center justify-center">
+                Back to Home
+            </button>
+</div>
+<div class="mt-12 w-full">
+<div class="bg-surface-container-low rounded-xl p-5 flex items-center gap-4">
+<div class="bg-surface-container-lowest p-3 rounded-lg">
+<span class="material-symbols-outlined text-tertiary" data-icon="info">info</span>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-bold text-on-surface">Need help?</h4>
+<p class="text-xs text-on-surface-variant">Contact our patient support line for any urgent changes to your request.</p>
+</div>
+<button class="text-primary active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="call">call</span>
+</button>
+</div>
+</div>
+</main>
+<footer class="fixed bottom-0 left-0 w-full z-50 rounded-t-[2rem] bg-[#f7faf9]/80 backdrop-blur-2xl shadow-[0_-8px_24px_rgba(0,66,119,0.06)]">
+<nav class="w-full max-w-md mx-auto flex justify-around items-center px-4 pb-6 pt-3">
+<div class="flex flex-col items-center justify-center text-slate-500 hover:text-[#005A9E] px-5 py-2 active:scale-90 transition-all duration-200 ease-out">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-['Public_Sans'] text-[11px] font-semibold uppercase tracking-wider">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#005A9E]/10 text-[#005A9E] rounded-2xl px-5 py-2 active:scale-90 transition-all duration-200 ease-out">
+<span class="material-symbols-outlined mb-1" data-icon="event" style="font-variation-settings: 'FILL' 1;">event</span>
+<span class="font-['Public_Sans'] text-[11px] font-semibold uppercase tracking-wider">Visits</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 hover:text-[#005A9E] px-5 py-2 active:scale-90 transition-all duration-200 ease-out">
+<span class="material-symbols-outlined mb-1" data-icon="monitor_heart">monitor_heart</span>
+<span class="font-['Public_Sans'] text-[11px] font-semibold uppercase tracking-wider">Health</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 hover:text-[#005A9E] px-5 py-2 active:scale-90 transition-all duration-200 ease-out">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-['Public_Sans'] text-[11px] font-semibold uppercase tracking-wider">Profile</span>
+</div>
+</nav>
+</footer>
+<div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md pointer-events-none -z-10 overflow-hidden h-screen">
+<div class="absolute top-1/4 right-0 w-64 h-64 bg-secondary-fixed-dim/20 rounded-full blur-[80px]"></div>
+<div class="absolute bottom-1/4 left-0 w-64 h-64 bg-primary-fixed/20 rounded-full blur-[80px]"></div>
+</div>
+</body></html>

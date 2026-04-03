@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Public+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#414750",
+                        "on-surface": "#181c1c",
+                        "on-secondary-fixed-variant": "#0e5138",
+                        "surface-container-high": "#e6e9e8",
+                        "tertiary": "#683200",
+                        "surface-container-low": "#f1f4f3",
+                        "on-secondary-container": "#316e52",
+                        "surface-dim": "#d7dbda",
+                        "on-primary-container": "#b1d1ff",
+                        "secondary-fixed-dim": "#95d4b3",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "surface-tint": "#1260a5",
+                        "on-tertiary-container": "#ffc298",
+                        "on-primary-fixed": "#001c38",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#004881",
+                        "primary-fixed": "#d3e4ff",
+                        "inverse-surface": "#2d3131",
+                        "surface-bright": "#f7faf9",
+                        "surface-container-highest": "#e0e3e2",
+                        "tertiary-container": "#8b4500",
+                        "outline": "#727782",
+                        "surface-variant": "#e0e3e2",
+                        "on-tertiary-fixed": "#301400",
+                        "primary": "#004277",
+                        "secondary": "#2c694e",
+                        "inverse-on-surface": "#eef1f0",
+                        "tertiary-fixed": "#ffdcc5",
+                        "secondary-fixed": "#b1f0ce",
+                        "secondary-container": "#aeeecb",
+                        "inverse-primary": "#a2c9ff",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#002114",
+                        "primary-container": "#005a9e",
+                        "on-error": "#ffffff",
+                        "on-background": "#181c1c",
+                        "background": "#f7faf9",
+                        "surface-container": "#ebeeed",
+                        "primary-fixed-dim": "#a2c9ff",
+                        "surface": "#f7faf9",
+                        "outline-variant": "#c1c7d2",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Public Sans"],
+                        "label": ["Public Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body { font-family: 'Public Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-[#f7faf9] dark:bg-slate-950 flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
+<div class="flex items-center gap-3">
+<button class="text-slate-500 dark:text-slate-400 active:scale-95 transition-transform hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-['Manrope'] text-lg font-bold tracking-tight text-[#005A9E] dark:text-blue-400">Check Symptoms</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
+<img class="w-full h-full object-cover" data-alt="Portrait of a distinguished Ethiopian man with short dark hair, smiling warmly against a soft blue background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBItLO_6L2XupQt9cqoPMbO--4ZEMNHCXyfgRZO1yYRv-vCnbUH3gtXeSiH5GhakYQUdxDg_e5fG0rhfnEq8jbihbNH629CgUgJfihFrXIDBJHS-yhzEqF6fEbrZrtEUtj7yCLk2OPd7YvnLqIcHsIa3UUyygjHjwVDT9nNbnRn3EaOeQuI7MQ7z0sR-Udwd5yySmvWMGHGSo3vY78U4PkdFEcRqXL2RPBPVowvifVmDjGAR_U-OxFAoAeczFe805ulrHdx9M-EwFqK"/>
+</div>
+</div>
+</header>
+<!-- Main Content: Conversational UI -->
+<main class="flex-1 mt-20 mb-32 px-6 flex flex-col max-w-2xl mx-auto w-full">
+<!-- Header Section -->
+<section class="py-6">
+<h1 class="text-3xl font-extrabold tracking-tight text-primary mb-2">Describe your symptoms</h1>
+<p class="text-on-surface-variant text-lg leading-relaxed">Tell us how you are feeling, and we'll guide you through the next steps.</p>
+</section>
+<!-- Conversation Canvas -->
+<div class="space-y-6 flex-1">
+<!-- AI Message -->
+<div class="flex gap-3 max-w-[85%] items-end">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-secondary-fixed-variant text-sm">medical_services</span>
+</div>
+<div class="bg-surface-container-low p-4 rounded-t-2xl rounded-r-2xl shadow-sm">
+<p class="text-on-surface font-medium leading-relaxed">Where do you feel the most discomfort?</p>
+<p class="text-xs text-on-surface-variant mt-2 opacity-70">Symptom Assistant • Just now</p>
+</div>
+</div>
+<!-- Body Part Selection (Bento Style Buttons) -->
+<div class="grid grid-cols-2 gap-3 mt-4">
+<button class="flex flex-col items-center justify-center p-6 bg-surface-container-lowest border-2 border-transparent hover:border-primary/20 active:scale-95 transition-all rounded-xl shadow-sm group">
+<span class="material-symbols-outlined text-primary text-3xl mb-2 group-hover:scale-110 transition-transform">person</span>
+<span class="font-semibold text-on-surface">Head</span>
+</button>
+<button class="flex flex-col items-center justify-center p-6 bg-surface-container-lowest border-2 border-transparent hover:border-primary/20 active:scale-95 transition-all rounded-xl shadow-sm group">
+<span class="material-symbols-outlined text-primary text-3xl mb-2 group-hover:scale-110 transition-transform">favorite</span>
+<span class="font-semibold text-on-surface">Chest</span>
+</button>
+<button class="flex flex-col items-center justify-center p-6 bg-surface-container-lowest border-2 border-transparent hover:border-primary/20 active:scale-95 transition-all rounded-xl shadow-sm group">
+<span class="material-symbols-outlined text-primary text-3xl mb-2 group-hover:scale-110 transition-transform">gastroenterology</span>
+<span class="font-semibold text-on-surface">Stomach</span>
+</button>
+<button class="flex flex-col items-center justify-center p-6 bg-surface-container-lowest border-2 border-transparent hover:border-primary/20 active:scale-95 transition-all rounded-xl shadow-sm group">
+<span class="material-symbols-outlined text-primary text-3xl mb-2 group-hover:scale-110 transition-transform">accessibility_new</span>
+<span class="font-semibold text-on-surface">Limbs</span>
+</button>
+<button class="col-span-2 flex items-center justify-center gap-3 p-4 bg-surface-container-lowest border-2 border-transparent hover:border-primary/20 active:scale-95 transition-all rounded-xl shadow-sm group">
+<span class="material-symbols-outlined text-primary text-2xl group-hover:rotate-12 transition-transform">airline_seat_recline_extra</span>
+<span class="font-semibold text-on-surface">Back</span>
+</button>
+</div>
+<!-- Suggestion Bubbles -->
+<div class="flex flex-wrap gap-2 pt-4">
+<button class="px-4 py-2 rounded-full border border-outline-variant text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">Dizziness</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">Fever</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">Nausea</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">Cough</button>
+</div>
+</div>
+</main>
+<!-- Bottom Action Area with Input -->
+<div class="fixed bottom-0 left-0 w-full z-50 bg-[#f7faf9]/80 backdrop-blur-lg px-4 pb-8 pt-4">
+<div class="max-w-2xl mx-auto flex flex-col gap-4">
+<!-- Amharic Informed Input Field -->
+<div class="relative group">
+<input class="w-full h-14 pl-4 pr-16 bg-surface-container-lowest rounded-xl border-none shadow-[0_8px_24px_rgba(0,66,119,0.06)] focus:ring-2 focus:ring-primary/20 placeholder:text-slate-400 text-on-surface" placeholder="ተጨማሪ ዝርዝሮችን ይግለጹ... (Describe other details)" type="text"/>
+<button class="absolute right-2 top-2 w-10 h-10 bg-primary text-white rounded-lg flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+<!-- Primary Action -->
+<button class="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span>Start Evaluation</span>
+<span class="material-symbols-outlined text-xl">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- BottomNavBar (Hidden on desktop via design shell logic) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-[#f7faf9]/80 backdrop-blur-lg shadow-[0_-8px_24px_rgba(0,66,119,0.06)] rounded-t-[2rem]">
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 active:scale-90 transition-all duration-300">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Manrope'] text-[10px] font-semibold">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#005A9E]/10 dark:bg-blue-400/10 text-[#005A9E] dark:text-blue-400 rounded-xl px-4 py-2 active:scale-90 transition-all duration-300">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-['Manrope'] text-[10px] font-semibold">Health</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 active:scale-90 transition-all duration-300">
+<span class="material-symbols-outlined">event_note</span>
+<span class="font-['Manrope'] text-[10px] font-semibold">Schedule</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 active:scale-90 transition-all duration-300">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-['Manrope'] text-[10px] font-semibold">Support</span>
+</div>
+</nav>
+<!-- Responsive Drawer (Hidden by default) -->
+<div class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-[55]"></div>
+<aside class="hidden fixed inset-y-0 left-0 w-80 z-[60] flex flex-col p-4 bg-[#f7faf9] dark:bg-slate-950 shadow-2xl rounded-r-3xl">
+<div class="flex flex-col p-6 items-start gap-2">
+<div class="w-16 h-16 rounded-2xl bg-primary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up profile photo of an Ethiopian male patient in clean studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5jmAFmHCtROKEg48JC9gc_txLqZ4nKH52JOxzZN-9xmNoIjg5zV4rq2T2jHIAVaR0y_72Hl65cVK68nus-m3OQs38oKUkRI6ogwIVOc3ozVrNde-keS4Zl2c1s2TUqDVULABEx1TUeEFSUtui1RQHVBJGoz-l8Q9zZ83uhlhFTxwRw9XE_E7k12UU1PIMTAolrB30rCiGvnUrMq2vWimXz4ob59RzA2YQNa6DGZ-oMP_OBgm-d4NAJ3-ZJVa5RH7iMx3xqWiev5u6"/>
+</div>
+<h3 class="text-primary font-black font-['Manrope'] text-lg">Abebe Bikila</h3>
+<p class="text-xs text-slate-500">Patient ID: 8829-ET</p>
+<span class="px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-bold rounded">Blood Type: O+</span>
+</div>
+<div class="flex-1 space-y-2 mt-4 overflow-y-auto">
+<div class="flex items-center gap-3 p-3 bg-[#005A9E] text-white rounded-lg mx-2 transition-colors duration-200">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Manrope'] text-sm font-medium">My Profile</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-700 dark:text-slate-300 mx-2 hover:bg-[#f1f4f3] dark:hover:bg-slate-900 transition-colors duration-200">
+<span class="material-symbols-outlined">folder_shared</span>
+<span class="font-['Manrope'] text-sm font-medium">Medical Records</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-700 dark:text-slate-300 mx-2 hover:bg-[#f1f4f3] dark:hover:bg-slate-900 transition-colors duration-200">
+<span class="material-symbols-outlined">settings_input_component</span>
+<span class="font-['Manrope'] text-sm font-medium">Connected Devices</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-700 dark:text-slate-300 mx-2 hover:bg-[#f1f4f3] dark:hover:bg-slate-900 transition-colors duration-200">
+<span class="material-symbols-outlined">translate</span>
+<span class="font-['Manrope'] text-sm font-medium">Language Settings</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-700 dark:text-slate-300 mx-2 hover:bg-[#f1f4f3] dark:hover:bg-slate-900 transition-colors duration-200">
+<span class="material-symbols-outlined">emergency</span>
+<span class="font-['Manrope'] text-sm font-medium text-error">Emergency Contacts</span>
+</div>
+</div>
+</aside>
+</body></html>

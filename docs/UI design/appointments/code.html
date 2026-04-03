@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Appointments - Ethiopia Patient Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Public_Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#ffdcc5",
+                        "surface": "#f7faf9",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-on-surface": "#eef1f0",
+                        "surface-container-low": "#f1f4f3",
+                        "surface-container": "#ebeeed",
+                        "outline": "#727782",
+                        "on-primary-container": "#b1d1ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-variant": "#e0e3e2",
+                        "primary-fixed-dim": "#a2c9ff",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#e0e3e2",
+                        "on-secondary-container": "#316e52",
+                        "inverse-primary": "#a2c9ff",
+                        "on-surface": "#181c1c",
+                        "surface-tint": "#1260a5",
+                        "on-primary-fixed": "#001c38",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "outline-variant": "#c1c7d2",
+                        "on-background": "#181c1c",
+                        "secondary": "#2c694e",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#8b4500",
+                        "primary-container": "#005a9e",
+                        "secondary-fixed": "#b1f0ce",
+                        "on-secondary-fixed": "#002114",
+                        "on-surface-variant": "#414750",
+                        "inverse-surface": "#2d3131",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface-bright": "#f7faf9",
+                        "on-tertiary-fixed": "#301400",
+                        "tertiary": "#683200",
+                        "background": "#f7faf9",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#004881",
+                        "primary": "#004277",
+                        "primary-fixed": "#d3e4ff",
+                        "surface-container-high": "#e6e9e8",
+                        "secondary-container": "#aeeecb",
+                        "on-tertiary-container": "#ffc298",
+                        "on-secondary-fixed-variant": "#0e5138",
+                        "secondary-fixed-dim": "#95d4b3",
+                        "surface-dim": "#d7dbda"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "1rem",
+                        "xl": "1.25rem",
+                        "2xl": "2rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Public Sans"],
+                        "label": ["Public Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .tonal-transition {
+            transition: background-color 0.3s ease;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-[#f7faf9] dark:bg-slate-950 no-border tonal-transition bg-surface-container-low">
+<div class="flex justify-between items-center w-full px-6 py-4 max-w-screen-xl mx-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-fixed">
+<img class="w-full h-full object-cover" data-alt="Portrait of a smiling Ethiopian man in a professional setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVKeQWelaWul1WQF4K31xL4OSCvmnKVcp4sd44c_d9W_gea6ZmBsKQoYuatQ9zeVuUQR11BAJTKaVJipBebYTWyVe0t_IZB3hVD9To3lV69caRib7UEDURp8n7IHq4YPw8tZiWU3uO6kHni7GQ3Eb6kgAooy_v8g_rW9uI5fFx3hU_ON33WU0Nh4v6-gfXcZMk7XEav1Lt7lrsyWlAOQ8ZzxHFD7PW93nLpYR5CFyCGlQE0xNzKDjSOQWRccfnD8Zv5nqjVKn7lpqk"/>
+</div>
+<h1 class="font-['Manrope'] font-bold text-lg leading-relaxed text-[#005A9E]">Good morning, Abebe</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-[#005A9E]">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-screen-xl mx-auto space-y-8">
+<!-- Section: Upcoming Appointment (Hero Card) -->
+<section class="space-y-4">
+<div class="flex justify-between items-end">
+<h2 class="font-headline font-extrabold text-2xl tracking-tight text-primary">Upcoming Visit</h2>
+<span class="text-label text-sm font-medium text-secondary">ቀጣይ ቀጠሮ</span>
+</div>
+<div class="relative overflow-hidden rounded-2xl bg-surface-container-lowest shadow-[0_8px_24px_rgba(0,66,119,0.06)] p-6 group">
+<!-- Status Chip -->
+<div class="absolute top-4 right-4 bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    Confirmed
+                </div>
+<div class="flex flex-col md:flex-row gap-6">
+<div class="flex-shrink-0 w-20 h-20 bg-primary-fixed rounded-2xl flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-4xl">medical_services</span>
+</div>
+<div class="space-y-2 flex-grow">
+<h3 class="font-headline font-bold text-xl text-on-surface">Black Lion Specialized Hospital</h3>
+<p class="text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">calendar_today</span>
+                            Tuesday, Oct 24 • 10:30 AM
+                        </p>
+<p class="text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">person</span>
+                            Dr. Selamawit Tadesse (Cardiology)
+                        </p>
+</div>
+</div>
+<!-- Preparation Checklist Prompt -->
+<div class="mt-6 pt-6 border-t border-surface-variant/30">
+<div class="bg-primary-container/5 rounded-xl p-4 flex items-center justify-between group-hover:bg-primary-container/10 transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm">assignment</span>
+</div>
+<div>
+<p class="text-sm font-bold text-primary">Next: Preparation checklist</p>
+<p class="text-xs text-on-surface-variant">Don't forget your previous lab results</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Past Appointments -->
+<section class="space-y-4">
+<div class="flex justify-between items-end">
+<h2 class="font-headline font-extrabold text-xl tracking-tight text-on-surface">Past Visits</h2>
+<span class="text-label text-sm font-medium text-on-surface-variant">ያለፉ ቀጠሮዎች</span>
+</div>
+<div class="space-y-3">
+<!-- Past Item 1 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-highest rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">history</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">General Checkup</p>
+<p class="text-sm text-on-surface-variant">Sep 12, 2023 • St. Paul's Hospital</p>
+</div>
+</div>
+<div class="text-right">
+<span class="block text-xs font-bold text-on-secondary-container bg-secondary-fixed/50 px-3 py-1 rounded-full">Completed</span>
+</div>
+</div>
+<!-- Past Item 2 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-highest rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">vaccines</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Vaccination</p>
+<p class="text-sm text-on-surface-variant">Aug 05, 2023 • Zewditu Memorial</p>
+</div>
+</div>
+<div class="text-right">
+<span class="block text-xs font-bold text-on-secondary-container bg-secondary-fixed/50 px-3 py-1 rounded-full">Completed</span>
+</div>
+</div>
+<!-- Past Item 3 -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-highest rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">biotech</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Lab Analysis</p>
+<p class="text-sm text-on-surface-variant">Jul 20, 2023 • Lancet Clinic</p>
+</div>
+</div>
+<div class="text-right">
+<span class="block text-xs font-bold text-on-secondary-container bg-secondary-fixed/50 px-3 py-1 rounded-full">Completed</span>
+</div>
+</div>
+</div>
+<button class="w-full py-4 text-primary font-bold text-sm hover:underline">View All History</button>
+</section>
+<!-- Help/Guidance Banner (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-tertiary-container/10 p-5 rounded-2xl flex gap-4 items-start border border-tertiary-container/5">
+<span class="material-symbols-outlined text-tertiary p-2 bg-tertiary-fixed rounded-lg">lightbulb</span>
+<div>
+<h4 class="font-bold text-on-tertiary-fixed">Need to reschedule?</h4>
+<p class="text-sm text-on-tertiary-fixed-variant mt-1 leading-snug">Please make changes at least 24 hours before your slot.</p>
+</div>
+</div>
+<div class="bg-secondary-container/10 p-5 rounded-2xl flex gap-4 items-start border border-secondary-container/5">
+<span class="material-symbols-outlined text-secondary p-2 bg-secondary-fixed rounded-lg">verified_user</span>
+<div>
+<h4 class="font-bold text-on-secondary-container">Digital Health ID</h4>
+<p class="text-sm text-on-secondary-fixed-variant mt-1 leading-snug">Present your QR code at the reception desk for fast check-in.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Book Appointment CTA (FAB) -->
+<button class="fixed bottom-28 right-6 bg-primary text-on-primary shadow-xl h-16 px-6 rounded-2xl flex items-center gap-3 active:scale-95 transition-transform z-40">
+<span class="material-symbols-outlined">add</span>
+<span class="font-bold">Book Appointment</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 shadow-[0_-8px_24px_rgba(0,66,119,0.06)] rounded-t-[2rem]">
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1 transition-transform tap-highlight-none active:scale-90">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1 transition-transform tap-highlight-none active:scale-90">
+<span class="material-symbols-outlined">description</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Records</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#005A9E] dark:text-blue-300 bg-[#f1f4f3] dark:bg-blue-900/30 rounded-2xl px-3 py-1 transition-transform tap-highlight-none active:scale-90">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">event_available</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Appointments</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1 transition-transform tap-highlight-none active:scale-90">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Care</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-3 py-1 transition-transform tap-highlight-none active:scale-90">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Profile</span>
+</div>
+</nav>
+</body></html>

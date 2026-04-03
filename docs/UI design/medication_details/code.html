@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Public+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#414750",
+                        "on-surface": "#181c1c",
+                        "on-secondary-fixed-variant": "#0e5138",
+                        "surface-container-high": "#e6e9e8",
+                        "tertiary": "#683200",
+                        "surface-container-low": "#f1f4f3",
+                        "on-secondary-container": "#316e52",
+                        "surface-dim": "#d7dbda",
+                        "on-primary-container": "#b1d1ff",
+                        "secondary-fixed-dim": "#95d4b3",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "surface-tint": "#1260a5",
+                        "on-tertiary-container": "#ffc298",
+                        "on-primary-fixed": "#001c38",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#004881",
+                        "primary-fixed": "#d3e4ff",
+                        "inverse-surface": "#2d3131",
+                        "surface-bright": "#f7faf9",
+                        "surface-container-highest": "#e0e3e2",
+                        "tertiary-container": "#8b4500",
+                        "outline": "#727782",
+                        "surface-variant": "#e0e3e2",
+                        "on-tertiary-fixed": "#301400",
+                        "primary": "#004277",
+                        "secondary": "#2c694e",
+                        "inverse-on-surface": "#eef1f0",
+                        "tertiary-fixed": "#ffdcc5",
+                        "secondary-fixed": "#b1f0ce",
+                        "secondary-container": "#aeeecb",
+                        "inverse-primary": "#a2c9ff",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#002114",
+                        "primary-container": "#005a9e",
+                        "on-error": "#ffffff",
+                        "on-background": "#181c1c",
+                        "background": "#f7faf9",
+                        "surface-container": "#ebeeed",
+                        "primary-fixed-dim": "#a2c9ff",
+                        "surface": "#f7faf9",
+                        "outline-variant": "#c1c7d2",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Public Sans"],
+                        "label": ["Public Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Public Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-40">
+<!-- Top Navigation Bar -->
+<header class="bg-[#f7faf9] dark:bg-slate-950 flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform text-[#005A9E] dark:text-blue-400">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Manrope'] text-lg font-bold tracking-tight text-[#005A9E] dark:text-blue-400">Medication Details: Aspirin</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img alt="Patient Profile" class="w-full h-full object-cover" data-alt="Professional portrait of a male doctor in his 40s wearing a white lab coat with a warm empathetic smile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBcn6qw5eBsgzLhre3uq2MYPlsgSbuSCO-JL_EB3hxUjVz0eLw0qbd9TFze0IoSWVFQkfeZxWlpLsd5FmnUtJjiF8biGnu4uv-WNRI3shz4-gx5R--mbjDDdYk3U3dGqS7TjC50SnMA-wUGQKk_2YmT5OlON-UsKP1pRuQ8kuN_zoh-ufOOhgI0YclagFlHBLSNwkVRiTf4d4dOASXgPOmipsCSAW75Jw7lFYKmlu30EB5tNTzN-0VhYVea4obFACe7rclnwkjkt8g"/>
+</div>
+</header>
+<main class="px-6 space-y-6 mt-4">
+<!-- Next Dose Highlight Card (Glassmorphism & Tonal Depth) -->
+<section class="relative group overflow-hidden rounded-[2rem] p-6 bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-xl">
+<div class="relative z-10 flex flex-col items-center text-center">
+<span class="text-xs font-bold uppercase tracking-widest text-primary-fixed-dim/80 mb-2">Upcoming Task</span>
+<h2 class="text-3xl font-extrabold mb-1">Next dose: Now</h2>
+<div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full mt-2">
+<span class="material-symbols-outlined text-sm" data-icon="restaurant">restaurant</span>
+<span class="text-sm font-medium">Take with food</span>
+</div>
+</div>
+<!-- Decorative Grain/Shape -->
+<div class="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
+</section>
+<!-- Instructions Section (Surface Tier 1) -->
+<section class="bg-surface-container-low rounded-3xl p-6">
+<h3 class="text-on-surface-variant font-bold text-sm uppercase tracking-wide mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="info">info</span>
+                How to take
+            </h3>
+<div class="space-y-4">
+<div class="flex items-start gap-4">
+<div class="bg-surface-container-lowest p-3 rounded-2xl">
+<span class="material-symbols-outlined text-primary" data-icon="local_drink">local_drink</span>
+</div>
+<p class="text-on-surface text-lg leading-relaxed">Take one pill with a full glass of water.</p>
+</div>
+<div class="flex items-start gap-4">
+<div class="bg-surface-container-lowest p-3 rounded-2xl">
+<span class="material-symbols-outlined text-primary" data-icon="schedule">schedule</span>
+</div>
+<p class="text-on-surface text-lg leading-relaxed">Maintain an 8-hour gap between doses.</p>
+</div>
+</div>
+</section>
+<!-- Dosage History List (No-Divider Rule) -->
+<section class="space-y-4">
+<h3 class="text-on-surface-variant font-bold text-sm uppercase tracking-wide px-1">Recent Activity</h3>
+<div class="space-y-3">
+<!-- Day 1: Today Early -->
+<div class="flex items-center justify-between p-5 bg-surface-container-lowest rounded-2xl shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Today, 8:00 AM</p>
+<p class="text-sm text-on-surface-variant">Taken on time</p>
+</div>
+</div>
+<span class="text-secondary font-semibold text-sm">Taken</span>
+</div>
+<!-- Day 2: Yesterday -->
+<div class="flex items-center justify-between p-5 bg-surface-container-low rounded-2xl">
+<div class="flex items-center gap-4 opacity-70">
+<div class="w-12 h-12 rounded-xl bg-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-icon="cancel" style="font-variation-settings: 'FILL' 1;">cancel</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Yesterday, 4:00 PM</p>
+<p class="text-sm text-on-surface-variant">Forgotten</p>
+</div>
+</div>
+<span class="text-error font-semibold text-sm">Missed</span>
+</div>
+<!-- Day 3: Day Before -->
+<div class="flex items-center justify-between p-5 bg-surface-container-lowest rounded-2xl shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Oct 23, 8:00 AM</p>
+<p class="text-sm text-on-surface-variant">Taken with food</p>
+</div>
+</div>
+<span class="text-secondary font-semibold text-sm">Taken</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Action Bar (Fixed, Glassmorphism) -->
+<div class="fixed bottom-0 left-0 w-full z-50 bg-[#f7faf9]/80 backdrop-blur-lg px-6 pt-4 pb-8 flex flex-col gap-3 shadow-[0_-8px_24px_rgba(0,66,119,0.06)]">
+<button class="w-full bg-primary text-on-primary py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg">
+<span class="material-symbols-outlined" data-icon="task_alt">task_alt</span>
+            Mark as Taken
+        </button>
+<button class="w-full bg-secondary-container text-on-secondary-container py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined" data-icon="notifications_paused">notifications_paused</span>
+            Snooze (15 mins)
+        </button>
+</div>
+<!-- Navigation Shell (BottomNavBar Placeholder as defined in instructions) -->
+<nav class="hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-[#f7faf9]/80 backdrop-blur-lg dark:bg-slate-900/80 rounded-t-[2rem] shadow-[0_-8px_24px_rgba(0,66,119,0.06)]">
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:opacity-80 active:scale-90 transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Manrope'] text-[10px] font-semibold">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#005A9E]/10 dark:bg-blue-400/10 text-[#005A9E] dark:text-blue-400 rounded-xl px-4 py-2 hover:opacity-80 active:scale-90 transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-['Manrope'] text-[10px] font-semibold">Health</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:opacity-80 active:scale-90 transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="font-['Manrope'] text-[10px] font-semibold">Schedule</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:opacity-80 active:scale-90 transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-['Manrope'] text-[10px] font-semibold">Support</span>
+</div>
+</nav>
+</body></html>

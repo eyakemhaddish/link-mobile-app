@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Public_Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#683200",
+                    "surface-variant": "#e0e3e2",
+                    "surface-bright": "#f7faf9",
+                    "secondary-fixed-dim": "#95d4b3",
+                    "on-primary-fixed": "#001c38",
+                    "on-background": "#181c1c",
+                    "on-primary-fixed-variant": "#004881",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f1f4f3",
+                    "primary-fixed": "#d3e4ff",
+                    "on-secondary-container": "#316e52",
+                    "on-primary-container": "#b1d1ff",
+                    "surface": "#f7faf9",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#0e5138",
+                    "on-surface": "#181c1c",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "secondary-container": "#aeeecb",
+                    "surface-tint": "#1260a5",
+                    "on-tertiary-fixed-variant": "#713700",
+                    "tertiary-container": "#8b4500",
+                    "secondary-fixed": "#b1f0ce",
+                    "secondary": "#2c694e",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#ffc298",
+                    "on-secondary-fixed": "#002114",
+                    "background": "#f7faf9",
+                    "on-surface-variant": "#414750",
+                    "inverse-on-surface": "#eef1f0",
+                    "tertiary-fixed-dim": "#ffb783",
+                    "surface-container-high": "#e6e9e8",
+                    "primary-fixed-dim": "#a2c9ff",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#ebeeed",
+                    "primary-container": "#005a9e",
+                    "surface-dim": "#d7dbda",
+                    "on-tertiary-fixed": "#301400",
+                    "surface-container-highest": "#e0e3e2",
+                    "inverse-primary": "#a2c9ff",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed": "#ffdcc5",
+                    "primary": "#004277",
+                    "inverse-surface": "#2d3131",
+                    "outline": "#727782",
+                    "outline-variant": "#c1c7d2",
+                    "error": "#ba1a1a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "1rem",
+                    "xl": "1.5rem",
+                    "2xl": "2rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Public Sans"],
+                    "label": ["Public Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Public Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#f7faf9]/80 backdrop-blur-xl shadow-[0_8px_24px_rgba(0,66,119,0.06)]">
+<div class="flex items-center justify-between px-6 h-16 w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-3">
+<button class="text-primary active:scale-95 duration-200 p-2 -ml-2">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="font-['Manrope'] font-extrabold text-[#005A9E] text-xl">CarePortal</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border-2 border-primary-container/20">
+<img alt="Patient Profile Picture" data-alt="close-up portrait of a serene elderly patient with warm eyes and a gentle smile, soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHLX2W4cNV82GN45S_VQfzzt3eVwrF7PP-lMm7bgr-PZaPDqls25mkcc3COfHpVZR2Foev65H2bY_mX7-bUffEnWs5_VNay29iqKA0V3noSaWsxkz_RLiL-f6iyzAHwoGyUsQutXd1xi1uxTobOjBzcUHvIoyiptQQHX8Sdh7rtYocCXwxRwdTFL0rNRz5Q9eDCz_hAtz1YcAQFKJOuBaqVv3aSwHS-k-JokwFU5un-Ml5J-iiiL6ItPru1frjWxZHzUCFBJ-89qIO"/>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-screen-md mx-auto space-y-8">
+<!-- Hero Section & Explanation -->
+<section class="space-y-4">
+<h1 class="text-3xl font-extrabold tracking-tight text-primary leading-tight">Add a Caregiver</h1>
+<p class="text-on-surface-variant text-lg leading-relaxed">
+                Extend your care circle by adding a family member or trusted friend. They can help monitor your health and manage your schedule.
+            </p>
+</section>
+<!-- Asymmetric Bento-style Info Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-6 rounded-xl flex flex-col gap-3">
+<div class="w-12 h-12 bg-secondary-container text-on-secondary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<h3 class="font-bold text-primary">Shared Accountability</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">Caregivers receive notifications only for the categories you explicitly authorize below.</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl flex flex-col gap-3">
+<div class="w-12 h-12 bg-primary-fixed text-on-primary-fixed-variant rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">visibility</span>
+</div>
+<h3 class="font-bold text-primary">Full Control</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">You remain the primary owner. You can revoke access or change permissions at any moment.</p>
+</div>
+</div>
+<!-- Form Section -->
+<form class="space-y-10 mt-4">
+<!-- Identity Fields -->
+<div class="space-y-6">
+<div class="group">
+<label class="block text-sm font-semibold text-on-surface-variant mb-2 ml-1">Caregiver's Full Name</label>
+<input class="w-full bg-surface-container-lowest border-none ring-1 ring-outline-variant/30 rounded-lg h-14 px-4 text-on-surface focus:ring-2 focus:ring-primary transition-all placeholder:text-outline-variant" placeholder="e.g. Abeba Kebede" type="text"/>
+</div>
+<div class="group">
+<label class="block text-sm font-semibold text-on-surface-variant mb-2 ml-1">Phone Number</label>
+<input class="w-full bg-surface-container-lowest border-none ring-1 ring-outline-variant/30 rounded-lg h-14 px-4 text-on-surface focus:ring-2 focus:ring-primary transition-all placeholder:text-outline-variant" placeholder="+251 __ ___ ____" type="tel"/>
+</div>
+</div>
+<!-- Permission Checkboxes -->
+<div class="space-y-4">
+<h2 class="text-xl font-bold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">notification_important</span>
+                    Notification Permissions
+                </h2>
+<div class="bg-surface-container-low rounded-xl overflow-hidden">
+<!-- Medication -->
+<label class="flex items-center justify-between p-5 hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">medication</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface">Medication</p>
+<p class="text-xs text-on-surface-variant">Alerts for missed doses and refills</p>
+</div>
+</div>
+<input class="w-6 h-6 rounded-md border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</label>
+<div class="h-px bg-surface-variant/30 mx-5"></div>
+<!-- Appointments -->
+<label class="flex items-center justify-between p-5 hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">calendar_month</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface">Appointments</p>
+<p class="text-xs text-on-surface-variant">Booking confirmations and reminders</p>
+</div>
+</div>
+<input class="w-6 h-6 rounded-md border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</label>
+<div class="h-px bg-surface-variant/30 mx-5"></div>
+<!-- Emergencies -->
+<label class="flex items-center justify-between p-5 hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center text-error">
+<span class="material-symbols-outlined">emergency</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface">Emergencies</p>
+<p class="text-xs text-on-surface-variant">Urgent health alerts and lab spikes</p>
+</div>
+</div>
+<input checked="" class="w-6 h-6 rounded-md border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Consent Footer -->
+<div class="bg-secondary-container/20 p-5 rounded-xl border border-secondary/10">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">info</span>
+<p class="text-sm text-secondary font-medium leading-relaxed">
+                        By clicking "Add Caregiver", you confirm that you have obtained verbal consent from this individual to share your healthcare data and receive SMS notifications on their device.
+                    </p>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-primary text-white h-16 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 active:scale-[0.98] transition-all hover:bg-primary-container" type="submit">
+                Add Caregiver
+            </button>
+</form>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full rounded-t-[2rem] z-50 bg-[#f7faf9]/80 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,66,119,0.06)]">
+<div class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3">
+<div class="flex flex-col items-center justify-center text-[#5a6c7a] py-2 px-4 hover:text-[#005A9E] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined">home_health</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#5a6c7a] py-2 px-4 hover:text-[#005A9E] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined">insights</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Tracking</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#5a6c7a] py-2 px-4 hover:text-[#005A9E] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Booking</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#005A9E] text-white rounded-2xl py-2 px-4 shadow-lg shadow-[#005A9E]/20 active:scale-90 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-['Public_Sans'] text-[11px] font-medium tracking-wide">Consent</span>
+</div>
+</div>
+</nav>
+</body></html>
