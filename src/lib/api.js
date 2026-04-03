@@ -410,6 +410,11 @@ const WEB_MOCK_RESPONSES = {
       { id: "doc-003", document_type: "vaccination", provider_name: "Health Officer", document_date: "2025-12-10", description: "COVID-19 booster vaccination record", tags: ["vaccination", "covid"], file_url: "https://example.com/doc-003.pdf", uploaded_at: "2025-12-11T09:00:00Z" },
     ],
   },
+  "/patient-portal/documents/upload": {
+    success: true,
+    file_url: "https://example.com/uploads/demo-record.pdf",
+    fileUrl: "https://example.com/uploads/demo-record.pdf",
+  },
   "/ai/link-agent/interaction": {
     success: true,
     agent: {
@@ -513,20 +518,32 @@ const deduplicatedGet = async (path, options) => {
   return promise;
 };
 
+const hasHeader = (headers = {}, key) => {
+  const needle = String(key || "").toLowerCase();
+  return Object.keys(headers).some((headerKey) => headerKey.toLowerCase() === needle);
+};
+
+const isFormDataBody = (body) =>
+  typeof FormData !== "undefined" && body instanceof FormData;
+
 const request = async (path, { method = "GET", body, headers, auth = true } = {}) => {
   const url = buildUrl(path);
   const token = auth ? await getAuthToken() : null;
+  const formDataBody = isFormDataBody(body);
+  const mergedHeaders = {
+    ...(!formDataBody && !hasHeader(headers, "content-type")
+      ? { "Content-Type": "application/json" }
+      : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(headers || {}),
+  };
   const options = {
     method,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(headers || {}),
-    },
+    headers: mergedHeaders,
   };
 
   if (body !== undefined) {
-    options.body = JSON.stringify(body);
+    options.body = formDataBody ? body : JSON.stringify(body);
   }
 
   try {

@@ -71,9 +71,7 @@ export async function submitVoiceNote(patientId, payload, audioUri) {
       formData.append(key, Array.isArray(value) ? JSON.stringify(value) : String(value));
     }
   });
-  return api.post(`/hew/patients/${patientId}/notes/voice`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return api.post(`/hew/patients/${patientId}/notes/voice`, formData);
 }
 
 // ─── Caseload ───────────────────────────────────────────────────────────────
