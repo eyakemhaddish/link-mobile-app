@@ -60,21 +60,10 @@ const HomeScreen = () => {
   // Get patient name
   const patientName = patientData?.full_name || patientData?.first_name || "Patient";
 
-  // Get current stage info
-  const currentStage = activeVisit?.current_journey_stage || activeVisit?.status || "No active visit";
-  const provider = activeVisit?.provider || "Staff";
-
-  // Format current stage label
-  const stageLabels = {
-    registered: "Registration",
-    at_triage: "Triage",
-    vitals_taken: "Vitals Capture",
-    with_doctor: "Consultation",
-    at_lab: "Lab / Diagnostic",
-    at_imaging: "Imaging",
-    at_pharmacy: "Pharmacy",
-  };
-  const currentStageLabel = stageLabels[currentStage] || currentStage;
+  const formattedActiveVisit = activeVisit ? formatVisitForDisplay(activeVisit) : null;
+  const provider = formattedActiveVisit?.provider || activeVisit?.provider || "Staff";
+  const currentStageLabel = formattedActiveVisit?.currentStage || "No active visit";
+  const lastUpdatedLabel = formattedActiveVisit?.currentStageUpdatedLabel || null;
 
   if (loading) {
     return (
@@ -134,6 +123,9 @@ const HomeScreen = () => {
                 <Text style={styles.bannerSubtitle}>
                   Current stage: {currentStageLabel} · {provider}
                 </Text>
+                {lastUpdatedLabel ? (
+                  <Text style={styles.bannerMeta}>Last update: {lastUpdatedLabel}</Text>
+                ) : null}
               </View>
               <View style={styles.bannerAction}>
                 <Text style={styles.bannerActionText}>View Journey</Text>
@@ -542,6 +534,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: palette.black,
     opacity: 0.5,
+  },
+  bannerMeta: {
+    fontSize: 12,
+    color: palette.black,
+    opacity: 0.45,
+    marginTop: 2,
   },
   bannerAction: {
     backgroundColor: palette.lightPurple,

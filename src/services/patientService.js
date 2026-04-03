@@ -48,6 +48,11 @@ const normalizeActiveVisitPayload = (response) => {
 
     const normalizedActiveVisit = {
         ...rawActiveVisit,
+        journey_timeline: Array.isArray(rawActiveVisit.journey_timeline)
+            ? rawActiveVisit.journey_timeline
+            : Array.isArray(rawActiveVisit.journeyTimeline)
+                ? rawActiveVisit.journeyTimeline
+                : [],
         current_journey_stage:
             rawActiveVisit.current_journey_stage ||
             rawActiveVisit.currentJourneyStage ||

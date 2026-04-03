@@ -1,22 +1,63 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Screen from "../components/ui/Screen";
-import Card from "../components/ui/Card";
+
 import Button from "../components/ui/Button";
-import { colors, spacing, typography } from "../theme/tokens";
+import Card from "../components/ui/Card";
+import Screen from "../components/ui/Screen";
 import { useAuth } from "../context/AuthContext";
+import { colors, spacing, typography } from "../theme/tokens";
+
+const pickFirstTruthy = (...values) => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (value) return String(value);
+  }
+  return null;
+};
+
+const formatRole = (role) => {
+  if (!role) return null;
+  return String(role)
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (match) => match.toUpperCase());
+};
 
 const ProfileScreen = () => {
-  const { signOut, user, token } = useAuth();
-  const displayName = user?.full_name || "Patient";
-  const facility = user?.facility_name || "Addis Ababa";
-  const patientId = user?.patient_id || user?.id || "-";
-  const userId = user?.user_id || "-";
-  const phoneNumber = user?.phone_number || user?.phone || "-";
-  const sessionPreview =
-    typeof token === "string" && token.length > 18
-      ? `${token.slice(0, 18)}...`
-      : token || "-";
+  const { signOut, user } = useAuth();
+
+  const displayName =
+    pickFirstTruthy(
+      user?.full_name,
+      user?.fullName,
+      user?.name,
+      [user?.first_name, user?.last_name].filter(Boolean).join(" "),
+    ) || "Not available";
+
+  const role = formatRole(pickFirstTruthy(user?.role, user?.user_role));
+
+  const facility =
+    pickFirstTruthy(
+      user?.facility_name,
+      user?.facility?.name,
+      user?.facility?.facility_name,
+      user?.workspace?.facility_name,
+      user?.workspace?.name,
+    ) || "Not available";
+
+  const patientId = pickFirstTruthy(user?.patient_id, user?.patient_account_id);
+  const userId = pickFirstTruthy(user?.user_id, user?.auth_user_id, user?.id);
+  const phoneNumber =
+    pickFirstTruthy(
+      user?.phone_number,
+      user?.phone,
+      user?.mobile_number,
+      user?.contact?.phone_number,
+      user?.contact?.phone,
+    ) || "Not available";
+
+  const email =
+    pickFirstTruthy(user?.email, user?.email_address, user?.contact?.email) ||
+    "Not available";
 
   return (
     <Screen>
@@ -29,11 +70,16 @@ const ProfileScreen = () => {
 
       <Card style={styles.card}>
         <Text style={styles.cardTitle}>Primary details</Text>
-        <Text style={styles.cardBody}>{displayName} - {facility}</Text>
-        <Text style={styles.meta}>Patient ID: {patientId}</Text>
-        <Text style={styles.meta}>User ID: {userId}</Text>
+        <Text style={styles.cardBody}>
+          {displayName} - {facility}
+        </Text>
+        <Text style={styles.meta}>Role: {role || "Not available"}</Text>
+        <Text style={styles.meta}>
+          Patient ID: {patientId || "Not available"}
+        </Text>
+        <Text style={styles.meta}>User ID: {userId || "Not available"}</Text>
+        <Text style={styles.meta}>Email: {email}</Text>
         <Text style={styles.meta}>Phone: {phoneNumber}</Text>
-        <Text style={styles.meta}>Session token: {sessionPreview}</Text>
 
         <Button title="Update profile" onPress={() => {}} variant="secondary" />
         <Button
