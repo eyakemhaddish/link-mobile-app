@@ -32,6 +32,31 @@ const toStringArray = (value) => {
     return [];
 };
 
+const pickFirstString = (...values) => {
+    for (const value of values) {
+        if (typeof value === "string" && value.trim()) return value.trim();
+    }
+    return null;
+};
+
+const extractUploadedFileUrl = (response) => {
+    if (!response || typeof response !== "object") return null;
+
+    return pickFirstString(
+        response.file_url,
+        response.fileUrl,
+        response.url,
+        response.location,
+        response.path,
+        response?.data?.file_url,
+        response?.data?.fileUrl,
+        response?.data?.url,
+        response?.result?.file_url,
+        response?.result?.fileUrl,
+        response?.result?.url
+    );
+};
+
 const normalizeActiveVisitPayload = (response) => {
     const source = response && typeof response === "object" ? response : {};
     const patient = source.patient || source.patient_profile || null;
@@ -261,6 +286,46 @@ export const getDocuments = async () => {
         return response;
     } catch (error) {
         console.error("Failed to fetch documents:", error);
+        throw error;
+    }
+};
+
+export const uploadDocumentFile = async (file) => {
+    try {
+        if (!file?.uri) {
+            throw new Error("File URI is required for upload.");
+        }
+
+        const fileName =
+            file?.name ||
+            file?.fileName ||
+            `document-${Date.now()}`;
+
+        const formData = new FormData();
+        const webFile = file?.webFile || file?.file || null;
+        const nativeFilePart = {
+            uri: file.uri,
+            type: file?.mimeType || file?.type || "application/octet-stream",
+            name: fileName,
+        };
+
+        // ASP.NET endpoint validation reports `file` as required; send lower-case key.
+        formData.append("file", webFile || nativeFilePart);
+        formData.append("fileName", fileName);
+
+        const response = await api.post("/patient-portal/documents/upload", formData);
+        const fileUrl = extractUploadedFileUrl(response);
+
+        if (!fileUrl) {
+            throw new Error("Upload succeeded but file URL was not returned.");
+        }
+
+        return {
+            file_url: fileUrl,
+            raw: response,
+        };
+    } catch (error) {
+        console.error("Failed to upload document file:", error);
         throw error;
     }
 };

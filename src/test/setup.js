@@ -29,6 +29,22 @@ jest.mock("expo-av", () => ({
   },
 }));
 
+jest.mock("expo-document-picker", () => ({
+  getDocumentAsync: jest.fn(() =>
+    Promise.resolve({
+      canceled: false,
+      assets: [
+        {
+          uri: "file://mock-document.pdf",
+          name: "mock-document.pdf",
+          mimeType: "application/pdf",
+          size: 1024,
+        },
+      ],
+    })
+  ),
+}));
+
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
   setItemAsync: jest.fn(() => Promise.resolve()),

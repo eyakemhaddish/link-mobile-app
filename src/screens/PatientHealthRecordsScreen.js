@@ -13,11 +13,18 @@ import {
   Share,
   Alert,
 } from "react-native";
+import * as DocumentPicker from "expo-document-picker";
 import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
-import { getDocuments, getSyncedRecords, uploadDocument, deleteDocument } from "../services/patientService";
+import {
+  getDocuments,
+  getSyncedRecords,
+  uploadDocument,
+  uploadDocumentFile,
+  deleteDocument,
+} from "../services/patientService";
 import { useToast } from "../context/ToastContext";
 import { useFeatureFlags } from "../context/FeatureFlagsContext";
 
@@ -52,6 +59,7 @@ const PatientHealthRecordsScreen = () => {
   const [docDate, setDocDate] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const [showTypePicker, setShowTypePicker] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -98,6 +106,35 @@ const PatientHealthRecordsScreen = () => {
     setDocDate("");
     setDescription("");
     setTags("");
+    setSelectedFile(null);
+    setShowTypePicker(false);
+  };
+
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        multiple: false,
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets?.length) return;
+
+      const asset = result.assets[0];
+      if (!asset?.uri) {
+        Alert.alert("File Error", "Selected file is missing a URI.");
+        return;
+      }
+
+      setSelectedFile({
+        uri: asset.uri,
+        name: asset.name || `document-${Date.now()}`,
+        mimeType: asset.mimeType || "application/octet-stream",
+        size: asset.size || 0,
+        webFile: asset.file || null,
+      });
+    } catch (error) {
+      Alert.alert("File Error", "Unable to select a file right now.");
+    }
   };
 
   const handleUpload = async () => {
@@ -105,14 +142,20 @@ const PatientHealthRecordsScreen = () => {
       Alert.alert("Missing Fields", "Please provide at least a document date.");
       return;
     }
+    if (!selectedFile?.uri) {
+      Alert.alert("Missing File", "Please attach a file to upload.");
+      return;
+    }
     setSubmitting(true);
     try {
+      const uploaded = await uploadDocumentFile(selectedFile);
       await uploadDocument({
         documentType: uploadType,
         documentDate: docDate,
         providerName: providerName.trim() || undefined,
         description: description.trim() || undefined,
         tags: tags.trim() || undefined,
+        fileUrl: uploaded.file_url,
       });
       showToast("Document uploaded successfully", "success");
       setShowUploadModal(false);
@@ -411,6 +454,18 @@ const PatientHealthRecordsScreen = () => {
                 onChangeText={setTags}
                 placeholderTextColor="#9CA3AF"
               />
+
+              <Text style={styles.fieldLabel}>Document File *</Text>
+              <View style={styles.filePickerRow}>
+                <Pressable style={styles.filePickerBtn} onPress={handlePickFile}>
+                  <Text style={styles.filePickerBtnText}>
+                    {selectedFile ? "Replace File" : "Choose File"}
+                  </Text>
+                </Pressable>
+                <Text style={styles.fileNameText} numberOfLines={1}>
+                  {selectedFile?.name || "No file selected"}
+                </Text>
+              </View>
             </ScrollView>
 
             <Button
@@ -584,6 +639,35 @@ const styles = StyleSheet.create({
     backgroundColor: palette.softWhite,
   },
   textArea: { minHeight: 80, textAlignVertical: "top" },
+  filePickerRow: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+    backgroundColor: palette.softWhite,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  filePickerBtn: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.darkPurple,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    backgroundColor: palette.white,
+  },
+  filePickerBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: palette.darkPurple,
+  },
+  fileNameText: {
+    flex: 1,
+    fontSize: 12,
+    color: palette.black,
+    opacity: 0.75,
+  },
   pickerButton: {
     borderWidth: 1,
     borderColor: colors.border,
