@@ -1,12 +1,80 @@
 import { api } from "../lib/api";
 
+const toIsoDateTime = (value) => {
+    if (!value) return undefined;
+
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? undefined : value.toISOString();
+    }
+
+    const rawValue = String(value).trim();
+    if (!rawValue) return undefined;
+    if (rawValue.includes("T")) return rawValue;
+
+    const parsed = new Date(`${rawValue}T00:00:00.000Z`);
+    return Number.isNaN(parsed.getTime()) ? rawValue : parsed.toISOString();
+};
+
+const toStringArray = (value) => {
+    if (Array.isArray(value)) {
+        return value
+            .map((entry) => String(entry || "").trim())
+            .filter(Boolean);
+    }
+
+    if (typeof value === "string") {
+        return value
+            .split(",")
+            .map((entry) => entry.trim())
+            .filter(Boolean);
+    }
+
+    return [];
+};
+
+const normalizeActiveVisitPayload = (response) => {
+    const source = response && typeof response === "object" ? response : {};
+    const patient = source.patient || source.patient_profile || null;
+    const rawActiveVisit = source.activeVisit || source.active_visit || null;
+
+    if (!rawActiveVisit) {
+        return {
+            ...source,
+            patient,
+            activeVisit: null,
+            active_visit: null,
+        };
+    }
+
+    const normalizedActiveVisit = {
+        ...rawActiveVisit,
+        journey_timeline: Array.isArray(rawActiveVisit.journey_timeline)
+            ? rawActiveVisit.journey_timeline
+            : Array.isArray(rawActiveVisit.journeyTimeline)
+                ? rawActiveVisit.journeyTimeline
+                : [],
+        current_journey_stage:
+            rawActiveVisit.current_journey_stage ||
+            rawActiveVisit.currentJourneyStage ||
+            rawActiveVisit.status ||
+            "registered",
+    };
+
+    return {
+        ...source,
+        patient,
+        activeVisit: normalizedActiveVisit,
+        active_visit: normalizedActiveVisit,
+    };
+};
+
 /**
  * Fetch the active visit for the authenticated patient
  */
 export const getActiveVisit = async () => {
     try {
         const response = await api.get("/mobile/patient/active-visit");
-        return response;
+        return normalizeActiveVisitPayload(response);
     } catch (error) {
         console.error("Failed to fetch active visit:", error);
         throw error;
@@ -108,7 +176,15 @@ export const getAppointments = async () => {
 
 export const createAppointment = async (data) => {
     try {
-        const response = await api.post("/patient-portal/appointments", data);
+        const payload = {
+            facility_id: data?.facility_id || data?.facilityId,
+            requested_date: toIsoDateTime(data?.requested_date || data?.requestedDate),
+            requested_time_slot: data?.requested_time_slot || data?.requestedTimeSlot,
+            reason: data?.reason,
+            notes: data?.notes,
+        };
+
+        const response = await api.post("/patient-portal/appointments", payload);
         return response;
     } catch (error) {
         console.error("Failed to create appointment:", error);
@@ -118,7 +194,21 @@ export const createAppointment = async (data) => {
 
 export const logSymptomCheck = async (data) => {
     try {
-        const response = await api.post("/patient-portal/symptom-logs", data);
+        const symptomData = data?.symptom_data || data?.symptomData || {};
+        const payload = {
+            symptom_data: {
+                symptoms: symptomData?.symptoms || toStringArray(symptomData?.userInput),
+                notes:
+                    symptomData?.notes ||
+                    data?.notes ||
+                    symptomData?.userInput ||
+                    undefined,
+            },
+            urgency_level: data?.urgency_level || data?.urgencyLevel,
+            recommendations: data?.recommendations,
+        };
+
+        const response = await api.post("/patient-portal/symptom-logs", payload);
         return response;
     } catch (error) {
         console.error("Failed to log symptom check:", error);
@@ -177,7 +267,16 @@ export const getDocuments = async () => {
 
 export const uploadDocument = async (formData) => {
     try {
-        const response = await api.post("/patient-portal/documents", formData);
+        const payload = {
+            document_type: formData?.document_type || formData?.documentType,
+            provider_name: formData?.provider_name || formData?.providerName,
+            document_date: toIsoDateTime(formData?.document_date || formData?.documentDate),
+            description: formData?.description,
+            tags: toStringArray(formData?.tags),
+            file_url: formData?.file_url || formData?.fileUrl,
+        };
+
+        const response = await api.post("/patient-portal/documents", payload);
         return response;
     } catch (error) {
         console.error("Failed to upload document:", error);

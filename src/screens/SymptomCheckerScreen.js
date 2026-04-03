@@ -6,6 +6,7 @@ import Button from "../components/ui/Button";
 import { colors, spacing, typography, radius, shadow } from "../theme/tokens";
 import { getActiveVisit } from "../services/patientService";
 import { useFeatureFlags } from "../context/FeatureFlagsContext";
+import { formatVisitForDisplay } from "../utils/journeyMapper";
 
 const QUICK_PROMPTS = [
   {
@@ -29,16 +30,6 @@ const QUICK_PROMPTS = [
     prompt: "Based on my current symptoms, should I seek care now or monitor at home?",
   },
 ];
-
-const STAGE_LABELS = {
-  registered: "Registration",
-  at_triage: "Triage",
-  vitals_taken: "Vitals",
-  with_doctor: "Consultation",
-  at_lab: "Lab",
-  at_imaging: "Imaging",
-  at_pharmacy: "Pharmacy",
-};
 
 const SymptomCheckerScreen = ({ navigation }) => {
   const { linkAgentMvp } = useFeatureFlags();
@@ -89,8 +80,9 @@ const SymptomCheckerScreen = ({ navigation }) => {
     navigation.navigate("PatientHealthRecords");
   }, [navigation]);
 
-  const currentStage = activeVisit?.current_journey_stage || activeVisit?.status || null;
-  const currentStageLabel = STAGE_LABELS[currentStage] || currentStage || "In progress";
+  const formattedActiveVisit = activeVisit ? formatVisitForDisplay(activeVisit) : null;
+  const currentStageLabel = formattedActiveVisit?.currentStage || "In progress";
+  const lastUpdatedLabel = formattedActiveVisit?.currentStageUpdatedLabel || null;
 
   return (
     <Screen>
@@ -140,6 +132,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
           <Text style={styles.handoffBody}>
             You have an active visit at <Text style={styles.handoffStrong}>{currentStageLabel}</Text>. Ask follow-up
             questions, then open records or continue care handoff.
+            {lastUpdatedLabel ? ` Last update: ${lastUpdatedLabel}.` : ""}
           </Text>
         ) : (
           <Text style={styles.handoffBody}>

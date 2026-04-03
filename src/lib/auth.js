@@ -7,6 +7,7 @@ if (Platform.OS !== "web") {
 }
 
 const TOKEN_KEY = "linkhc_auth_token";
+const PROFILE_KEY = "linkhc_auth_profile_v1";
 
 // Platform-specific storage: SecureStore for native, localStorage for web
 const isWeb = Platform.OS === "web";
@@ -40,4 +41,42 @@ export const clearAuthToken = async () => {
     return;
   }
   return SecureStore.deleteItemAsync(TOKEN_KEY);
+};
+
+export const getAuthProfile = async () => {
+  try {
+    const raw = isWeb
+      ? localStorage.getItem(PROFILE_KEY)
+      : await SecureStore.getItemAsync(PROFILE_KEY);
+
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+export const setAuthProfile = async (profile) => {
+  if (!profile) {
+    if (isWeb) {
+      localStorage.removeItem(PROFILE_KEY);
+      return;
+    }
+    return SecureStore.deleteItemAsync(PROFILE_KEY);
+  }
+
+  const serialized = JSON.stringify(profile);
+  if (isWeb) {
+    localStorage.setItem(PROFILE_KEY, serialized);
+    return;
+  }
+  return SecureStore.setItemAsync(PROFILE_KEY, serialized);
+};
+
+export const clearAuthProfile = async () => {
+  if (isWeb) {
+    localStorage.removeItem(PROFILE_KEY);
+    return;
+  }
+  return SecureStore.deleteItemAsync(PROFILE_KEY);
 };
