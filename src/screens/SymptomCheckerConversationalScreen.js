@@ -13,6 +13,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import Screen from "../components/ui/Screen";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
+import HeroHeader from "../components/ui/HeroHeader";
 import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
 import { Feather } from "@expo/vector-icons";
 import { requestPatientSymptomAssessment } from "../services/linkAgentService";
@@ -354,6 +355,12 @@ const SymptomCheckerConversationalScreen = () => {
 
     return (
         <Screen scrollable={false} backgroundColor={colors.background}>
+            <HeroHeader
+                badge="Symptom support"
+                title="Describe your symptoms"
+                subtitle="Tell us how you are feeling and we will guide you through the next steps."
+                style={styles.heroHeader}
+            />
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.container}
@@ -394,6 +401,11 @@ const SymptomCheckerConversationalScreen = () => {
 };
 
 const styles = StyleSheet.create({
+    heroHeader: {
+        paddingHorizontal: spacing.md,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.sm,
+    },
     container: {
         flex: 1,
     },
@@ -404,19 +416,21 @@ const styles = StyleSheet.create({
     messageBubble: {
         maxWidth: "80%",
         padding: spacing.md,
-        borderRadius: radius.lg,
+        borderRadius: 22,
         marginBottom: spacing.md,
         ...shadow.card,
     },
     userBubble: {
         alignSelf: "flex-end",
-        backgroundColor: colors.primary,
-        borderBottomRightRadius: 4,
+        backgroundColor: "#005A9E",
+        borderBottomRightRadius: 6,
     },
     aiBubble: {
         alignSelf: "flex-start",
-        backgroundColor: colors.surface,
-        borderBottomLeftRadius: 4,
+        backgroundColor: "#FFFFFF",
+        borderBottomLeftRadius: 6,
+        borderWidth: 1,
+        borderColor: "#E0E6EA",
     },
     errorBubble: {
         backgroundColor: "#FEE2E2",
@@ -430,13 +444,13 @@ const styles = StyleSheet.create({
     userMessageText: {
         color: "#FFF",
     },
-    metaSection: {
-        marginTop: spacing.sm,
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-        paddingTop: spacing.sm,
-        gap: 2,
-    },
+      metaSection: {
+          marginTop: spacing.sm,
+          borderTopWidth: 1,
+          borderTopColor: "#E3E8EB",
+          paddingTop: spacing.sm,
+          gap: 2,
+      },
     metaTitle: {
         ...typography.caption,
         fontWeight: "700",
@@ -509,22 +523,23 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: colors.text,
     },
-    inputContainer: {
-        flexDirection: "row",
-        padding: spacing.md,
-        backgroundColor: colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-        alignItems: "flex-end",
-        gap: spacing.sm,
-    },
-    input: {
-        flex: 1,
-        minHeight: 45,
-        maxHeight: 120,
-        backgroundColor: colors.background,
-        borderWidth: 0,
-    },
+      inputContainer: {
+          flexDirection: "row",
+          padding: spacing.md,
+          backgroundColor: "#F4F7F8",
+          borderTopWidth: 1,
+          borderTopColor: "#E3E8EB",
+          alignItems: "flex-end",
+          gap: spacing.sm,
+      },
+      input: {
+          flex: 1,
+          minHeight: 45,
+          maxHeight: 120,
+          backgroundColor: "#FFFFFF",
+          borderWidth: 0,
+          borderRadius: 18,
+      },
     sendButton: {
         width: 45,
         height: 45,
@@ -532,8 +547,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 0,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: colors.primary,
-    },
-});
+          backgroundColor: "#005A9E",
+      },
+  });
 
 export default SymptomCheckerConversationalScreen;

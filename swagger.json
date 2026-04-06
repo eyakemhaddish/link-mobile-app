@@ -13330,6 +13330,47 @@
         }
       }
     },
+    "/api/v1/patient-portal/visits/active": {
+      "get": {
+        "tags": [
+          "PatientPortal"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/patient-portal/visits/history": {
+      "get": {
+        "tags": [
+          "PatientPortal"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/patient-portal/documents/upload": {
       "post": {
         "tags": [
@@ -13376,6 +13417,29 @@
         "parameters": [
           {
             "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/patient-portal/visits/{visitId}": {
+      "get": {
+        "tags": [
+          "PatientPortal"
+        ],
+        "parameters": [
+          {
+            "name": "visitId",
             "in": "path",
             "required": true,
             "schema": {
@@ -17327,6 +17391,13 @@
             "name": "path",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "download_name",
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -21584,6 +21655,10 @@
           "result_type": {
             "type": "string",
             "nullable": true
+          },
+          "is_global": {
+            "type": "boolean",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -24746,7 +24821,8 @@
           },
           "tenant_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "password": {
             "type": "string",
@@ -26387,7 +26463,16 @@
             "type": "string",
             "nullable": true
           },
+          "facility_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "is_active": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "is_global": {
             "type": "boolean",
             "nullable": true
           },

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import HeroHeader from "../components/ui/HeroHeader";
 import Screen from "../components/ui/Screen";
 import { useAuth } from "../context/AuthContext";
 import { spacing, typography, shadow } from "../theme/tokens";
@@ -73,15 +74,12 @@ const ProfileScreen = () => {
 
   return (
     <Screen backgroundColor={palette.surface}>
-      <View style={styles.header}>
-        <View style={styles.headerBadge}>
-          <Text style={styles.headerBadgeText}>Profile</Text>
-        </View>
-        <Text style={styles.title}>My Profile</Text>
-        <Text style={styles.subtitle}>
-          Manage your identity, care settings, and account details.
-        </Text>
-      </View>
+      <HeroHeader
+        badge="Profile"
+        title="My Profile"
+        subtitle="Manage your identity, care settings, and account details."
+        style={styles.header}
+      />
 
       <Card style={styles.identityCard}>
         <View style={styles.identityAvatar}>
@@ -161,31 +159,6 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.md,
-    gap: spacing.xs,
-  },
-  headerBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: palette.tertiaryFixed,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  headerBadgeText: {
-    ...typography.caption,
-    color: "#713700",
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: palette.primary,
-    marginBottom: 4,
-    fontFamily: "Manrope",
-  },
-  subtitle: {
-    fontSize: 13,
-    color: palette.textMuted,
   },
   identityCard: {
     gap: spacing.sm,

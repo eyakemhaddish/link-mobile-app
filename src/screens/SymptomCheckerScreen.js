@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-nati
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import HeroHeader from "../components/ui/HeroHeader";
 import { colors, spacing, typography, radius, shadow } from "../theme/tokens";
 import { getActiveVisit } from "../services/patientService";
 import { useFeatureFlags } from "../context/FeatureFlagsContext";
@@ -86,12 +87,12 @@ const SymptomCheckerScreen = ({ navigation }) => {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <Text style={styles.title}>{linkAgentMvp ? "Link Agent" : "Symptom Checker"}</Text>
-        <Text style={styles.subtitle}>
-          Ask health questions, check symptoms, and move directly to care when needed.
-        </Text>
-      </View>
+      <HeroHeader
+        badge="Guided care"
+        title={linkAgentMvp ? "Link Agent" : "Symptom Checker"}
+        subtitle="Ask health questions, check symptoms, and move directly to care when needed."
+        style={styles.header}
+      />
 
       <Card style={styles.agentCard}>
         <Text style={styles.cardLabel}>
@@ -153,37 +154,40 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.md,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: colors.ink,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.muted,
-  },
   sectionTitle: {
     ...typography.caption,
     marginTop: spacing.md,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
     fontWeight: "700",
-    letterSpacing: 0.3,
-    color: colors.text,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    color: "#4C6070",
   },
   agentCard: {
     marginBottom: spacing.sm,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#E0E6EA",
+    shadowColor: "#004277",
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
   },
   cardLabel: {
     ...typography.caption,
     textTransform: "uppercase",
     letterSpacing: 1.1,
-    color: colors.primary,
+    color: "#005A9E",
     marginBottom: spacing.sm,
+    fontWeight: "800",
   },
   cardBody: {
     ...typography.body,
     marginBottom: spacing.md,
+    color: "#53626E",
+    lineHeight: 22,
   },
   primaryAction: {
     alignSelf: "flex-start",
@@ -196,25 +200,33 @@ const styles = StyleSheet.create({
   promptCard: {
     width: "48%",
     minHeight: 92,
-    borderRadius: radius.lg,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: "#DCE5EA",
+    backgroundColor: "#F7FAF9",
     padding: spacing.md,
     justifyContent: "space-between",
-    ...shadow.card,
+    shadowColor: "#004277",
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 2,
   },
   promptLabel: {
     ...typography.body,
     fontWeight: "600",
-    color: colors.text,
+    color: "#18384C",
   },
   promptHint: {
     ...typography.caption,
-    color: colors.muted,
+    color: "#68808F",
   },
   handoffCard: {
     marginTop: spacing.xs,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#E0E6EA",
   },
   loadingRow: {
     flexDirection: "row",
@@ -224,15 +236,17 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...typography.caption,
-    color: colors.muted,
+    color: "#68808F",
   },
   handoffBody: {
     ...typography.body,
     marginBottom: spacing.sm,
+    color: "#53626E",
+    lineHeight: 22,
   },
   handoffStrong: {
     fontWeight: "700",
-    color: colors.primary,
+    color: "#005A9E",
   },
   actionRow: {
     flexDirection: "row",

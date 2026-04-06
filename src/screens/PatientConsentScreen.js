@@ -15,6 +15,7 @@ import {
 import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import HeroHeader from "../components/ui/HeroHeader";
 import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
 import { getFacilities, grantConsent, revokeConsent, getConsentHistory } from "../services/patientService";
 import { useToast } from "../context/ToastContext";
@@ -287,9 +288,15 @@ const PatientConsentScreen = () => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.darkPurple} />}
       >
+        <HeroHeader
+          badge="Privacy control"
+          title="Consent Manager"
+          subtitle="Choose who can view your records, revoke access clearly, and review every consent action in one place."
+          style={styles.heroBlock}
+        />
         {/* ── GRANT TAB ──────────────────────────────────────────────── */}
         {activeTab === "grant" && (
-          <View>
+          <View style={styles.panel}>
             <Text style={styles.heading}>{t.grantTitle}</Text>
             <Text style={styles.subtitle}>{t.grantDesc}</Text>
 
@@ -444,7 +451,7 @@ const PatientConsentScreen = () => {
 
         {/* ── REVOKE TAB ─────────────────────────────────────────────── */}
         {activeTab === "revoke" && (
-          <View>
+          <View style={styles.panel}>
             <Text style={styles.heading}>{t.revokeTitle}</Text>
             <Text style={styles.subtitle}>{t.revokeDesc}</Text>
 
@@ -500,7 +507,7 @@ const PatientConsentScreen = () => {
 
         {/* ── HISTORY TAB ────────────────────────────────────────────── */}
         {activeTab === "history" && (
-          <View>
+          <View style={styles.panel}>
             <Text style={styles.heading}>{t.historyTitle}</Text>
             <Text style={styles.subtitle}>{t.historyDesc}</Text>
 
@@ -547,12 +554,12 @@ const PatientConsentScreen = () => {
 };
 
 const palette = {
-  darkPurple: "#4D2C91",
-  lightPurple: "#D7C8F5",
+  darkPurple: "#005A9E",
+  lightPurple: "#D7E8FF",
   green: "#B9F0D8",
-  black: "#121214",
+  black: "#18384C",
   white: "#FFFFFF",
-  softWhite: "#F7F5FB",
+  softWhite: "#F4F7F8",
 };
 
 const styles = StyleSheet.create({
@@ -560,18 +567,28 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { padding: spacing.lg, paddingBottom: 40 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  heroBlock: { marginBottom: spacing.lg },
+  panel: {
+    backgroundColor: palette.white,
+    borderRadius: 24,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: "#E0E6EA",
+    marginBottom: spacing.md,
+    ...shadow.card,
+  },
 
   langRow: { flexDirection: "row", gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   langChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#D6E0E6",
     backgroundColor: palette.softWhite,
   },
   langChipActive: { backgroundColor: palette.darkPurple, borderColor: palette.darkPurple },
-  langText: { fontSize: 13, color: palette.black },
+  langText: { fontSize: 13, color: palette.black, fontWeight: "600" },
   langTextActive: { color: palette.white, fontWeight: "600" },
 
   tabBar: {
@@ -583,26 +600,26 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingVertical: 12,
+    borderRadius: 16,
     backgroundColor: palette.softWhite,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#D6E0E6",
   },
   tabActive: { backgroundColor: palette.darkPurple, borderColor: palette.darkPurple },
-  tabText: { fontSize: 14, fontWeight: "600", color: palette.black },
+  tabText: { fontSize: 14, fontWeight: "700", color: palette.black },
   tabTextActive: { color: palette.white },
 
-  heading: { fontSize: 20, fontWeight: "700", color: palette.black, marginBottom: 4 },
-  subtitle: { fontSize: 13, color: palette.black, opacity: 0.5, marginBottom: spacing.lg },
+  heading: { fontSize: 22, fontWeight: "800", color: palette.black, marginBottom: 6 },
+  subtitle: { fontSize: 14, color: "#566772", marginBottom: spacing.lg, lineHeight: 21 },
 
-  fieldLabel: { fontSize: 13, fontWeight: "600", color: palette.black, marginBottom: 6, marginTop: spacing.md },
+  fieldLabel: { fontSize: 13, fontWeight: "700", color: palette.black, marginBottom: 8, marginTop: spacing.md },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    padding: spacing.sm,
+    borderColor: "#D6E0E6",
+    borderRadius: 16,
+    padding: spacing.md,
     fontSize: 14,
     color: palette.black,
     backgroundColor: palette.softWhite,
@@ -612,44 +629,44 @@ const styles = StyleSheet.create({
 
   pickerButton: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    padding: spacing.sm,
+    borderColor: "#D6E0E6",
+    borderRadius: 16,
+    padding: spacing.md,
     backgroundColor: palette.softWhite,
   },
   pickerText: { fontSize: 14, color: palette.black },
   pickerPlaceholder: { fontSize: 14, color: "#9CA3AF" },
   pickerDropdown: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.sm,
+    borderColor: "#D6E0E6",
+    borderRadius: 18,
     backgroundColor: palette.white,
     marginTop: 4,
   },
-  pickerOption: { padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
+  pickerOption: { padding: spacing.md, borderBottomWidth: 1, borderBottomColor: "#E3E8EB" },
   pickerOptionSelected: { backgroundColor: palette.lightPurple },
   pickerOptionText: { fontSize: 14, color: palette.black },
 
   readOnlyField: {
-    borderRadius: radius.sm,
-    padding: spacing.sm,
+    borderRadius: 16,
+    padding: spacing.md,
     backgroundColor: palette.softWhite,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#D6E0E6",
   },
   readOnlyText: { fontSize: 14, color: palette.black, opacity: 0.7 },
 
   radioGroup: { flexDirection: "row", gap: spacing.sm, flexWrap: "wrap" },
   radioOption: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#D6E0E6",
     backgroundColor: palette.softWhite,
   },
   radioSelected: { backgroundColor: palette.darkPurple, borderColor: palette.darkPurple },
-  radioText: { fontSize: 13, color: palette.black },
+  radioText: { fontSize: 13, color: palette.black, fontWeight: "600" },
   radioTextSelected: { color: palette.white, fontWeight: "600" },
 
   warningCard: {
@@ -669,7 +686,7 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: "#CBD8E1",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -682,7 +699,14 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: "center", paddingVertical: spacing.xl * 2 },
   emptyTitle: { fontSize: 16, fontWeight: "600", color: palette.black, opacity: 0.5 },
 
-  card: { marginBottom: spacing.md, padding: spacing.md },
+  card: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E0E6EA",
+  },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
   actionBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   actionBadgeText: { fontSize: 11, fontWeight: "700" },

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, Platform, Pressable } from "
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import HeroHeader from "../components/ui/HeroHeader";
 import Input from "../components/ui/Input";
 import { colors, spacing, typography } from "../theme/tokens";
 import { useAuth } from "../context/AuthContext";
@@ -486,13 +487,13 @@ const LoginScreen = () => {
   if (mode === "patient") {
     return (
       <Screen variant="hero">
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>Link Health</Text>
-          <Text style={styles.title}>Patient Portal</Text>
-          <Text style={styles.subtitle}>
-            Sign in to your patient account with the phone number stored on this device.
-          </Text>
-        </View>
+        <HeroHeader
+          badge="Patient Portal"
+          eyebrow="Link Health"
+          title="Patient Portal"
+          subtitle="Sign in to your patient account with the phone number stored on this device."
+          style={styles.header}
+        />
 
         <Card style={styles.card}>
           <Text style={styles.label}>Phone number on this device</Text>
@@ -540,13 +541,13 @@ const LoginScreen = () => {
   if (mode === "patient_onboarding") {
     return (
       <Screen variant="hero">
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>Link Health</Text>
-          <Text style={styles.title}>Create Patient Account</Text>
-          <Text style={styles.subtitle}>
-            Verify your phone number first, then finish setting up your account.
-          </Text>
-        </View>
+        <HeroHeader
+          badge="Create Account"
+          eyebrow="Link Health"
+          title="Create Patient Account"
+          subtitle="Verify your phone number first, then finish setting up your account."
+          style={styles.header}
+        />
 
         <Card style={styles.card}>
           <Text style={styles.label}>Phone number</Text>
@@ -697,13 +698,13 @@ const LoginScreen = () => {
   if (mode === "pin") {
     return (
       <Screen variant="hero">
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>Link Health</Text>
-          <Text style={styles.title}>Demo Mode</Text>
-          <Text style={styles.subtitle}>
-            Use demo PINs only for sandbox testing.
-          </Text>
-        </View>
+        <HeroHeader
+          badge="Demo Access"
+          eyebrow="Link Health"
+          title="Demo Mode"
+          subtitle="Use demo PINs only for sandbox testing."
+          style={styles.header}
+        />
 
         <Card style={styles.card}>
           <Text style={styles.label}>PIN</Text>
@@ -761,13 +762,13 @@ const LoginScreen = () => {
 
   return (
     <Screen variant="hero">
-      <View style={styles.header}>
-        <Text style={styles.eyebrow}>Link Health</Text>
-        <Text style={styles.title}>Clinician Sign In</Text>
-        <Text style={styles.subtitle}>
-          Sign in with your clinic credentials.
-        </Text>
-      </View>
+      <HeroHeader
+        badge="Staff Access"
+        eyebrow="Link Health"
+        title="Clinician Sign In"
+        subtitle="Sign in with your clinic credentials."
+        style={styles.header}
+      />
 
       <Card style={styles.card}>
         <Text style={styles.label}>Email</Text>
@@ -816,58 +817,65 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.xl,
   },
-  eyebrow: {
-    ...typography.caption,
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-    marginBottom: spacing.sm,
-  },
-  title: {
-    ...typography.h1,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.muted,
-  },
   card: {
     gap: spacing.sm,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: "#E0E6EA",
+    shadowColor: "#004277",
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
   },
   label: {
     ...typography.caption,
-    color: colors.muted,
+    color: "#52616B",
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
   registrationHint: {
     ...typography.caption,
-    color: colors.muted,
+    color: "#3B5E74",
     marginBottom: spacing.xs,
+    backgroundColor: "#EFF6FB",
+    borderRadius: 16,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   readonlyField: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
+    borderColor: "#D8E1E7",
+    borderRadius: 18,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.background,
+    backgroundColor: "#F4F7F8",
   },
   readonlyValue: {
     ...typography.body,
-    color: colors.text,
+    color: "#18384C",
+    fontWeight: "600",
   },
   actions: {
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
     gap: spacing.sm,
   },
   testActions: {
     marginTop: spacing.xl,
     paddingTop: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: "#DCE5E8",
     alignItems: "center",
   },
   error: {
-    color: colors.danger,
+    color: "#B42318",
     ...typography.caption,
+    backgroundColor: "#FFF1F1",
+    borderRadius: 14,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   pinDots: {
     flexDirection: "row",
@@ -880,27 +888,30 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 7,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: "#D2DDE4",
     backgroundColor: "transparent",
   },
   dotFilled: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: "#005A9E",
+    borderColor: "#005A9E",
   },
   hintText: {
     fontSize: 12,
-    color: colors.muted,
+    color: "#61717C",
     textAlign: "center",
+    lineHeight: 18,
   },
   switchMode: {
     marginTop: spacing.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
+    borderRadius: 999,
+    backgroundColor: "#F4F7F8",
   },
   switchModeText: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.primary,
+    color: "#005A9E",
     textAlign: "center",
   },
   loadingShell: {
@@ -911,7 +922,7 @@ const styles = StyleSheet.create({
   },
   loadingShellText: {
     ...typography.body,
-    color: colors.muted,
+    color: "#53626E",
   },
 });
 
