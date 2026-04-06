@@ -13,21 +13,25 @@ import {
   Share,
   Alert,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import * as DocumentPicker from "expo-document-picker";
 import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { API_BASE_URL } from "../lib/env";
-import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
+import { colors, spacing, radius, shadow } from "../theme/tokens";
 import {
+  getActiveVisit,
   getDocuments,
   getSyncedRecords,
+  getVisitHistory,
   uploadDocument,
   uploadDocumentFile,
   deleteDocument,
 } from "../services/patientService";
 import { useToast } from "../context/ToastContext";
 import { useFeatureFlags } from "../context/FeatureFlagsContext";
+import { formatVisitForDisplay, getOrdersSummary } from "../utils/journeyMapper";
 
 const DOC_TYPES = [
   { value: "prescription", label: "Prescription", bg: "#DBEAFE", text: "#1E40AF" },
@@ -56,8 +60,22 @@ const resolveDownloadUrl = (inputUrl) => {
   }
 };
 
+const formatShortDate = (value) => {
+  if (!value) return "Date unavailable";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 const PatientHealthRecordsScreen = () => {
+  const navigation = useNavigation();
   const [documents, setDocuments] = useState([]);
+  const [activeVisit, setActiveVisit] = useState(null);
+  const [visitHistory, setVisitHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,11 +98,19 @@ const PatientHealthRecordsScreen = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const [docsResponse, syncedResponse] = await Promise.all([
+      const [docsResponse, syncedResponse, activeVisitResponse, visitHistoryResponse] = await Promise.all([
         getDocuments(),
         getSyncedRecords(80).catch((error) => {
           console.error("Failed to load synced records:", error);
           return { records: [] };
+        }),
+        getActiveVisit().catch((error) => {
+          console.error("Failed to load active visit:", error);
+          return { activeVisit: null };
+        }),
+        getVisitHistory(20).catch((error) => {
+          console.error("Failed to load visit history:", error);
+          return { visits: [] };
         }),
       ]);
 
@@ -99,6 +125,8 @@ const PatientHealthRecordsScreen = () => {
 
       setDocuments([...synced, ...manual]);
       setGrowthLinks(syncedResponse.growth || null);
+      setActiveVisit(activeVisitResponse.activeVisit || null);
+      setVisitHistory((visitHistoryResponse.visits || []).filter(Boolean));
     } catch (err) {
       console.error("Failed to load documents:", err);
     } finally {
@@ -240,6 +268,24 @@ const PatientHealthRecordsScreen = () => {
     }
   };
 
+  const getVisitArtifacts = useCallback(
+    (visitId) => documents.filter((record) => record?.visit_id === visitId),
+    [documents]
+  );
+
+  const openVisitDetails = useCallback(
+    (visit, isActiveVisit = false) => {
+      if (!visit?.id) return;
+      navigation.navigate("PatientVisitDetails", {
+        visitId: visit.id,
+        visit,
+        isActiveVisit,
+        artifacts: getVisitArtifacts(visit.id),
+      });
+    },
+    [getVisitArtifacts, navigation]
+  );
+
   // Filter and search
   const filtered = documents.filter((doc) => {
     if (filterType !== "all" && doc.document_type !== filterType) return false;
@@ -255,10 +301,13 @@ const PatientHealthRecordsScreen = () => {
 
   const selectedTypeLabel = getDocTypeConfig(uploadType).label;
   const filterLabel = filterType === "all" ? "All Types" : getDocTypeConfig(filterType).label;
+  const activeVisitSummary = activeVisit ? formatVisitForDisplay(activeVisit) : null;
+  const activeOrderSummary = getOrdersSummary(activeVisit?.orders);
+  const visibleVisitHistory = visitHistory.filter((visit) => visit?.id && visit.id !== activeVisit?.id);
 
   if (loading) {
     return (
-      <Screen backgroundColor={palette.white} style={styles.screen}>
+      <Screen backgroundColor={palette.white} style={styles.screen} scrollable={false}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={palette.darkPurple} />
           <Text style={styles.loadingText}>Loading health records...</Text>
@@ -268,7 +317,7 @@ const PatientHealthRecordsScreen = () => {
   }
 
   return (
-    <Screen backgroundColor={palette.white} style={styles.screen}>
+    <Screen backgroundColor={palette.white} style={styles.screen} scrollable={false}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -276,6 +325,59 @@ const PatientHealthRecordsScreen = () => {
       >
         <Text style={styles.heading}>Health Records</Text>
         <Text style={styles.subtitle}>Your synced visit records and uploaded documents</Text>
+        {activeVisitSummary && (
+          <Card style={styles.visitHeroCard}>
+            <View style={styles.visitHeroHeader}>
+              <View>
+                <Text style={styles.visitHeroEyebrow}>Active visit</Text>
+                <Text style={styles.visitHeroTitle}>{activeVisit?.facility_name || "Current facility"}</Text>
+              </View>
+              <View style={styles.liveBadge}>
+                <Text style={styles.liveBadgeText}>LIVE</Text>
+              </View>
+            </View>
+            <Text style={styles.visitHeroMeta}>
+              {activeVisitSummary.currentStage} · {activeVisitSummary.provider || "Care team"}
+            </Text>
+            <Text style={styles.visitHeroMeta}>
+              Orders: {activeOrderSummary.total} total · {activeOrderSummary.completed} paid · {activeOrderSummary.pending} pending
+            </Text>
+            <View style={styles.visitHeroActions}>
+              <Button title="View active visit" onPress={() => openVisitDetails(activeVisit, true)} style={styles.visitPrimaryButton} />
+            </View>
+          </Card>
+        )}
+
+        <Card style={styles.visitSectionCard}>
+          <View style={styles.visitSectionHeader}>
+            <Text style={styles.visitSectionTitle}>Visit history</Text>
+            <Text style={styles.visitSectionCaption}>{visibleVisitHistory.length} visits</Text>
+          </View>
+          {visibleVisitHistory.length === 0 ? (
+            <Text style={styles.emptyVisitText}>Your completed and previous visits will appear here.</Text>
+          ) : (
+            visibleVisitHistory.map((visit) => {
+              const summary = formatVisitForDisplay(visit);
+              const artifactCount = getVisitArtifacts(visit.id).length;
+              return (
+                <Pressable key={visit.id} style={styles.visitListCard} onPress={() => openVisitDetails(visit, false)}>
+                  <View style={styles.visitListHeader}>
+                    <Text style={styles.visitListTitle}>{visit.facility_name || "Health facility"}</Text>
+                    <Text style={styles.visitListDate}>{formatShortDate(visit.visit_date || visit.date)}</Text>
+                  </View>
+                  <Text style={styles.visitListMeta}>
+                    {summary.currentStage} · {visit.provider || "Care team"}
+                  </Text>
+                  {visit.chief_complaint ? <Text style={styles.visitListBody}>{visit.chief_complaint}</Text> : null}
+                  <Text style={styles.visitListHint}>
+                    {artifactCount} visit outputs linked · Tap to view orders and results
+                  </Text>
+                </Pressable>
+              );
+            })
+          )}
+        </Card>
+
         {patientRecordsSync && (
           <View style={styles.rolloutCard}>
             <Text style={styles.rolloutTitle}>
@@ -386,6 +488,11 @@ const PatientHealthRecordsScreen = () => {
                       <View style={styles.syncedPill}>
                         <Text style={styles.syncedPillText}>Synced from Link visit</Text>
                       </View>
+                      {doc.visit_id ? (
+                        <Pressable style={[styles.actionBtn, styles.continueBtn]} onPress={() => openVisitDetails({ id: doc.visit_id }, false)}>
+                          <Text style={styles.actionBtnText}>Open visit</Text>
+                        </Pressable>
+                      ) : null}
                       {doc.continuity_url ? (
                         <Pressable style={[styles.actionBtn, styles.continueBtn]} onPress={() => handleOpenExternal(doc.continuity_url)}>
                           <Text style={styles.actionBtnText}>Continue care</Text>
@@ -520,6 +627,44 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: spacing.md, fontSize: 14, color: palette.darkPurple },
   heading: { fontSize: 22, fontWeight: "700", color: palette.black, marginBottom: 4 },
   subtitle: { fontSize: 14, color: palette.black, opacity: 0.5, marginBottom: spacing.md },
+  visitHeroCard: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: palette.lightPurple,
+    backgroundColor: "#F3EEFF",
+    ...shadow.card,
+  },
+  visitHeroHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  visitHeroEyebrow: { fontSize: 12, fontWeight: "700", color: palette.darkPurple, textTransform: "uppercase" },
+  visitHeroTitle: { fontSize: 18, fontWeight: "700", color: palette.black, marginTop: 4 },
+  visitHeroMeta: { fontSize: 13, color: palette.black, opacity: 0.72, marginTop: 2 },
+  liveBadge: {
+    backgroundColor: palette.darkPurple,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  liveBadgeText: { fontSize: 10, fontWeight: "800", color: palette.white, letterSpacing: 0.6 },
+  visitHeroActions: { marginTop: spacing.md, alignItems: "flex-start" },
+  visitPrimaryButton: { paddingHorizontal: spacing.lg },
+  visitSectionCard: { marginBottom: spacing.md, padding: spacing.md },
+  visitSectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
+  visitSectionTitle: { fontSize: 17, fontWeight: "700", color: palette.black },
+  visitSectionCaption: { fontSize: 12, color: palette.black, opacity: 0.55 },
+  visitListCard: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingVertical: spacing.sm,
+  },
+  visitListHeader: { flexDirection: "row", justifyContent: "space-between", gap: spacing.sm },
+  visitListTitle: { flex: 1, fontSize: 14, fontWeight: "700", color: palette.black },
+  visitListDate: { fontSize: 12, color: palette.black, opacity: 0.55 },
+  visitListMeta: { fontSize: 13, color: palette.darkPurple, marginTop: 4 },
+  visitListBody: { fontSize: 13, color: palette.black, opacity: 0.74, marginTop: 4 },
+  visitListHint: { fontSize: 12, color: palette.black, opacity: 0.55, marginTop: 6 },
+  emptyVisitText: { fontSize: 14, color: palette.black, opacity: 0.55 },
   rolloutCard: {
     marginBottom: spacing.md,
     padding: spacing.md,
@@ -646,7 +791,7 @@ const styles = StyleSheet.create({
     maxHeight: "85%",
   },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.lg },
-  modalTitle: { ...typography.h2, fontWeight: "700" },
+  modalTitle: { fontSize: 20, fontWeight: "700", color: palette.black },
   closeBtn: { padding: 8, borderRadius: 20, backgroundColor: palette.lightPurple },
   closeBtnText: { fontSize: 14, color: palette.darkPurple, fontWeight: "700" },
   modalScroll: { marginBottom: spacing.md },

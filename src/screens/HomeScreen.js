@@ -1,47 +1,44 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, Modal, Pressable, RefreshControl, ScrollView, ActivityIndicator } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, Text, StyleSheet, Pressable, RefreshControl, ScrollView, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
-import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
+import { colors, spacing, shadow } from "../theme/tokens";
 import { getActiveVisit, getPatientStats } from "../services/patientService";
-import { formatVisitForDisplay } from "../utils/journeyMapper";
+import { formatVisitForDisplay, getOrdersSummary } from "../utils/journeyMapper";
+
+const palette = {
+  darkPurple: "#4D2C91",
+  lightPurple: "#D7C8F5",
+  green: "#B9F0D8",
+  black: "#121214",
+  white: "#FFFFFF",
+  softWhite: "#F7F5FB",
+};
 
 const HomeScreen = () => {
-  const [showJourney, setShowJourney] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [patientData, setPatientData] = useState(null);
   const [activeVisit, setActiveVisit] = useState(null);
   const [stats, setStats] = useState({ totalVisits: 0, activeTasks: 0, visitsToday: 0 });
-  const [journeySteps, setJourneySteps] = useState([]);
   const navigation = useNavigation();
 
   const fetchData = useCallback(async () => {
     try {
       setError(null);
-
-      // Fetch active visit and stats in parallel
       const [visitResponse, statsResponse] = await Promise.all([
         getActiveVisit(),
         getPatientStats(),
       ]);
 
-      setPatientData(visitResponse.patient);
-      setActiveVisit(visitResponse.activeVisit);
-      setStats(statsResponse);
-
-      // Format journey steps if there's an active visit
-      if (visitResponse.activeVisit) {
-        const formattedVisit = formatVisitForDisplay(visitResponse.activeVisit);
-        setJourneySteps(formattedVisit.journeySteps);
-      } else {
-        setJourneySteps([]);
-      }
+      setPatientData(visitResponse.patient || null);
+      setActiveVisit(visitResponse.activeVisit || null);
+      setStats(statsResponse || { totalVisits: 0, activeTasks: 0, visitsToday: 0 });
     } catch (err) {
       console.error("Failed to fetch patient data:", err);
-      setError(err.message || "Failed to load patient data");
+      setError(err?.message || "Failed to load patient data");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -57,17 +54,16 @@ const HomeScreen = () => {
     fetchData();
   }, [fetchData]);
 
-  // Get patient name
   const patientName = patientData?.full_name || patientData?.first_name || "Patient";
-
   const formattedActiveVisit = activeVisit ? formatVisitForDisplay(activeVisit) : null;
   const provider = formattedActiveVisit?.provider || activeVisit?.provider || "Staff";
   const currentStageLabel = formattedActiveVisit?.currentStage || "No active visit";
   const lastUpdatedLabel = formattedActiveVisit?.currentStageUpdatedLabel || null;
+  const orderSummary = getOrdersSummary(activeVisit?.orders);
 
   if (loading) {
     return (
-      <Screen backgroundColor={palette.white} style={styles.screenContainer}>
+      <Screen backgroundColor={palette.white} style={styles.screenContainer} scrollable={false}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={palette.darkPurple} />
           <Text style={styles.loadingText}>Loading patient data...</Text>
@@ -78,9 +74,9 @@ const HomeScreen = () => {
 
   if (error) {
     return (
-      <Screen backgroundColor={palette.white} style={styles.screenContainer}>
+      <Screen backgroundColor={palette.white} style={styles.screenContainer} scrollable={false}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <Text style={styles.errorText}>Unable to load your patient dashboard.</Text>
           <Button title="Retry" onPress={fetchData} style={{ marginTop: spacing.md }} />
         </View>
       </Screen>
@@ -88,9 +84,10 @@ const HomeScreen = () => {
   }
 
   return (
-    <Screen backgroundColor={palette.white} style={styles.screenContainer}>
+    <Screen backgroundColor={palette.white} style={styles.screenContainer} scrollable={false}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.darkPurple} />
         }
@@ -110,11 +107,20 @@ const HomeScreen = () => {
           </View>
 
           <View style={styles.header}>
-            <Text style={styles.greetingTitle}>Hello, {patientName} 👋</Text>
+            <Text style={styles.greetingTitle}>Hello, {patientName}</Text>
           </View>
 
           {activeVisit ? (
-            <Pressable onPress={() => setShowJourney(true)} style={styles.bannerCard}>
+            <Pressable
+              onPress={() =>
+                navigation.navigate("PatientVisitDetails", {
+                  visitId: activeVisit.id,
+                  visit: activeVisit,
+                  isActiveVisit: true,
+                })
+              }
+              style={styles.bannerCard}
+            >
               <View style={styles.bannerBadge}>
                 <Text style={styles.bannerBadgeText}>LIVE</Text>
               </View>
@@ -126,9 +132,12 @@ const HomeScreen = () => {
                 {lastUpdatedLabel ? (
                   <Text style={styles.bannerMeta}>Last update: {lastUpdatedLabel}</Text>
                 ) : null}
+                <Text style={styles.bannerMeta}>
+                  Orders: {orderSummary.total} total · {orderSummary.completed} paid · {orderSummary.pending} pending
+                </Text>
               </View>
               <View style={styles.bannerAction}>
-                <Text style={styles.bannerActionText}>View Journey</Text>
+                <Text style={styles.bannerActionText}>View Details</Text>
               </View>
             </Pressable>
           ) : (
@@ -136,7 +145,7 @@ const HomeScreen = () => {
               <View style={styles.bannerCopy}>
                 <Text style={styles.bannerTitle}>No active visit</Text>
                 <Text style={styles.bannerSubtitle}>
-                  You don't have any active visits at the moment
+                  You do not have any active visits at the moment.
                 </Text>
               </View>
             </View>
@@ -153,15 +162,12 @@ const HomeScreen = () => {
             </View>
             <View style={[styles.statPill, styles.statDark]}>
               <Text style={[styles.statValue, styles.statValueLight]}>{stats.visitsToday}</Text>
-              <Text style={[styles.statLabel, styles.statValueLight]}>
-                Today
-              </Text>
+              <Text style={[styles.statLabel, styles.statValueLight]}>Today</Text>
             </View>
           </View>
 
           <View style={styles.sectionRow}>
             <Text style={styles.sectionTitle}>Overview</Text>
-            <Text style={styles.sectionLink}>See all</Text>
           </View>
 
           <View style={styles.cardGrid}>
@@ -178,22 +184,26 @@ const HomeScreen = () => {
               </View>
             </Pressable>
             <View style={styles.smallColumn}>
-              <View style={[styles.smallCard, styles.lightPurpleCard]}>
+              <Pressable
+                style={[styles.smallCard, styles.lightPurpleCard]}
+                onPress={() => navigation.navigate("Facilities")}
+              >
                 <Text style={styles.cardTitle}>Find care</Text>
                 <Text style={styles.cardBody}>
-                  Nearby clinics &amp; pharmacies.
+                  Nearby clinics and pharmacies.
                 </Text>
-                <Text style={styles.cardMeta}>Open map</Text>
-              </View>
-              <View style={[styles.smallCard, styles.darkPurpleCard]}>
-                <Text style={[styles.cardTitle, styles.lightText]}>
-                  Health feed
-                </Text>
+                <Text style={styles.cardMeta}>Open finder</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.smallCard, styles.darkPurpleCard]}
+                onPress={() => navigation.navigate("PatientHealthRecords")}
+              >
+                <Text style={[styles.cardTitle, styles.lightText]}>Visit history</Text>
                 <Text style={[styles.cardBody, styles.lightText]}>
-                  New tips for your routine.
+                  Review records, visit outputs, and lab results.
                 </Text>
-                <Text style={[styles.cardMeta, styles.lightText]}>View</Text>
-              </View>
+                <Text style={[styles.cardMeta, styles.lightText]}>View records</Text>
+              </Pressable>
             </View>
           </View>
 
@@ -207,7 +217,7 @@ const HomeScreen = () => {
               onPress={() => navigation.navigate("PatientAppointments")}
             >
               <Text style={styles.cardTitle}>Appointments</Text>
-              <Text style={styles.cardBody}>Book &amp; manage visits.</Text>
+              <Text style={styles.cardBody}>Book and manage visits.</Text>
               <Text style={styles.cardMeta}>Book now</Text>
             </Pressable>
             <Pressable
@@ -219,91 +229,24 @@ const HomeScreen = () => {
               <Text style={styles.cardMeta}>Manage</Text>
             </Pressable>
             <Pressable
-              style={[styles.serviceCard, { backgroundColor: palette.softWhite, borderWidth: 1, borderColor: palette.lightPurple }]}
+              style={[styles.serviceCard, styles.recordsCard]}
               onPress={() => navigation.navigate("PatientHealthRecords")}
             >
               <Text style={styles.cardTitle}>Records</Text>
-              <Text style={styles.cardBody}>Your health docs.</Text>
-              <Text style={styles.cardMeta}>View</Text>
+              <Text style={styles.cardBody}>Your visits, results, and documents.</Text>
+              <Text style={styles.cardMeta}>Open</Text>
             </Pressable>
           </View>
         </View>
       </ScrollView>
-
-      <Modal
-        visible={showJourney}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowJourney(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Visit Journey</Text>
-              <Pressable onPress={() => setShowJourney(false)} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>✕</Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.journeyContainer}>
-              {journeySteps.length > 0 ? (
-                journeySteps.map((step, index) => (
-                  <View key={step.id} style={styles.journeyItem}>
-                    <View style={styles.journeyLineColumn}>
-                      <View style={[
-                        styles.journeyDot,
-                        step.status === "completed" && styles.dotCompleted,
-                        step.status === "active" && styles.dotActive
-                      ]} />
-                      {index < journeySteps.length - 1 && (
-                        <View style={[
-                          styles.journeyLine,
-                          step.status === "completed" && styles.lineCompleted
-                        ]} />
-                      )}
-                    </View>
-                    <View style={styles.journeyTextColumn}>
-                      <Text style={[
-                        styles.journeyLabel,
-                        step.status === "active" && styles.labelActive
-                      ]}>
-                        {step.label}
-                      </Text>
-                      <Text style={styles.journeyTime}>{step.time}</Text>
-                    </View>
-                    {step.status === "active" && (
-                      <View style={styles.activeTag}>
-                        <Text style={styles.activeTagText}>In Progress</Text>
-                      </View>
-                    )}
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.noJourneyText}>No journey data available</Text>
-              )}
-            </View>
-
-            <Button title="Close" onPress={() => setShowJourney(false)} style={{ marginTop: spacing.lg }} />
-          </View>
-        </View>
-      </Modal>
     </Screen>
   );
 };
 
-const palette = {
-  darkPurple: "#4D2C91",
-  lightPurple: "#D7C8F5",
-  green: "#B9F0D8",
-  black: "#121214",
-  white: "#FFFFFF",
-  softWhite: "#F7F5FB",
-};
-
 const styles = StyleSheet.create({
-  screenContainer: {
-    padding: 0,
-  },
+  screenContainer: { padding: 0 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: spacing.xl * 2 },
   canvas: {
     flex: 1,
     backgroundColor: palette.white,
@@ -357,19 +300,64 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: palette.darkPurple,
   },
-  header: {
-    marginBottom: spacing.md,
-  },
+  header: { marginBottom: spacing.md },
   greetingTitle: {
     fontSize: 22,
     fontWeight: "700",
     color: palette.black,
   },
-  subtitle: {
-    fontSize: 14,
+  bannerCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: palette.softWhite,
+    borderRadius: 22,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: palette.lightPurple,
+    marginBottom: spacing.lg,
+    ...shadow.card,
+  },
+  bannerBadge: {
+    backgroundColor: palette.darkPurple,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    marginRight: spacing.md,
+  },
+  bannerBadgeText: {
+    color: palette.white,
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  bannerCopy: { flex: 1 },
+  bannerTitle: {
+    fontSize: 16,
+    fontWeight: "700",
     color: palette.black,
-    opacity: 0.6,
-    maxWidth: 320,
+    marginBottom: 2,
+  },
+  bannerSubtitle: {
+    fontSize: 13,
+    color: palette.black,
+    opacity: 0.65,
+  },
+  bannerMeta: {
+    fontSize: 12,
+    color: palette.black,
+    opacity: 0.5,
+    marginTop: 2,
+  },
+  bannerAction: {
+    backgroundColor: palette.lightPurple,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  bannerActionText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: palette.darkPurple,
   },
   statsRow: {
     flexDirection: "row",
@@ -382,15 +370,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
   },
-  statPurple: {
-    backgroundColor: palette.lightPurple,
-  },
-  statGreen: {
-    backgroundColor: palette.green,
-  },
-  statDark: {
-    backgroundColor: palette.darkPurple,
-  },
+  statPurple: { backgroundColor: palette.lightPurple },
+  statGreen: { backgroundColor: palette.green },
+  statDark: { backgroundColor: palette.darkPurple },
   statValue: {
     fontSize: 16,
     fontWeight: "700",
@@ -401,9 +383,7 @@ const styles = StyleSheet.create({
     color: palette.black,
     opacity: 0.7,
   },
-  statValueLight: {
-    color: palette.white,
-  },
+  statValueLight: { color: palette.white },
   sectionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -414,23 +394,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: palette.black,
-  },
-  sectionLink: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: palette.darkPurple,
-  },
-  servicesRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  serviceCard: {
-    flex: 1,
-    borderRadius: 18,
-    padding: spacing.md,
-    minHeight: 100,
-    justifyContent: "space-between",
   },
   cardGrid: {
     flexDirection: "row",
@@ -455,14 +418,13 @@ const styles = StyleSheet.create({
     minHeight: 90,
     justifyContent: "space-between",
   },
-  greenCard: {
-    backgroundColor: palette.green,
-  },
-  lightPurpleCard: {
-    backgroundColor: palette.lightPurple,
-  },
-  darkPurpleCard: {
-    backgroundColor: palette.darkPurple,
+  greenCard: { backgroundColor: palette.green },
+  lightPurpleCard: { backgroundColor: palette.lightPurple },
+  darkPurpleCard: { backgroundColor: palette.darkPurple },
+  recordsCard: {
+    backgroundColor: palette.softWhite,
+    borderWidth: 1,
+    borderColor: palette.lightPurple,
   },
   cardTitle: {
     fontSize: 15,
@@ -494,161 +456,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: palette.darkPurple,
   },
-  lightText: {
-    color: palette.white,
-  },
-  bannerCard: {
+  lightText: { color: palette.white },
+  servicesRow: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.softWhite,
-    borderRadius: 22,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: palette.lightPurple,
+    gap: spacing.sm,
     marginBottom: spacing.lg,
-    ...shadow.card,
   },
-  bannerBadge: {
-    backgroundColor: palette.darkPurple,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    marginRight: spacing.md,
-  },
-  bannerBadgeText: {
-    color: palette.white,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-  bannerCopy: {
+  serviceCard: {
     flex: 1,
-  },
-  bannerTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: palette.black,
-    marginBottom: 2,
-  },
-  bannerSubtitle: {
-    fontSize: 13,
-    color: palette.black,
-    opacity: 0.5,
-  },
-  bannerMeta: {
-    fontSize: 12,
-    color: palette.black,
-    opacity: 0.45,
-    marginTop: 2,
-  },
-  bannerAction: {
-    backgroundColor: palette.lightPurple,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  bannerActionText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: palette.darkPurple,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
-    paddingBottom: spacing.xl,
-    maxHeight: "80%",
-  },
-  modalHeader: {
-    flexDirection: "row",
+    borderRadius: 18,
+    padding: spacing.md,
+    minHeight: 108,
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.xl,
-  },
-  modalTitle: {
-    ...typography.h2,
-    fontWeight: "700",
-  },
-  closeButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: palette.lightPurple,
-  },
-  closeButtonText: {
-    fontSize: 14,
-    color: palette.darkPurple,
-    fontWeight: "700",
-  },
-  journeyContainer: {
-    paddingLeft: spacing.sm,
-  },
-  journeyItem: {
-    flexDirection: "row",
-    marginBottom: 0,
-    minHeight: 70,
-  },
-  journeyLineColumn: {
-    width: 20,
-    alignItems: "center",
-  },
-  journeyDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: colors.border,
-    zIndex: 2,
-  },
-  dotCompleted: {
-    backgroundColor: palette.green,
-  },
-  dotActive: {
-    backgroundColor: palette.darkPurple,
-    borderWidth: 3,
-    borderColor: palette.lightPurple,
-  },
-  journeyLine: {
-    width: 2,
-    flex: 1,
-    backgroundColor: "#EFEFEF",
-    marginVertical: -2,
-  },
-  lineCompleted: {
-    backgroundColor: palette.green,
-  },
-  journeyTextColumn: {
-    flex: 1,
-    marginLeft: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
-  journeyLabel: {
-    ...typography.h3,
-    color: colors.muted,
-    marginBottom: 4,
-  },
-  labelActive: {
-    color: palette.darkPurple,
-    fontWeight: "700",
-  },
-  journeyTime: {
-    ...typography.caption,
-  },
-  activeTag: {
-    backgroundColor: palette.lightPurple,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    height: 24,
-  },
-  activeTagText: {
-    fontSize: 10,
-    color: palette.darkPurple,
-    fontWeight: "700",
   },
   loadingContainer: {
     flex: 1,
@@ -669,18 +488,8 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: colors.error,
+    color: colors.danger,
     textAlign: "center",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  noJourneyText: {
-    fontSize: 14,
-    color: palette.black,
-    opacity: 0.6,
-    textAlign: "center",
-    paddingVertical: spacing.lg,
   },
 });
 

@@ -10,6 +10,7 @@ import SymptomCheckerConversationalScreen from "./screens/SymptomCheckerConversa
 import PatientAppointmentsScreen from "./screens/PatientAppointmentsScreen";
 import PatientConsentScreen from "./screens/PatientConsentScreen";
 import PatientHealthRecordsScreen from "./screens/PatientHealthRecordsScreen";
+import PatientVisitDetailsScreen from "./screens/PatientVisitDetailsScreen";
 
 import MainTabs from "./navigation/MainTabs";
 import HEWNavigator from "./navigation/HEWNavigator";
@@ -176,6 +177,11 @@ const AppNavigator = () => {
           name="PatientHealthRecords"
           component={PatientHealthRecordsScreen}
           options={{ title: "Health Records" }}
+        />
+        <Stack.Screen
+          name="PatientVisitDetails"
+          component={PatientVisitDetailsScreen}
+          options={{ title: "Visit Details" }}
         />
       </Stack.Navigator>
     </NavigationContainer>

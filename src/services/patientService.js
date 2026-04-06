@@ -121,6 +121,45 @@ const normalizeActiveVisitPayload = (response) => {
     };
 };
 
+const normalizeVisit = (visit) => {
+    const source = visit && typeof visit === "object" ? visit : {};
+
+    return {
+        ...source,
+        orders: source.orders || {
+            lab: source.lab_orders || source.labOrders || [],
+            imaging: source.imaging_orders || source.imagingOrders || [],
+            medication: source.medication_orders || source.medicationOrders || [],
+        },
+    };
+};
+
+const normalizeVisitHistoryPayload = (response) => {
+    const source = response && typeof response === "object" ? response : {};
+    const rawVisits = Array.isArray(source.visits)
+        ? source.visits
+        : Array.isArray(source.items)
+            ? source.items
+            : [];
+    const visits = rawVisits.map(normalizeVisit);
+
+    return {
+        ...source,
+        visits,
+        items: visits,
+    };
+};
+
+const normalizeVisitDetailsPayload = (response) => {
+    const source = response && typeof response === "object" ? response : {};
+    const rawVisit = source.visit || source.data || source.result || source;
+
+    return {
+        ...source,
+        visit: normalizeVisit(rawVisit),
+    };
+};
+
 /**
  * Fetch the active visit for the authenticated patient
  */
@@ -153,7 +192,7 @@ export const getPatientStats = async () => {
 export const getVisitHistory = async (limit = 10) => {
     try {
         const response = await api.get(`/mobile/patient/visit-history?limit=${limit}`);
-        return response;
+        return normalizeVisitHistoryPayload(response);
     } catch (error) {
         console.error("Failed to fetch visit history:", error);
         throw error;
@@ -179,7 +218,7 @@ export const getSyncedRecords = async (limit = 80) => {
 export const getVisitDetails = async (visitId) => {
     try {
         const response = await api.get(`/visits/${visitId}`);
-        return response;
+        return normalizeVisitDetailsPayload(response);
     } catch (error) {
         console.error("Failed to fetch visit details:", error);
         throw error;

@@ -9,10 +9,14 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { api } from "../lib/api";
 import { PATIENT_TENANT_ID } from "../lib/env";
+import {
+  getStoredPatientPhone,
+  setStoredPatientPhone,
+  clearStoredPatientPhone,
+} from "../lib/auth";
 
 const isWeb = Platform.OS === "web";
 
-// ── Demo PINs (secondary path) ────────────────────────────────────────────
 const DEMO_USERS = {
   "1234": {
     token: "demo-token-abebe",
@@ -115,6 +119,8 @@ const LoginScreen = () => {
   const { signInWithToken } = useAuth();
   const { showToast } = useToast();
   const [phoneNumber, setPhoneNumber] = React.useState("");
+  const [storedPatientPhone, setStoredPatientPhoneState] = React.useState("");
+  const [phoneLoaded, setPhoneLoaded] = React.useState(false);
   const [otp, setOtp] = React.useState("");
   const [otpRequested, setOtpRequested] = React.useState(false);
   const [requiresRegistration, setRequiresRegistration] = React.useState(false);
@@ -123,6 +129,8 @@ const LoginScreen = () => {
   const [gender, setGender] = React.useState("");
   const [emergencyContactName, setEmergencyContactName] = React.useState("");
   const [emergencyContactPhone, setEmergencyContactPhone] = React.useState("");
+  const [patientPassword, setPatientPassword] = React.useState("");
+  const [patientPasswordConfirm, setPatientPasswordConfirm] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [pin, setPin] = React.useState("");
@@ -130,16 +138,50 @@ const LoginScreen = () => {
   const [error, setError] = React.useState("");
   const [mode, setMode] = React.useState("patient");
 
-  const resetOtpFlow = React.useCallback(() => {
-    setOtp("");
-    setOtpRequested(false);
-    setRequiresRegistration(false);
+  React.useEffect(() => {
+    let active = true;
+
+    const loadStoredPhone = async () => {
+      try {
+        const storedPhone = normalizePhoneNumber(await getStoredPatientPhone());
+        if (!active) return;
+
+        if (storedPhone) {
+          setStoredPatientPhoneState(storedPhone);
+          setPhoneNumber(storedPhone);
+          setMode("patient");
+        } else {
+          setMode("patient_onboarding");
+        }
+      } catch {
+        if (active) setMode("patient_onboarding");
+      } finally {
+        if (active) setPhoneLoaded(true);
+      }
+    };
+
+    loadStoredPhone();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const resetRegistrationFields = React.useCallback(() => {
     setName("");
     setDateOfBirth("");
     setGender("");
     setEmergencyContactName("");
     setEmergencyContactPhone("");
+    setPatientPassword("");
+    setPatientPasswordConfirm("");
   }, []);
+
+  const resetOtpFlow = React.useCallback(() => {
+    setOtp("");
+    setOtpRequested(false);
+    setRequiresRegistration(false);
+    resetRegistrationFields();
+  }, [resetRegistrationFields]);
 
   const switchMode = React.useCallback((nextMode) => {
     setMode(nextMode);
@@ -150,12 +192,20 @@ const LoginScreen = () => {
     const sessionToken = getAuthTokenFromResponse(authResponse);
     if (!sessionToken) {
       setError("Unable to start patient session. Please try again.");
-      return;
+      return false;
     }
 
     const profile = buildPatientProfile(authResponse, fallbackPhone);
+    const resolvedPhone = normalizePhoneNumber(profile.phone_number || profile.phone || fallbackPhone);
+
     await signInWithToken(sessionToken, profile);
+    if (resolvedPhone) {
+      await setStoredPatientPhone(resolvedPhone);
+      setStoredPatientPhoneState(resolvedPhone);
+      setPhoneNumber(resolvedPhone);
+    }
     showToast(`Welcome, ${profile.first_name}!`, "success");
+    return true;
   }, [showToast, signInWithToken]);
 
   const handleRequestOtp = async () => {
@@ -206,10 +256,16 @@ const LoginScreen = () => {
         { phone_number: normalizedPhone, otp },
         { auth: false }
       );
-      await completePatientSignIn({
+
+      const signedIn = await completePatientSignIn({
         authResponse: response,
         fallbackPhone: normalizedPhone,
       });
+
+      if (!signedIn) {
+        setRequiresRegistration(true);
+        showToast("Phone verified. Create a password to finish your account.", "success");
+      }
     } catch (err) {
       if (err?.status === 404 && err?.payload?.error === "patient_not_found") {
         setRequiresRegistration(true);
@@ -240,6 +296,14 @@ const LoginScreen = () => {
       setError("Please enter your full name.");
       return;
     }
+    if (!patientPassword || patientPassword.length < 6) {
+      setError("Please create a password with at least 6 characters.");
+      return;
+    }
+    if (patientPassword !== patientPasswordConfirm) {
+      setError("Passwords do not match.");
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -255,6 +319,7 @@ const LoginScreen = () => {
           emergency_contact_name: emergencyContactName.trim() || undefined,
           emergency_contact_phone: normalizedEmergencyPhone || undefined,
           tenant_id: PATIENT_TENANT_ID || undefined,
+          password: patientPassword,
         },
         { auth: false }
       );
@@ -267,7 +332,11 @@ const LoginScreen = () => {
         setError("This phone number is already used by a non-patient account. Contact support.");
       } else if (err?.status === 409 && err?.payload?.error === "patient_exists") {
         setRequiresRegistration(false);
-        setError("Patient already exists. Verify the OTP to sign in.");
+        setMode("patient");
+        setStoredPatientPhoneState(normalizedPhone);
+        setPhoneNumber(normalizedPhone);
+        await setStoredPatientPhone(normalizedPhone);
+        setError("An account already exists for this number. Enter your password to sign in.");
       } else {
         setError(err?.message || "Unable to complete registration.");
       }
@@ -276,7 +345,51 @@ const LoginScreen = () => {
     }
   };
 
-  // ── 4-digit demo PIN login (secondary/testing path) ────────────────────
+  const handlePatientPasswordSignIn = async () => {
+    if (loading) return;
+
+    const normalizedPhone = normalizePhoneNumber(storedPatientPhone || phoneNumber);
+    if (!normalizedPhone) {
+      setError("No phone number is stored on this device. Use another phone number.");
+      return;
+    }
+    if (!patientPassword) {
+      setError("Please enter your password.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const response = await api.post(
+        "/patient-auth/sign-in",
+        {
+          phone_number: normalizedPhone,
+          password: patientPassword,
+        },
+        { auth: false }
+      );
+      await completePatientSignIn({
+        authResponse: response,
+        fallbackPhone: normalizedPhone,
+      });
+    } catch (err) {
+      setError(err?.message || "Unable to sign in.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUseAnotherPhoneNumber = async () => {
+    if (loading) return;
+    await clearStoredPatientPhone();
+    setStoredPatientPhoneState("");
+    setPhoneNumber("");
+    setPatientPassword("");
+    resetOtpFlow();
+    switchMode("patient_onboarding");
+  };
+
   const handlePinLogin = async () => {
     if (loading) return;
 
@@ -296,7 +409,7 @@ const LoginScreen = () => {
     try {
       const response = await api.post(
         "/patient-auth/dev-login",
-        { phone_number: match.profile.phone },
+        { phone_number: match.profile.phone, pin },
         { auth: false }
       );
 
@@ -311,6 +424,7 @@ const LoginScreen = () => {
 
       showToast(`Welcome, ${profile.first_name}! (${match.label})`, "success");
       await signInWithToken(token, profile);
+      await setStoredPatientPhone(normalizePhoneNumber(match.profile.phone));
     } catch (err) {
       setError(err?.message || "Login failed. Please try again.");
     } finally {
@@ -318,7 +432,6 @@ const LoginScreen = () => {
     }
   };
 
-  // ── Clinician / HEW email login (native) ───────────────────────────────
   const handleClinicianLogin = async () => {
     if (loading) return;
 
@@ -359,7 +472,17 @@ const LoginScreen = () => {
     }
   };
 
-  // ── Patient OTP login UI (default) ─────────────────────────────────────
+  if (!phoneLoaded) {
+    return (
+      <Screen variant="hero">
+        <View style={styles.loadingShell}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={styles.loadingShellText}>Preparing sign in...</Text>
+        </View>
+      </Screen>
+    );
+  }
+
   if (mode === "patient") {
     return (
       <Screen variant="hero">
@@ -367,7 +490,61 @@ const LoginScreen = () => {
           <Text style={styles.eyebrow}>Link Health</Text>
           <Text style={styles.title}>Patient Portal</Text>
           <Text style={styles.subtitle}>
-            Sign in with your phone number to access your Link records.
+            Sign in to your patient account with the phone number stored on this device.
+          </Text>
+        </View>
+
+        <Card style={styles.card}>
+          <Text style={styles.label}>Phone number on this device</Text>
+          <View style={styles.readonlyField}>
+            <Text style={styles.readonlyValue}>{storedPatientPhone || "No stored phone number"}</Text>
+          </View>
+
+          <Text style={styles.label}>Password</Text>
+          <Input
+            value={patientPassword}
+            onChangeText={(text) => {
+              setPatientPassword(text);
+              setError("");
+            }}
+            secureTextEntry
+            placeholder="Enter your password"
+            testID="patient-password"
+          />
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <View style={styles.actions}>
+            <Button title="Sign in" onPress={handlePatientPasswordSignIn} />
+            <Button
+              title="Use another phone number"
+              variant="secondary"
+              onPress={handleUseAnotherPhoneNumber}
+            />
+            {loading ? <ActivityIndicator color={colors.primary} /> : null}
+          </View>
+        </Card>
+
+        <View style={styles.testActions}>
+          <Pressable onPress={() => switchMode("email")} style={styles.switchMode}>
+            <Text style={styles.switchModeText}>Clinician or HEW sign in</Text>
+          </Pressable>
+          <Pressable onPress={() => switchMode("pin")} style={styles.switchMode}>
+            <Text style={styles.switchModeText}>Use demo PIN instead</Text>
+          </Pressable>
+        </View>
+      </Screen>
+    );
+  }
+
+  if (mode === "patient_onboarding") {
+    return (
+      <Screen variant="hero">
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>Link Health</Text>
+          <Text style={styles.title}>Create Patient Account</Text>
+          <Text style={styles.subtitle}>
+            Verify your phone number first, then finish setting up your account.
           </Text>
         </View>
 
@@ -405,7 +582,7 @@ const LoginScreen = () => {
           {requiresRegistration ? (
             <>
               <Text style={styles.registrationHint}>
-                We did not find an existing account for this phone number. Complete a quick setup.
+                Complete your account details and create a password for future sign-ins.
               </Text>
 
               <Text style={styles.label}>Full name</Text>
@@ -417,6 +594,28 @@ const LoginScreen = () => {
                 }}
                 placeholder="Abebe Metaferia Alemey"
                 testID="register-name"
+              />
+
+              <Text style={styles.label}>Create password</Text>
+              <Input
+                value={patientPassword}
+                onChangeText={(text) => {
+                  setPatientPassword(text);
+                  setError("");
+                }}
+                secureTextEntry
+                placeholder="At least 6 characters"
+              />
+
+              <Text style={styles.label}>Confirm password</Text>
+              <Input
+                value={patientPasswordConfirm}
+                onChangeText={(text) => {
+                  setPatientPasswordConfirm(text);
+                  setError("");
+                }}
+                secureTextEntry
+                placeholder="Re-enter password"
               />
 
               <Text style={styles.label}>Date of birth (optional)</Text>
@@ -455,11 +654,9 @@ const LoginScreen = () => {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <View style={styles.actions}>
-            {!otpRequested ? (
-              <Button title="Send code" onPress={handleRequestOtp} />
-            ) : null}
+            {!otpRequested ? <Button title="Send code" onPress={handleRequestOtp} /> : null}
             {otpRequested && !requiresRegistration ? (
-              <Button title="Verify and sign in" onPress={handleVerifyOtp} />
+              <Button title="Verify phone" onPress={handleVerifyOtp} />
             ) : null}
             {otpRequested && requiresRegistration ? (
               <Button title="Create account" onPress={handleRegisterPatient} />
@@ -471,23 +668,32 @@ const LoginScreen = () => {
                 onPress={resetOtpFlow}
               />
             ) : null}
-            {loading && <ActivityIndicator color={colors.primary} />}
+            {loading ? <ActivityIndicator color={colors.primary} /> : null}
           </View>
         </Card>
 
         <View style={styles.testActions}>
+          <Pressable
+            onPress={() => {
+              if (storedPatientPhone) {
+                setPatientPassword("");
+                switchMode("patient");
+              }
+            }}
+            style={styles.switchMode}
+          >
+            <Text style={styles.switchModeText}>
+              {storedPatientPhone ? "Back to password sign in" : "Password sign in available after account setup"}
+            </Text>
+          </Pressable>
           <Pressable onPress={() => switchMode("email")} style={styles.switchMode}>
             <Text style={styles.switchModeText}>Clinician or HEW sign in</Text>
-          </Pressable>
-          <Pressable onPress={() => switchMode("pin")} style={styles.switchMode}>
-            <Text style={styles.switchModeText}>Use demo PIN instead</Text>
           </Pressable>
         </View>
       </Screen>
     );
   }
 
-  // ── Demo PIN UI (secondary path) ───────────────────────────────────────
   if (mode === "pin") {
     return (
       <Screen variant="hero">
@@ -531,14 +737,17 @@ const LoginScreen = () => {
 
           <View style={styles.actions}>
             <Button title="Sign in with demo PIN" onPress={handlePinLogin} />
-            {loading && <ActivityIndicator color={colors.primary} />}
+            {loading ? <ActivityIndicator color={colors.primary} /> : null}
           </View>
         </Card>
 
         <View style={styles.testActions}>
           <Text style={styles.hintText}>1234 = Patient (Abebe) · 5678 = HEW (Birtukan)</Text>
-          <Pressable onPress={() => switchMode("patient")} style={styles.switchMode}>
-            <Text style={styles.switchModeText}>Back to patient OTP sign in</Text>
+          <Pressable
+            onPress={() => switchMode(storedPatientPhone ? "patient" : "patient_onboarding")}
+            style={styles.switchMode}
+          >
+            <Text style={styles.switchModeText}>Back to patient sign in</Text>
           </Pressable>
           {!isWeb ? (
             <Pressable onPress={() => switchMode("email")} style={styles.switchMode}>
@@ -550,7 +759,6 @@ const LoginScreen = () => {
     );
   }
 
-  // ── Clinician email/password login UI ──────────────────────────────────
   return (
     <Screen variant="hero">
       <View style={styles.header}>
@@ -585,13 +793,16 @@ const LoginScreen = () => {
 
         <View style={styles.actions}>
           <Button title="Sign in" onPress={handleClinicianLogin} />
-          {loading && <ActivityIndicator color={colors.primary} />}
+          {loading ? <ActivityIndicator color={colors.primary} /> : null}
         </View>
       </Card>
 
       <View style={styles.testActions}>
-        <Pressable onPress={() => switchMode("patient")} style={styles.switchMode}>
-          <Text style={styles.switchModeText}>Back to patient OTP sign in</Text>
+        <Pressable
+          onPress={() => switchMode(storedPatientPhone ? "patient" : "patient_onboarding")}
+          style={styles.switchMode}
+        >
+          <Text style={styles.switchModeText}>Back to patient sign in</Text>
         </Pressable>
         <Pressable onPress={() => switchMode("pin")} style={styles.switchMode}>
           <Text style={styles.switchModeText}>Use demo PIN instead</Text>
@@ -631,6 +842,18 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginBottom: spacing.xs,
   },
+  readonlyField: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.background,
+  },
+  readonlyValue: {
+    ...typography.body,
+    color: colors.text,
+  },
   actions: {
     marginTop: spacing.sm,
     gap: spacing.sm,
@@ -661,8 +884,8 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   dotFilled: {
-    backgroundColor: colors.primary || "#4D2C91",
-    borderColor: colors.primary || "#4D2C91",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   hintText: {
     fontSize: 12,
@@ -677,8 +900,18 @@ const styles = StyleSheet.create({
   switchModeText: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.primary || "#4D2C91",
+    color: colors.primary,
     textAlign: "center",
+  },
+  loadingShell: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  loadingShellText: {
+    ...typography.body,
+    color: colors.muted,
   },
 });
 

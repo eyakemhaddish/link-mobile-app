@@ -8,6 +8,7 @@ if (Platform.OS !== "web") {
 
 const TOKEN_KEY = "linkhc_auth_token";
 const PROFILE_KEY = "linkhc_auth_profile_v1";
+const PATIENT_PHONE_KEY = "linkhc_patient_phone_v1";
 
 // Platform-specific storage: SecureStore for native, localStorage for web
 const isWeb = Platform.OS === "web";
@@ -79,4 +80,35 @@ export const clearAuthProfile = async () => {
     return;
   }
   return SecureStore.deleteItemAsync(PROFILE_KEY);
+};
+
+export const getStoredPatientPhone = async () => {
+  if (isWeb) {
+    return localStorage.getItem(PATIENT_PHONE_KEY);
+  }
+  return SecureStore.getItemAsync(PATIENT_PHONE_KEY);
+};
+
+export const setStoredPatientPhone = async (phoneNumber) => {
+  if (!phoneNumber) {
+    if (isWeb) {
+      localStorage.removeItem(PATIENT_PHONE_KEY);
+      return;
+    }
+    return SecureStore.deleteItemAsync(PATIENT_PHONE_KEY);
+  }
+
+  if (isWeb) {
+    localStorage.setItem(PATIENT_PHONE_KEY, phoneNumber);
+    return;
+  }
+  return SecureStore.setItemAsync(PATIENT_PHONE_KEY, phoneNumber);
+};
+
+export const clearStoredPatientPhone = async () => {
+  if (isWeb) {
+    localStorage.removeItem(PATIENT_PHONE_KEY);
+    return;
+  }
+  return SecureStore.deleteItemAsync(PATIENT_PHONE_KEY);
 };

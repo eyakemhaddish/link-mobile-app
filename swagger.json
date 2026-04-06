@@ -804,6 +804,10 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "username": "doctor.demo",
+                "password": "P@ssword123"
               }
             },
             "text/json": {
@@ -1171,6 +1175,23 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -1208,6 +1229,15 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -2181,6 +2211,15 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -2221,6 +2260,15 @@
             }
           },
           {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
             "name": "include_visit_counts",
             "in": "query",
             "schema": {
@@ -2258,6 +2306,15 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -2287,6 +2344,23 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -2420,6 +2494,23 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -2455,6 +2546,13 @@
             }
           },
           {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "facility_type",
             "in": "query",
             "schema": {
@@ -2474,6 +2572,15 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -4045,6 +4152,15 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -4173,6 +4289,23 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -7502,6 +7635,23 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -10556,6 +10706,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -10904,6 +11061,15 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -10925,6 +11091,15 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -11006,6 +11181,15 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -11041,6 +11225,23 @@
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -11100,6 +11301,15 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -12245,6 +12455,9 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestPatientOtpDto"
+              },
+              "example": {
+                "phone_number": "+251912345678"
               }
             },
             "text/json": {
@@ -12261,7 +12474,71 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientOtpRequestResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientOtpRequestResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "OTP sent"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientOtpRequestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "error": "otp_rate_limited"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -12276,6 +12553,10 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/VerifyPatientOtpDto"
+              },
+              "example": {
+                "phone_number": "+251912345678",
+                "otp": "123456"
               }
             },
             "text/json": {
@@ -12293,6 +12574,69 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "error": "patient_not_found"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -12307,6 +12651,16 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RegisterPatientPortalAccountDto"
+              },
+              "example": {
+                "phone_number": "+251912345678",
+                "otp": "123456",
+                "name": "Test Patient",
+                "date_of_birth": "1998-05-12",
+                "gender": "female",
+                "emergency_contact_name": "Emergency Contact",
+                "emergency_contact_phone": "+251911111111",
+                "tenant_id": "00000000-0000-0000-0000-000000000001"
               }
             },
             "text/json": {
@@ -12324,6 +12678,247 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "error": "phone_number_in_use_by_non_patient_user"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient-auth/sign-in": {
+      "post": {
+        "tags": [
+          "PatientAuth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientPasswordSignInDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientPasswordSignInDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientPasswordSignInDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient-auth/me": {
+      "get": {
+        "tags": [
+          "PatientAuth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "error": "unauthorized"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient-auth/logout": {
+      "post": {
+        "tags": [
+          "PatientAuth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -12338,6 +12933,10 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PatientDevLoginDto"
+              },
+              "example": {
+                "phone_number": "+251911000099",
+                "pin": "005678"
               }
             },
             "text/json": {
@@ -12355,73 +12954,49 @@
         "responses": {
           "200": {
             "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/patient-auth/me": {
-      "get": {
-        "tags": [
-          "PatientAuth"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/patient-auth/facilities": {
-      "get": {
-        "tags": [
-          "PatientAuth"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/patient-auth/profile": {
-      "patch": {
-        "tags": [
-          "PatientAuth"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePatientPortalAccountDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePatientPortalAccountDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePatientPortalAccountDto"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
               }
             }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/patient-auth/logout": {
-      "post": {
-        "tags": [
-          "PatientAuth"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "error": "not_found"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -12692,6 +13267,17 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreatePatientDocumentDto"
+              },
+              "example": {
+                "document_type": "prescription",
+                "provider_name": "Dr X",
+                "document_date": "2026-04-01T00:00:00.000Z",
+                "description": "Medication plan",
+                "tags": [
+                  "opd",
+                  "rx"
+                ],
+                "file_url": "https://files.example/prescription.pdf"
               }
             },
             "text/json": {
@@ -12725,6 +13311,15 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -12816,6 +13411,17 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreatePatientSymptomLogDto"
+              },
+              "example": {
+                "symptom_data": {
+                  "symptoms": [
+                    "fever",
+                    "cough"
+                  ],
+                  "notes": "Started yesterday"
+                },
+                "urgency_level": "review",
+                "recommendations": "Hydration and clinic follow-up if worse."
               }
             },
             "text/json": {
@@ -12874,6 +13480,13 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreatePatientPortalAppointmentDto"
+              },
+              "example": {
+                "facility_id": "b2e70557-d695-4c4a-b7ff-0b756a04f07f",
+                "requested_date": "2026-04-01T00:00:00.000Z",
+                "requested_time_slot": "morning",
+                "reason": "Routine follow-up",
+                "notes": "Please schedule in the morning."
               }
             },
             "text/json": {
@@ -12917,6 +13530,17 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/GrantPatientConsentDto"
+              },
+              "example": {
+                "facilityId": "b2e70557-d695-4c4a-b7ff-0b756a04f07f",
+                "consentType": "records_access",
+                "comprehensionText": "I understand and consent.",
+                "comprehensionLanguage": "en",
+                "uiLanguage": "en",
+                "purpose": "Continuity of care",
+                "highRiskOverride": false,
+                "providerTargetType": "facility_care_team",
+                "providerTargetName": "General OPD"
               }
             },
             "text/json": {
@@ -12948,6 +13572,11 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RevokePatientConsentDto"
+              },
+              "example": {
+                "facilityId": "b2e70557-d695-4c4a-b7ff-0b756a04f07f",
+                "consentType": "records_access",
+                "reason": "No longer needed"
               }
             },
             "text/json": {
@@ -13417,6 +14046,15 @@
               "format": "int32",
               "default": 50
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -13839,6 +14477,14 @@
             }
           },
           {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -13852,8 +14498,7 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "default": 10
+              "format": "int32"
             }
           }
         ],
@@ -13884,6 +14529,15 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -13921,6 +14575,15 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -16235,6 +16898,15 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
           }
         ],
         "responses": {
@@ -16478,6 +17150,15 @@
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
@@ -23511,6 +24192,37 @@
           "phone_number": {
             "type": "string",
             "nullable": true
+          },
+          "pin": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PatientOtpRequestResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PatientPasswordSignInDto": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -24034,7 +24746,10 @@
           },
           "tenant_id": {
             "type": "string",
-            "format": "uuid",
+            "format": "uuid"
+          },
+          "password": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -24366,6 +25081,14 @@
             "nullable": true
           },
           "narrative_text": {
+            "type": "string",
+            "nullable": true
+          },
+          "follow_up": {
+            "type": "string",
+            "nullable": true
+          },
+          "followUp": {
             "type": "string",
             "nullable": true
           },

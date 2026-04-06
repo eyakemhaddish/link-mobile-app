@@ -67,6 +67,10 @@ The design team should:
 
 Use this mapping when designing:
 
+- current patient OTP-only onboarding becomes:
+  - first-time OTP verification
+  - registration with password creation
+  - later password sign-in with prefilled phone number
 - current `Home` becomes the stronger patient command center
 - current `PatientHealthRecords` becomes the main records destination with charts and tracking summaries
 - current `PatientAppointments` becomes the main appointment and reminder destination
@@ -355,7 +359,8 @@ Allow the user to get into the app with minimal friction and enough trust.
 4. Receive OTP
 5. Verify OTP
 6. If new patient, complete quick registration
-7. Land on Home
+7. Create password
+8. Land on Home
 
 Current implementation base:
 
@@ -366,6 +371,8 @@ Current implementation base:
 - OTP flow must be visually simple and linear
 - one primary action per step
 - form copy should be short and plain
+- password creation should happen only after OTP verification
+- password setup should be its own clear step, not buried in a dense form
 - emergency contact fields should not feel mandatory unless they are
 - show reassurance:
   - "You control your records"
@@ -379,6 +386,42 @@ Current implementation base:
 - prefer full-width buttons
 - use examples in local phone formatting
 - do not introduce device connection during initial onboarding
+
+## Flow 1b: Returning patient sign-in
+
+### Goal
+
+Make repeat sign-in faster and simpler than first-time registration.
+
+### Steps
+
+1. Open app
+2. App reads stored device phone number
+3. Show phone number prefilled and not editable
+4. Ask only for password
+5. Sign in
+6. Land on Home
+
+### UI/UX requirements
+
+- returning sign-in should be simpler than registration
+- phone number should be visible for trust, but not editable in the main sign-in view
+- if patient needs to change number, use a separate `Use another phone number` path
+- password screen must be simple and uncluttered
+
+### Copy direction
+
+Prefer:
+
+- "Sign in to your account"
+- "Phone number on this device"
+- "Enter your password"
+- "Use another phone number"
+
+Avoid:
+
+- technical device-account phrasing
+- long explanations on the sign-in screen
 
 ## Flow 2: Returning patient opening the app
 
@@ -625,6 +668,12 @@ Profile should support trust, not just account editing.
 - emergency contact
 - preferred language
 - sign out
+
+Related auth utilities in Profile or account support:
+
+- use another phone number
+- reset password
+- account recovery
 
 ### Settings areas inside Profile
 
@@ -885,6 +934,38 @@ These rules are mandatory.
 - if there are more, personalize and hide low-priority modules behind `See more`
 
 ## Screen-by-screen UI direction
+
+## Login and registration
+
+### Visual priority
+
+1. first-time or returning path clarity
+2. phone trust and identity
+3. OTP or password entry
+4. one clear primary action
+
+### Components
+
+- simple split between:
+  - first-time registration path
+  - returning password sign-in path
+- phone number field for first-time onboarding
+- prefilled phone display for returning sign-in
+- OTP entry
+- password creation
+- password entry
+
+### Preserve from current app
+
+- OTP-first patient acquisition
+- registration after patient-not-found
+
+### Improve from current app
+
+- add password creation after OTP verification
+- make returning sign-in a password flow
+- show phone number from device as prefilled and non-editable
+- provide a separate escape path for switching numbers
 
 ## Home
 
