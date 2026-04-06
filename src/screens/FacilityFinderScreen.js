@@ -11,7 +11,7 @@ import {
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-import { colors, spacing, typography } from "../theme/tokens";
+import { colors, radius, spacing, typography } from "../theme/tokens";
 import { useToast } from "../context/ToastContext";
 import { getFacilities, getPublicDirectoryFacilities } from "../services/patientService";
 
@@ -29,6 +29,22 @@ const formatFacilityType = (value) => {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+};
+
+const palette = {
+  background: "#F7FAF9",
+  surfaceLow: "#F1F4F3",
+  surfaceLowest: "#FFFFFF",
+  surfaceBorder: "#E0E3E2",
+  primary: "#004277",
+  primaryContainer: "#005A9E",
+  primaryFixed: "#D3E4FF",
+  secondary: "#2C694E",
+  secondaryFixed: "#B1F0CE",
+  tertiary: "#683200",
+  tertiaryFixed: "#FFDCC5",
+  text: "#181C1C",
+  textMuted: "#414750",
 };
 
 const FacilityFinderScreen = ({ navigation }) => {
@@ -117,15 +133,25 @@ const FacilityFinderScreen = ({ navigation }) => {
   }, [navigation]);
 
   return (
-    <Screen>
+    <Screen backgroundColor={palette.background}>
       <View style={styles.header}>
-        <Text style={styles.title}>Find Facilities</Text>
-        <Text style={styles.subtitle}>
-          Discover Link-enabled clinics and providers near you.
-        </Text>
+        <View style={styles.headerBadge}>
+          <Text style={styles.headerBadgeText}>Care directory</Text>
+        </View>
+        <Text style={styles.title}>Find a clinic</Text>
+        <Text style={styles.subtitle}>Discover Link-enabled clinics and providers near you.</Text>
       </View>
 
       <Card style={styles.searchCard}>
+        <View style={styles.searchCardHeader}>
+          <View>
+            <Text style={styles.searchCardTitle}>Search by facility or location</Text>
+            <Text style={styles.searchCardBody}>Use the directory below to find care and move directly into booking.</Text>
+          </View>
+          <View style={styles.searchCardIconWrap}>
+            <Text style={styles.searchCardIcon}>+</Text>
+          </View>
+        </View>
         <TextInput
           value={searchTerm}
           onChangeText={setSearchTerm}
@@ -159,7 +185,7 @@ const FacilityFinderScreen = ({ navigation }) => {
       ) : (
         <>
           <Text style={styles.resultsCount}>
-            {filteredFacilities.length} {filteredFacilities.length === 1 ? "facility" : "facilities"} found
+            {filteredFacilities.length} {filteredFacilities.length === 1 ? "facility" : "facilities"} available
           </Text>
 
           {filteredFacilities.length === 0 ? (
@@ -176,13 +202,19 @@ const FacilityFinderScreen = ({ navigation }) => {
             filteredFacilities.map((facility) => (
               <Card style={styles.card} key={facility.id}>
                 <View style={styles.facilityHeader}>
-                  <Text style={styles.cardTitle}>{facility.name}</Text>
+                  <View style={styles.facilityIdentity}>
+                    <View style={styles.facilityIcon}>
+                      <Text style={styles.facilityIconText}>+</Text>
+                    </View>
+                    <View style={styles.facilityTitleWrap}>
+                      <Text style={styles.cardTitle}>{facility.name}</Text>
+                      <Text style={styles.facilityLocation}>
+                        {facility.address || facility.location || "Location details unavailable"}
+                      </Text>
+                    </View>
+                  </View>
                   <Text style={styles.typeBadge}>{formatFacilityType(facility.facility_type)}</Text>
                 </View>
-
-                <Text style={styles.cardBody}>
-                  {facility.address || facility.location || "Location details unavailable"}
-                </Text>
 
                 {facility.phone_number ? (
                   <Pressable onPress={() => handleCall(facility.phone_number)}>
@@ -206,14 +238,8 @@ const FacilityFinderScreen = ({ navigation }) => {
 
                 <View style={styles.actionsRow}>
                   <Button
-                    title={connectedFacilityIdSet.has(facility.id) ? "Book appointment" : "Open appointments"}
-                    onPress={() => {
-                      if (connectedFacilityIdSet.has(facility.id)) {
-                        handleBookAppointment(facility);
-                        return;
-                      }
-                      navigation.navigate("PatientAppointments");
-                    }}
+                    title="Book appointment"
+                    onPress={() => handleBookAppointment(facility)}
                     style={styles.actionButton}
                   />
                   <Button
@@ -243,30 +269,80 @@ const FacilityFinderScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.md,
+    gap: spacing.xs,
+  },
+  headerBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: palette.tertiaryFixed,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  headerBadgeText: {
+    ...typography.caption,
+    color: palette.tertiary,
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: colors.ink,
-    marginBottom: 4,
+    fontSize: 28,
+    fontWeight: "800",
+    color: palette.primary,
+    fontFamily: "Manrope",
   },
   subtitle: {
-    fontSize: 13,
-    color: colors.muted,
+    ...typography.body,
+    color: palette.textMuted,
   },
   searchCard: {
     gap: spacing.sm,
     marginBottom: spacing.md,
+    backgroundColor: palette.surfaceLowest,
+    borderColor: palette.surfaceBorder,
+    borderRadius: 20,
+    padding: spacing.md,
+  },
+  searchCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  searchCardTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: palette.text,
+    fontFamily: "Manrope",
+  },
+  searchCardBody: {
+    ...typography.caption,
+    color: palette.textMuted,
+    marginTop: 4,
+    maxWidth: 260,
+  },
+  searchCardIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: palette.primaryFixed,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  searchCardIcon: {
+    fontSize: 24,
+    lineHeight: 24,
+    fontWeight: "700",
+    color: palette.primary,
   },
   searchInput: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
+    borderColor: palette.surfaceBorder,
+    borderRadius: 16,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: palette.background,
     ...typography.body,
-    color: colors.text,
+    color: palette.text,
   },
   filterRow: {
     flexDirection: "row",
@@ -275,23 +351,23 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: palette.surfaceBorder,
     borderRadius: 999,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: palette.surfaceLow,
   },
   filterChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
+    borderColor: palette.primaryContainer,
+    backgroundColor: palette.primaryFixed,
   },
   filterChipText: {
     ...typography.caption,
-    color: colors.muted,
+    color: palette.textMuted,
     fontWeight: "600",
   },
   filterChipTextActive: {
-    color: colors.primary,
+    color: palette.primary,
   },
   loadingState: {
     alignItems: "center",
@@ -300,16 +376,22 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...typography.body,
-    color: colors.muted,
+    color: palette.textMuted,
   },
   resultsCount: {
     ...typography.caption,
-    color: colors.muted,
+    color: palette.textMuted,
     marginBottom: spacing.sm,
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   card: {
     gap: spacing.sm,
     marginBottom: spacing.sm,
+    backgroundColor: palette.surfaceLowest,
+    borderColor: palette.surfaceBorder,
+    borderRadius: radius.lg,
+    padding: spacing.md,
   },
   facilityHeader: {
     flexDirection: "row",
@@ -317,26 +399,55 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: spacing.sm,
   },
+  facilityIdentity: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    flex: 1,
+  },
+  facilityIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: palette.secondaryFixed,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  facilityIconText: {
+    fontSize: 24,
+    lineHeight: 24,
+    fontWeight: "700",
+    color: palette.secondary,
+  },
+  facilityTitleWrap: {
+    flex: 1,
+    gap: 4,
+  },
   cardTitle: {
     ...typography.h3,
-    flex: 1,
+    color: palette.text,
+    fontFamily: "Manrope",
+  },
+  facilityLocation: {
+    ...typography.body,
+    color: palette.textMuted,
   },
   typeBadge: {
     ...typography.caption,
-    color: colors.primary,
-    backgroundColor: colors.primarySoft,
+    color: palette.primary,
+    backgroundColor: palette.primaryFixed,
     borderRadius: 999,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     overflow: "hidden",
+    fontWeight: "700",
   },
   cardBody: {
     ...typography.body,
-    color: colors.text,
+    color: palette.text,
   },
   phoneText: {
     ...typography.body,
-    color: colors.primary,
+    color: palette.primaryContainer,
     fontWeight: "600",
   },
   metaRow: {
@@ -346,12 +457,13 @@ const styles = StyleSheet.create({
   },
   metaBadge: {
     ...typography.caption,
-    color: colors.muted,
+    color: palette.textMuted,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: palette.surfaceBorder,
     borderRadius: 999,
     paddingVertical: 4,
     paddingHorizontal: 8,
+    backgroundColor: palette.surfaceLow,
   },
   actionsRow: {
     flexDirection: "row",
@@ -361,6 +473,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     minWidth: 110,
+    borderRadius: 14,
   },
   cardActions: {
     marginTop: spacing.sm,

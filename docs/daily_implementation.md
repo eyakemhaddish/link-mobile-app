@@ -116,7 +116,7 @@ We need the patient auth contract to support:
 Patient can clearly see:
 
 - previous visits
-- current active visit
+- current active visits
 - orders attached to each visit
 - available results and outputs from the visit
 
@@ -134,12 +134,26 @@ Patient can clearly see:
 - `GET /api/v1/visits/{id}`
 - `GET /api/v1/mobile/patient/records`
 
+### Backend contract update
+
+Do not keep the mobile app coupled to `GET /api/v1/visits/{id}` for patient visit detail.
+
+Use the dedicated patient-facing contract documented in:
+
+- [docs/patient-visit-contract-spec-2026-04-06.md](C:/Users/hp/Desktop/Projects/Link/link-mobile-app/docs/patient-visit-contract-spec-2026-04-06.md)
+
+Contract rules:
+
+- active visits are returned as a list, not a singleton
+- the frontend should not filter or reconstruct visit details
+- visit detail should come from a dedicated patient endpoint
+
 ### What must be true today
 
 - patient can open records and see visit history
-- patient can identify active visit separately from past visits
-- active visit shows current stage
-- active visit exposes orders summary:
+- patient can identify active visits separately from past visits
+- each active visit shows current stage
+- each active visit exposes orders summary:
   - lab
   - imaging
   - medication
@@ -154,12 +168,13 @@ Patient can clearly see:
 - do not leave visit context split awkwardly between Home and Records
 - use Home for summary and next step
 - use Records for history, details, and structured outputs
-- if needed, add a dedicated visit detail screen rather than overloading Home
+- do not rely on frontend filtering to reconstruct one visit from document feeds
+- backend should return patient-ready visit detail payloads
 
 ### Acceptance criteria
 
 - patient can see past visits in a recent-first structure
-- patient can see one clearly separated active visit state
+- patient can see zero, one, or multiple clearly separated active visits
 - orders are visible in a readable grouped format
 - results and outputs are visible or clearly marked unavailable
 - no dead-end “View” affordances without actual data behind them

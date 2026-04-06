@@ -17,7 +17,12 @@ import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
-import { getAppointments, getFacilities, createAppointment } from "../services/patientService";
+import {
+  getAppointments,
+  getFacilities,
+  getPublicDirectoryFacilities,
+  createAppointment,
+} from "../services/patientService";
 import { useToast } from "../context/ToastContext";
 
 const STATUS_CONFIG = {
@@ -54,14 +59,44 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
   const prefillFacilityName = route?.params?.prefillFacilityName || "";
   const startBooking = Boolean(route?.params?.startBooking);
 
+  const mergedFacilities = React.useMemo(() => {
+    const merged = new Map();
+
+    for (const facility of facilities) {
+      if (!facility?.id) continue;
+      merged.set(facility.id, facility);
+    }
+
+    return Array.from(merged.values());
+  }, [facilities]);
+
   const fetchData = useCallback(async () => {
     try {
-      const [apptRes, facRes] = await Promise.all([
+      const [apptRes, facRes, publicFacRes] = await Promise.all([
         getAppointments(),
         getFacilities(),
+        getPublicDirectoryFacilities({ limit: 200 }).catch(() => ({ facilities: [] })),
       ]);
+
+      const connectedFacilities = Array.isArray(facRes.facilities) ? facRes.facilities : [];
+      const publicFacilities = Array.isArray(publicFacRes.facilities) ? publicFacRes.facilities : [];
+      const mergedById = new Map();
+
+      for (const facility of publicFacilities) {
+        if (!facility?.id) continue;
+        mergedById.set(facility.id, facility);
+      }
+
+      for (const facility of connectedFacilities) {
+        if (!facility?.id) continue;
+        mergedById.set(facility.id, {
+          ...mergedById.get(facility.id),
+          ...facility,
+        });
+      }
+
       setAppointments(apptRes.appointments || apptRes.items || []);
-      setFacilities(facRes.facilities || []);
+      setFacilities(Array.from(mergedById.values()));
     } catch (err) {
       console.error("Failed to load appointments:", err);
     } finally {
@@ -75,16 +110,20 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
   }, [fetchData]);
 
   useEffect(() => {
-    if (!startBooking || !prefillFacilityId) return;
+    if (!startBooking) return;
 
-    const hasFacility = facilities.some((facility) => facility.id === prefillFacilityId);
-    if (!hasFacility) return;
-
-    const prefillKey = `${prefillFacilityId}:booking`;
+    const prefillKey = `${prefillFacilityId || "blank"}:booking`;
     if (consumedPrefillRef.current === prefillKey) return;
-    consumedPrefillRef.current = prefillKey;
 
-    setSelectedFacility(prefillFacilityId);
+    if (prefillFacilityId) {
+      const hasFacility = mergedFacilities.some((facility) => facility.id === prefillFacilityId);
+      if (!hasFacility) return;
+      setSelectedFacility(prefillFacilityId);
+    } else {
+      setSelectedFacility("");
+    }
+
+    consumedPrefillRef.current = prefillKey;
     setShowModal(true);
     setShowFacilityPicker(false);
 
@@ -95,7 +134,7 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
         prefillFacilityName: undefined,
       });
     }
-  }, [facilities, navigation, prefillFacilityId, startBooking]);
+  }, [mergedFacilities, navigation, prefillFacilityId, startBooking]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -139,7 +178,7 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
   };
 
   const selectedFacilityName =
-    facilities.find((f) => f.id === selectedFacility)?.name ||
+    mergedFacilities.find((f) => f.id === selectedFacility)?.name ||
     (selectedFacility === prefillFacilityId ? prefillFacilityName : "") ||
     "Select facility";
 
@@ -238,7 +277,7 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
               </Pressable>
               {showFacilityPicker && (
                 <View style={styles.pickerDropdown}>
-                  {facilities.map((fac) => (
+                  {mergedFacilities.map((fac) => (
                     <Pressable
                       key={fac.id}
                       style={[styles.pickerOption, selectedFacility === fac.id && styles.pickerOptionSelected]}
