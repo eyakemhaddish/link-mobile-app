@@ -8,12 +8,14 @@ import { getActiveVisit, getPatientStats } from "../services/patientService";
 import { formatVisitForDisplay, getOrdersSummary } from "../utils/journeyMapper";
 
 const palette = {
-  darkPurple: "#4D2C91",
-  lightPurple: "#D7C8F5",
-  green: "#B9F0D8",
+  primary: "#004277",
+  primaryContainer: "#005A9E",
+  primaryFixed: "#D3E4FF",
+  secondaryFixed: "#B1F0CE",
+  tertiaryFixed: "#FFDCC5",
   black: "#121214",
   white: "#FFFFFF",
-  softWhite: "#F7F5FB",
+  softWhite: "#F7FAF9",
 };
 
 const HomeScreen = () => {
@@ -65,7 +67,7 @@ const HomeScreen = () => {
     return (
       <Screen backgroundColor={palette.white} style={styles.screenContainer} scrollable={false}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={palette.darkPurple} />
+          <ActivityIndicator size="large" color={palette.primary} />
           <Text style={styles.loadingText}>Loading patient data...</Text>
         </View>
       </Screen>
@@ -89,7 +91,7 @@ const HomeScreen = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.darkPurple} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} />
         }
       >
         <View style={styles.canvas} testID="home-screen">
@@ -98,7 +100,10 @@ const HomeScreen = () => {
               <View style={styles.logoBadge}>
                 <Text style={styles.logoText}>LH</Text>
               </View>
-              <Text style={styles.brandText}>Link Health</Text>
+              <View>
+                <Text style={styles.brandText}>Link Health</Text>
+                <Text style={styles.brandSubtext}>Patient portal</Text>
+              </View>
             </View>
             <View style={styles.iconRow}>
               <View style={styles.iconDot} />
@@ -107,6 +112,9 @@ const HomeScreen = () => {
           </View>
 
           <View style={styles.header}>
+            <View style={styles.headerBadge}>
+              <Text style={styles.headerBadgeText}>Good morning</Text>
+            </View>
             <Text style={styles.greetingTitle}>Hello, {patientName}</Text>
           </View>
 
@@ -249,7 +257,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: spacing.xl * 2 },
   canvas: {
     flex: 1,
-    backgroundColor: palette.white,
+    backgroundColor: palette.softWhite,
     padding: spacing.lg,
   },
   topRow: {
@@ -267,20 +275,25 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: palette.lightPurple,
+    backgroundColor: palette.primaryFixed,
     alignItems: "center",
     justifyContent: "center",
   },
   logoText: {
-    color: palette.darkPurple,
+    color: palette.primary,
     fontWeight: "800",
     fontSize: 12,
   },
   brandText: {
     fontSize: 14,
     fontWeight: "700",
-    color: palette.darkPurple,
+    color: palette.primary,
     letterSpacing: 0.5,
+  },
+  brandSubtext: {
+    fontSize: 11,
+    color: colors.muted,
+    marginTop: 2,
   },
   iconRow: {
     flexDirection: "row",
@@ -291,34 +304,48 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: palette.green,
+    backgroundColor: palette.secondaryFixed,
   },
   iconRing: {
     width: 14,
     height: 14,
     borderRadius: 7,
     borderWidth: 2,
-    borderColor: palette.darkPurple,
+    borderColor: palette.primary,
   },
-  header: { marginBottom: spacing.md },
-  greetingTitle: {
-    fontSize: 22,
+  header: { marginBottom: spacing.md, gap: spacing.xs },
+  headerBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: palette.tertiaryFixed,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  headerBadgeText: {
+    fontSize: 11,
     fontWeight: "700",
-    color: palette.black,
+    color: "#713700",
+    textTransform: "uppercase",
+  },
+  greetingTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: palette.primary,
+    fontFamily: "Manrope",
   },
   bannerCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: palette.softWhite,
+    backgroundColor: palette.white,
     borderRadius: 22,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: palette.lightPurple,
+    borderColor: "#E0E3E2",
     marginBottom: spacing.lg,
     ...shadow.card,
   },
   bannerBadge: {
-    backgroundColor: palette.darkPurple,
+    backgroundColor: palette.primaryContainer,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
@@ -349,7 +376,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   bannerAction: {
-    backgroundColor: palette.lightPurple,
+    backgroundColor: palette.primaryFixed,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 12,
@@ -357,7 +384,7 @@ const styles = StyleSheet.create({
   bannerActionText: {
     fontSize: 11,
     fontWeight: "700",
-    color: palette.darkPurple,
+    color: palette.primary,
   },
   statsRow: {
     flexDirection: "row",
@@ -370,9 +397,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
   },
-  statPurple: { backgroundColor: palette.lightPurple },
-  statGreen: { backgroundColor: palette.green },
-  statDark: { backgroundColor: palette.darkPurple },
+  statPurple: { backgroundColor: palette.primaryFixed },
+  statGreen: { backgroundColor: palette.secondaryFixed },
+  statDark: { backgroundColor: palette.primaryContainer },
   statValue: {
     fontSize: 16,
     fontWeight: "700",
@@ -394,6 +421,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: palette.black,
+    fontFamily: "Manrope",
   },
   cardGrid: {
     flexDirection: "row",
@@ -406,7 +434,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     justifyContent: "space-between",
     minHeight: 190,
-    backgroundColor: palette.green,
+    backgroundColor: palette.secondaryFixed,
   },
   smallColumn: {
     flex: 1,
@@ -418,19 +446,20 @@ const styles = StyleSheet.create({
     minHeight: 90,
     justifyContent: "space-between",
   },
-  greenCard: { backgroundColor: palette.green },
-  lightPurpleCard: { backgroundColor: palette.lightPurple },
-  darkPurpleCard: { backgroundColor: palette.darkPurple },
+  greenCard: { backgroundColor: palette.secondaryFixed },
+  lightPurpleCard: { backgroundColor: palette.primaryFixed },
+  darkPurpleCard: { backgroundColor: palette.primaryContainer },
   recordsCard: {
-    backgroundColor: palette.softWhite,
+    backgroundColor: palette.white,
     borderWidth: 1,
-    borderColor: palette.lightPurple,
+    borderColor: "#E0E3E2",
   },
   cardTitle: {
     fontSize: 15,
     fontWeight: "700",
     color: palette.black,
     marginBottom: spacing.xs,
+    fontFamily: "Manrope",
   },
   cardBody: {
     fontSize: 12,
@@ -454,7 +483,7 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 12,
     fontWeight: "700",
-    color: palette.darkPurple,
+    color: palette.primary,
   },
   lightText: { color: palette.white },
   servicesRow: {
@@ -478,7 +507,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     fontSize: 14,
-    color: palette.darkPurple,
+    color: palette.primary,
   },
   errorContainer: {
     flex: 1,

@@ -5,7 +5,19 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Screen from "../components/ui/Screen";
 import { useAuth } from "../context/AuthContext";
-import { colors, spacing, typography } from "../theme/tokens";
+import { spacing, typography, shadow } from "../theme/tokens";
+
+const palette = {
+  primary: "#004277",
+  primaryFixed: "#D3E4FF",
+  secondaryFixed: "#B1F0CE",
+  tertiaryFixed: "#FFDCC5",
+  surface: "#F7FAF9",
+  surfaceLow: "#F1F4F3",
+  surfaceLowest: "#FFFFFF",
+  text: "#181C1C",
+  textMuted: "#414750",
+};
 
 const pickFirstTruthy = (...values) => {
   for (const value of values) {
@@ -60,27 +72,79 @@ const ProfileScreen = () => {
     "Not available";
 
   return (
-    <Screen>
+    <Screen backgroundColor={palette.surface}>
       <View style={styles.header}>
+        <View style={styles.headerBadge}>
+          <Text style={styles.headerBadgeText}>Profile</Text>
+        </View>
         <Text style={styles.title}>My Profile</Text>
         <Text style={styles.subtitle}>
-          Manage your health records and preferences.
+          Manage your identity, care settings, and account details.
         </Text>
       </View>
 
+      <Card style={styles.identityCard}>
+        <View style={styles.identityAvatar}>
+          <Text style={styles.identityAvatarText}>
+            {(displayName || "P").charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        <Text style={styles.identityName}>{displayName}</Text>
+        <Text style={styles.identitySubtext}>{phoneNumber}</Text>
+        <View style={styles.identityPills}>
+          <View style={styles.identityPill}>
+            <Text style={styles.identityPillText}>Patient ID: {patientId || "Not available"}</Text>
+          </View>
+          {role ? (
+            <View style={[styles.identityPill, styles.identityPillSecondary]}>
+              <Text style={styles.identityPillText}>{role}</Text>
+            </View>
+          ) : null}
+        </View>
+      </Card>
+
       <Card style={styles.card}>
         <Text style={styles.cardTitle}>Primary details</Text>
-        <Text style={styles.cardBody}>
-          {displayName} - {facility}
-        </Text>
-        <Text style={styles.meta}>Role: {role || "Not available"}</Text>
-        <Text style={styles.meta}>
-          Patient ID: {patientId || "Not available"}
-        </Text>
-        <Text style={styles.meta}>User ID: {userId || "Not available"}</Text>
-        <Text style={styles.meta}>Email: {email}</Text>
-        <Text style={styles.meta}>Phone: {phoneNumber}</Text>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Facility</Text>
+          <Text style={styles.detailValue}>{facility}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>User ID</Text>
+          <Text style={styles.detailValue}>{userId || "Not available"}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Email</Text>
+          <Text style={styles.detailValue}>{email}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Phone</Text>
+          <Text style={styles.detailValue}>{phoneNumber}</Text>
+        </View>
+      </Card>
 
+      <Card style={styles.preferencesCard}>
+        <View style={styles.preferenceTile}>
+          <View style={[styles.preferenceIconWrap, styles.preferenceBlue]}>
+            <Text style={styles.preferenceIcon}>!</Text>
+          </View>
+          <View style={styles.preferenceCopy}>
+            <Text style={styles.preferenceTitle}>Reminders</Text>
+            <Text style={styles.preferenceBody}>Manage medication and appointment alerts.</Text>
+          </View>
+        </View>
+        <View style={styles.preferenceTile}>
+          <View style={[styles.preferenceIconWrap, styles.preferenceGreen]}>
+            <Text style={styles.preferenceIcon}>+</Text>
+          </View>
+          <View style={styles.preferenceCopy}>
+            <Text style={styles.preferenceTitle}>Caregivers</Text>
+            <Text style={styles.preferenceBody}>Authorized access for family members.</Text>
+          </View>
+        </View>
+      </Card>
+
+      <View style={styles.actions}>
         <Button title="Update profile" onPress={() => {}} variant="secondary" />
         <Button
           title="Sign out"
@@ -89,7 +153,7 @@ const ProfileScreen = () => {
           }}
           variant="ghost"
         />
-      </Card>
+      </View>
     </Screen>
   );
 };
@@ -97,29 +161,150 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.md,
+    gap: spacing.xs,
+  },
+  headerBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: palette.tertiaryFixed,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  headerBadgeText: {
+    ...typography.caption,
+    color: "#713700",
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: colors.ink,
+    fontSize: 28,
+    fontWeight: "800",
+    color: palette.primary,
     marginBottom: 4,
+    fontFamily: "Manrope",
   },
   subtitle: {
     fontSize: 13,
-    color: colors.muted,
+    color: palette.textMuted,
+  },
+  identityCard: {
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+    backgroundColor: palette.surfaceLowest,
+    borderColor: "#E0E3E2",
+    ...shadow.card,
+  },
+  identityAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: palette.primaryFixed,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  identityAvatarText: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: palette.primary,
+  },
+  identityName: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: palette.text,
+    fontFamily: "Manrope",
+  },
+  identitySubtext: {
+    ...typography.body,
+    color: palette.textMuted,
+  },
+  identityPills: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  identityPill: {
+    backgroundColor: palette.surfaceLow,
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  identityPillSecondary: {
+    backgroundColor: palette.secondaryFixed,
+  },
+  identityPillText: {
+    ...typography.caption,
+    color: palette.text,
+    fontWeight: "700",
   },
   card: {
     gap: spacing.sm,
+    marginBottom: spacing.md,
+    backgroundColor: palette.surfaceLowest,
+    borderColor: "#E0E3E2",
+  },
+  preferencesCard: {
+    gap: spacing.md,
+    backgroundColor: palette.surfaceLowest,
+    borderColor: "#E0E3E2",
   },
   cardTitle: {
     ...typography.h3,
+    fontFamily: "Manrope",
   },
-  cardBody: {
-    ...typography.body,
+  detailRow: {
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E3E2",
   },
-  meta: {
+  detailLabel: {
     ...typography.caption,
-    color: colors.muted,
+    color: palette.textMuted,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  detailValue: {
+    ...typography.body,
+    color: palette.text,
+  },
+  preferenceTile: {
+    flexDirection: "row",
+    gap: spacing.md,
+    alignItems: "center",
+  },
+  preferenceIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  preferenceBlue: {
+    backgroundColor: palette.primaryFixed,
+  },
+  preferenceGreen: {
+    backgroundColor: palette.secondaryFixed,
+  },
+  preferenceIcon: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: palette.primary,
+  },
+  preferenceCopy: {
+    flex: 1,
+  },
+  preferenceTitle: {
+    ...typography.body,
+    fontWeight: "700",
+    color: palette.text,
+  },
+  preferenceBody: {
+    ...typography.caption,
+    color: palette.textMuted,
+    marginTop: 2,
+  },
+  actions: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
   },
 });
 

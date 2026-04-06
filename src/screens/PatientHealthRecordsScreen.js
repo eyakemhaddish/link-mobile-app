@@ -309,7 +309,7 @@ const PatientHealthRecordsScreen = () => {
     return (
       <Screen backgroundColor={palette.white} style={styles.screen} scrollable={false}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={palette.darkPurple} />
+          <ActivityIndicator size="large" color={palette.primary} />
           <Text style={styles.loadingText}>Loading health records...</Text>
         </View>
       </Screen>
@@ -321,8 +321,11 @@ const PatientHealthRecordsScreen = () => {
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.darkPurple} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} />}
       >
+        <View style={styles.headerBadge}>
+          <Text style={styles.headerBadgeText}>Records</Text>
+        </View>
         <Text style={styles.heading}>Health Records</Text>
         <Text style={styles.subtitle}>Your synced visit records and uploaded documents</Text>
         {activeVisitSummary && (
@@ -611,12 +614,14 @@ const PatientHealthRecordsScreen = () => {
 };
 
 const palette = {
-  darkPurple: "#4D2C91",
-  lightPurple: "#D7C8F5",
-  green: "#B9F0D8",
-  black: "#121214",
+  primary: "#004277",
+  primaryContainer: "#005A9E",
+  primaryFixed: "#D3E4FF",
+  tertiaryFixed: "#FFDCC5",
+  black: "#181C1C",
   white: "#FFFFFF",
-  softWhite: "#F7F5FB",
+  softWhite: "#F7FAF9",
+  softPanel: "#F1F4F3",
 };
 
 const styles = StyleSheet.create({
@@ -624,24 +629,38 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { padding: spacing.lg, paddingBottom: 100 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: spacing.xl },
-  loadingText: { marginTop: spacing.md, fontSize: 14, color: palette.darkPurple },
-  heading: { fontSize: 22, fontWeight: "700", color: palette.black, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: palette.black, opacity: 0.5, marginBottom: spacing.md },
+  loadingText: { marginTop: spacing.md, fontSize: 14, color: palette.primary },
+  headerBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: palette.tertiaryFixed,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: spacing.xs,
+  },
+  headerBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#713700",
+    textTransform: "uppercase",
+  },
+  heading: { fontSize: 28, fontWeight: "800", color: palette.primary, marginBottom: 4, fontFamily: "Manrope" },
+  subtitle: { fontSize: 14, color: colors.muted, opacity: 1, marginBottom: spacing.md },
   visitHeroCard: {
     marginBottom: spacing.md,
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: palette.lightPurple,
-    backgroundColor: "#F3EEFF",
+    borderColor: "#E0E3E2",
+    backgroundColor: palette.white,
     ...shadow.card,
   },
   visitHeroHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
-  visitHeroEyebrow: { fontSize: 12, fontWeight: "700", color: palette.darkPurple, textTransform: "uppercase" },
-  visitHeroTitle: { fontSize: 18, fontWeight: "700", color: palette.black, marginTop: 4 },
+  visitHeroEyebrow: { fontSize: 12, fontWeight: "700", color: palette.primary, textTransform: "uppercase" },
+  visitHeroTitle: { fontSize: 18, fontWeight: "700", color: palette.black, marginTop: 4, fontFamily: "Manrope" },
   visitHeroMeta: { fontSize: 13, color: palette.black, opacity: 0.72, marginTop: 2 },
   liveBadge: {
-    backgroundColor: palette.darkPurple,
+    backgroundColor: palette.primaryContainer,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -649,9 +668,9 @@ const styles = StyleSheet.create({
   liveBadgeText: { fontSize: 10, fontWeight: "800", color: palette.white, letterSpacing: 0.6 },
   visitHeroActions: { marginTop: spacing.md, alignItems: "flex-start" },
   visitPrimaryButton: { paddingHorizontal: spacing.lg },
-  visitSectionCard: { marginBottom: spacing.md, padding: spacing.md },
+  visitSectionCard: { marginBottom: spacing.md, padding: spacing.md, backgroundColor: palette.white, borderColor: "#E0E3E2" },
   visitSectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
-  visitSectionTitle: { fontSize: 17, fontWeight: "700", color: palette.black },
+  visitSectionTitle: { fontSize: 17, fontWeight: "700", color: palette.black, fontFamily: "Manrope" },
   visitSectionCaption: { fontSize: 12, color: palette.black, opacity: 0.55 },
   visitListCard: {
     borderTopWidth: 1,
@@ -670,11 +689,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: palette.lightPurple,
-    backgroundColor: "#F3EEFF",
+    borderColor: "#E0E3E2",
+    backgroundColor: palette.softPanel,
     ...shadow.card,
   },
-  rolloutTitle: { fontSize: 14, fontWeight: "700", color: palette.darkPurple, marginBottom: 6 },
+  rolloutTitle: { fontSize: 14, fontWeight: "700", color: palette.primary, marginBottom: 6 },
   rolloutBody: { fontSize: 13, color: palette.black, opacity: 0.75, lineHeight: 18 },
   growthCard: {
     marginBottom: spacing.md,
@@ -682,21 +701,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: "#BFD8FF",
-    backgroundColor: "#F4F8FF",
+    backgroundColor: palette.white,
     ...shadow.card,
   },
-  growthTitle: { fontSize: 14, fontWeight: "700", color: palette.darkPurple, marginBottom: 6 },
+  growthTitle: { fontSize: 14, fontWeight: "700", color: palette.primary, marginBottom: 6, fontFamily: "Manrope" },
   growthBody: { fontSize: 13, color: palette.black, opacity: 0.72, lineHeight: 18 },
   growthActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: spacing.sm },
   growthActionBtn: {
     borderRadius: 10,
-    backgroundColor: palette.white,
+    backgroundColor: palette.softWhite,
     borderWidth: 1,
     borderColor: "#BFD8FF",
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
-  growthActionText: { fontSize: 12, fontWeight: "700", color: palette.darkPurple },
+  growthActionText: { fontSize: 12, fontWeight: "700", color: palette.primary },
 
   searchRow: { marginBottom: spacing.sm },
   searchInput: {
@@ -718,7 +737,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: palette.softWhite,
   },
-  filterChipText: { fontSize: 13, fontWeight: "600", color: palette.darkPurple },
+  filterChipText: { fontSize: 13, fontWeight: "600", color: palette.primary },
   filterDropdown: {
     position: "absolute",
     top: 36,
@@ -738,7 +757,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 18, fontWeight: "600", color: palette.black, marginBottom: 8 },
   emptyBody: { fontSize: 14, color: palette.black, opacity: 0.5 },
 
-  card: { marginBottom: spacing.md, padding: spacing.md },
+  card: { marginBottom: spacing.md, padding: spacing.md, backgroundColor: palette.white, borderColor: "#E0E3E2" },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
   typeBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   typeBadgeText: { fontSize: 11, fontWeight: "700" },
@@ -747,7 +766,7 @@ const styles = StyleSheet.create({
   descText: { fontSize: 13, color: palette.black, marginBottom: 8 },
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 },
   tag: { backgroundColor: palette.softWhite, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: colors.border },
-  tagText: { fontSize: 11, color: palette.darkPurple },
+  tagText: { fontSize: 11, color: palette.primary },
 
   cardActions: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.sm },
   syncedActions: { flexDirection: "row", gap: spacing.sm, flexWrap: "wrap" },
@@ -755,9 +774,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 10,
-    backgroundColor: palette.lightPurple,
+    backgroundColor: palette.primaryFixed,
   },
-  actionBtnText: { fontSize: 12, fontWeight: "700", color: palette.darkPurple },
+  actionBtnText: { fontSize: 12, fontWeight: "700", color: palette.primary },
   continueBtn: { backgroundColor: "#DBEAFE" },
   deleteBtn: { backgroundColor: "#FEE2E2" },
   deleteBtnText: { fontSize: 12, fontWeight: "700", color: "#991B1B" },
@@ -773,7 +792,7 @@ const styles = StyleSheet.create({
 
   fabContainer: { position: "absolute", bottom: spacing.lg, left: spacing.lg, right: spacing.lg },
   fab: {
-    backgroundColor: palette.darkPurple,
+    backgroundColor: palette.primaryContainer,
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: "center",
@@ -792,8 +811,8 @@ const styles = StyleSheet.create({
   },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.lg },
   modalTitle: { fontSize: 20, fontWeight: "700", color: palette.black },
-  closeBtn: { padding: 8, borderRadius: 20, backgroundColor: palette.lightPurple },
-  closeBtnText: { fontSize: 14, color: palette.darkPurple, fontWeight: "700" },
+  closeBtn: { padding: 8, borderRadius: 20, backgroundColor: palette.primaryFixed },
+  closeBtnText: { fontSize: 14, color: palette.primary, fontWeight: "700" },
   modalScroll: { marginBottom: spacing.md },
 
   fieldLabel: { fontSize: 13, fontWeight: "600", color: palette.black, marginBottom: 6, marginTop: spacing.md },
@@ -820,7 +839,7 @@ const styles = StyleSheet.create({
   filePickerBtn: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: palette.darkPurple,
+    borderColor: palette.primary,
     paddingHorizontal: 10,
     paddingVertical: 7,
     backgroundColor: palette.white,
@@ -828,7 +847,7 @@ const styles = StyleSheet.create({
   filePickerBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: palette.darkPurple,
+    color: palette.primary,
   },
   fileNameText: {
     flex: 1,
@@ -852,7 +871,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   pickerOption: { padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
-  pickerOptionSelected: { backgroundColor: palette.lightPurple },
+  pickerOptionSelected: { backgroundColor: palette.primaryFixed },
   pickerOptionText: { fontSize: 14, color: palette.black },
   submitBtn: { marginTop: spacing.sm },
 });

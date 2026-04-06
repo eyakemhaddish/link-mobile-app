@@ -38,6 +38,34 @@ const TIME_SLOTS = [
   { value: "evening", label: "Evening (5PM - 8PM)" },
 ];
 
+const APPOINTMENT_PALETTE = {
+  primary: "#004277",
+  primaryContainer: "#005A9E",
+  primaryFixed: "#D3E4FF",
+  secondary: "#2C694E",
+  secondaryFixed: "#B1F0CE",
+  tertiaryFixed: "#FFDCC5",
+  surface: "#F7FAF9",
+  surfaceLow: "#F1F4F3",
+  surfaceLowest: "#FFFFFF",
+  surfaceBorder: "#E0E3E2",
+  text: "#181C1C",
+  textMuted: "#414750",
+};
+
+const formatDisplayDate = (value) => {
+  if (!value) return "Date pending";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
 const PatientAppointmentsScreen = ({ route, navigation }) => {
   const [appointments, setAppointments] = useState([]);
   const [facilities, setFacilities] = useState([]);
@@ -181,6 +209,8 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
     mergedFacilities.find((f) => f.id === selectedFacility)?.name ||
     (selectedFacility === prefillFacilityId ? prefillFacilityName : "") ||
     "Select facility";
+  const upcomingAppointment =
+    appointments.find((appointment) => appointment.status === "confirmed") || appointments[0] || null;
 
   if (loading) {
     return (
@@ -200,8 +230,31 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.darkPurple} />}
       >
-        <Text style={styles.heading}>My Appointments</Text>
-        <Text style={styles.subtitle}>Manage your appointment requests</Text>
+        <View style={styles.headerBlock}>
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerBadgeText}>Appointments</Text>
+          </View>
+          <Text style={styles.heading}>My appointments</Text>
+          <Text style={styles.subtitle}>Manage your appointment requests and prepare for upcoming visits.</Text>
+        </View>
+
+        {upcomingAppointment ? (
+          <Card style={styles.heroCard}>
+            <View style={styles.heroStatusRow}>
+              <Text style={styles.heroEyebrow}>Upcoming visit</Text>
+              <View style={[styles.heroStatusBadge, { backgroundColor: (STATUS_CONFIG[upcomingAppointment.status] || STATUS_CONFIG.pending).bg }]}>
+                <Text style={[styles.heroStatusText, { color: (STATUS_CONFIG[upcomingAppointment.status] || STATUS_CONFIG.pending).text }]}>
+                  {(STATUS_CONFIG[upcomingAppointment.status] || STATUS_CONFIG.pending).label}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.heroTitle}>
+              {upcomingAppointment.facility?.name || upcomingAppointment.facilities?.name || "Facility pending"}
+            </Text>
+            <Text style={styles.heroMeta}>{formatDisplayDate(upcomingAppointment.requested_date)}</Text>
+            {upcomingAppointment.reason ? <Text style={styles.heroReason}>{upcomingAppointment.reason}</Text> : null}
+          </Card>
+        ) : null}
 
         {appointments.length === 0 ? (
           <View style={styles.emptyState}>
@@ -215,14 +268,18 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
             return (
               <Card key={apt.id} style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.facilityName}>{facility?.name || "Unknown Facility"}</Text>
+                  <View style={styles.facilityHeaderWrap}>
+                    <View style={styles.facilityIcon}>
+                      <Text style={styles.facilityIconText}>+</Text>
+                    </View>
+                    <View style={styles.facilityCopy}>
+                      <Text style={styles.facilityName}>{facility?.name || "Unknown Facility"}</Text>
+                      <Text style={styles.facilitySubtext}>{formatDisplayDate(apt.requested_date)}</Text>
+                    </View>
+                  </View>
                   <View style={[styles.badge, { backgroundColor: status.bg }]}>
                     <Text style={[styles.badgeText, { color: status.text }]}>{status.label}</Text>
                   </View>
-                </View>
-                <View style={styles.cardRow}>
-                  <Text style={styles.label}>Date:</Text>
-                  <Text style={styles.value}>{apt.requested_date}</Text>
                 </View>
                 {apt.requested_time_slot && (
                   <View style={styles.cardRow}>
@@ -353,27 +410,110 @@ const styles = StyleSheet.create({
   screen: { padding: 0 },
   scroll: { flex: 1 },
   scrollContent: { padding: spacing.lg, paddingBottom: 100 },
+  headerBlock: { marginBottom: spacing.lg, gap: spacing.xs },
+  headerBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: APPOINTMENT_PALETTE.tertiaryFixed,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  headerBadgeText: {
+    ...typography.caption,
+    color: "#713700",
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: spacing.xl },
   loadingText: { marginTop: spacing.md, fontSize: 14, color: palette.darkPurple },
-  heading: { fontSize: 22, fontWeight: "700", color: palette.black, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: palette.black, opacity: 0.5, marginBottom: spacing.lg },
+  heading: { fontSize: 28, fontWeight: "800", color: APPOINTMENT_PALETTE.primary, marginBottom: 4, fontFamily: "Manrope" },
+  subtitle: { fontSize: 14, color: APPOINTMENT_PALETTE.textMuted, opacity: 1, marginBottom: 0 },
+  heroCard: {
+    marginBottom: spacing.lg,
+    backgroundColor: APPOINTMENT_PALETTE.surfaceLowest,
+    borderColor: APPOINTMENT_PALETTE.surfaceBorder,
+    borderRadius: 24,
+    padding: spacing.lg,
+    ...shadow.card,
+  },
+  heroStatusRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  heroEyebrow: {
+    ...typography.caption,
+    color: APPOINTMENT_PALETTE.primary,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  heroStatusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  heroStatusText: {
+    ...typography.caption,
+    fontWeight: "700",
+  },
+  heroTitle: {
+    fontSize: 21,
+    fontWeight: "800",
+    color: APPOINTMENT_PALETTE.text,
+    fontFamily: "Manrope",
+  },
+  heroMeta: {
+    ...typography.body,
+    color: APPOINTMENT_PALETTE.textMuted,
+    marginTop: 6,
+  },
+  heroReason: {
+    ...typography.body,
+    color: APPOINTMENT_PALETTE.text,
+    marginTop: spacing.sm,
+  },
 
   emptyState: { alignItems: "center", paddingVertical: spacing.xl * 2 },
   emptyTitle: { fontSize: 18, fontWeight: "600", color: palette.black, marginBottom: 8 },
   emptyBody: { fontSize: 14, color: palette.black, opacity: 0.5 },
 
-  card: { marginBottom: spacing.md, padding: spacing.md },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
-  facilityName: { fontSize: 16, fontWeight: "700", color: palette.black, flex: 1, marginRight: spacing.sm },
+  card: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: APPOINTMENT_PALETTE.surfaceLowest,
+    borderColor: APPOINTMENT_PALETTE.surfaceBorder,
+  },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: spacing.sm, gap: spacing.sm },
+  facilityHeaderWrap: { flexDirection: "row", alignItems: "center", flex: 1, gap: spacing.sm },
+  facilityIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: APPOINTMENT_PALETTE.primaryFixed,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  facilityIconText: {
+    fontSize: 24,
+    lineHeight: 24,
+    fontWeight: "700",
+    color: APPOINTMENT_PALETTE.primary,
+  },
+  facilityCopy: { flex: 1, gap: 3 },
+  facilityName: { fontSize: 16, fontWeight: "800", color: APPOINTMENT_PALETTE.text, fontFamily: "Manrope" },
+  facilitySubtext: { ...typography.caption, color: APPOINTMENT_PALETTE.textMuted },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   badgeText: { fontSize: 11, fontWeight: "700" },
   cardRow: { flexDirection: "row", marginBottom: 6 },
-  label: { fontSize: 13, fontWeight: "600", color: palette.black, opacity: 0.5, marginRight: 8, width: 50 },
-  value: { fontSize: 13, color: palette.black },
+  label: { fontSize: 13, fontWeight: "600", color: APPOINTMENT_PALETTE.textMuted, marginRight: 8, width: 50 },
+  value: { fontSize: 13, color: APPOINTMENT_PALETTE.text },
 
   callButton: {
     marginTop: spacing.sm,
-    backgroundColor: palette.lightPurple,
+    backgroundColor: APPOINTMENT_PALETTE.primaryFixed,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -425,16 +565,16 @@ const styles = StyleSheet.create({
 
   pickerButton: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.sm,
+    borderColor: APPOINTMENT_PALETTE.surfaceBorder,
+    borderRadius: 16,
     padding: spacing.sm,
-    backgroundColor: palette.softWhite,
+    backgroundColor: APPOINTMENT_PALETTE.surface,
   },
   pickerText: { fontSize: 14, color: palette.black },
   pickerPlaceholder: { fontSize: 14, color: "#9CA3AF" },
   pickerDropdown: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: APPOINTMENT_PALETTE.surfaceBorder,
     borderRadius: radius.sm,
     backgroundColor: palette.white,
     marginTop: 4,
@@ -447,10 +587,10 @@ const styles = StyleSheet.create({
   timeSlotChip: {
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: palette.softWhite,
+    borderColor: APPOINTMENT_PALETTE.surfaceBorder,
+    backgroundColor: APPOINTMENT_PALETTE.surface,
   },
   timeSlotChipActive: { backgroundColor: palette.darkPurple, borderColor: palette.darkPurple },
   timeSlotText: { fontSize: 13, color: palette.black },
