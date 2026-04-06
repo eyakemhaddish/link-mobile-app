@@ -60,7 +60,7 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
         getAppointments(),
         getFacilities(),
       ]);
-      setAppointments(apptRes.appointments || []);
+      setAppointments(apptRes.appointments || apptRes.items || []);
       setFacilities(facRes.facilities || []);
     } catch (err) {
       console.error("Failed to load appointments:", err);
@@ -172,10 +172,11 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
         ) : (
           appointments.map((apt) => {
             const status = STATUS_CONFIG[apt.status] || STATUS_CONFIG.pending;
+            const facility = apt.facilities || apt.facility || null;
             return (
               <Card key={apt.id} style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.facilityName}>{apt.facilities?.name || "Unknown Facility"}</Text>
+                  <Text style={styles.facilityName}>{facility?.name || "Unknown Facility"}</Text>
                   <View style={[styles.badge, { backgroundColor: status.bg }]}>
                     <Text style={[styles.badgeText, { color: status.text }]}>{status.label}</Text>
                   </View>
@@ -196,10 +197,10 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
                   <Text style={styles.label}>Reason:</Text>
                   <Text style={[styles.value, { flex: 1 }]}>{apt.reason}</Text>
                 </View>
-                {apt.status === "confirmed" && apt.facilities?.phone_number && (
+                {apt.status === "confirmed" && facility?.phone_number && (
                   <Pressable
                     style={styles.callButton}
-                    onPress={() => callFacility(apt.facilities.phone_number)}
+                    onPress={() => callFacility(facility.phone_number)}
                   >
                     <Text style={styles.callButtonText}>Call Facility</Text>
                   </Pressable>

@@ -17,6 +17,7 @@ import * as DocumentPicker from "expo-document-picker";
 import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import { API_BASE_URL } from "../lib/env";
 import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
 import {
   getDocuments,
@@ -39,6 +40,21 @@ const DOC_TYPES = [
 ];
 
 const getDocTypeConfig = (type) => DOC_TYPES.find((d) => d.value === type) || DOC_TYPES.find((d) => d.value === "other");
+
+const resolveDownloadUrl = (inputUrl) => {
+  const raw = typeof inputUrl === "string" ? inputUrl.trim() : "";
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+
+  try {
+    const apiOrigin = new URL(API_BASE_URL).origin;
+    if (raw.startsWith("/")) return `${apiOrigin}${raw}`;
+    const base = API_BASE_URL.replace(/\/+$/, "");
+    return `${base}/${raw.replace(/^\/+/, "")}`;
+  } catch {
+    return raw;
+  }
+};
 
 const PatientHealthRecordsScreen = () => {
   const [documents, setDocuments] = useState([]);
@@ -192,8 +208,15 @@ const PatientHealthRecordsScreen = () => {
     ]);
   };
 
-  const handleDownload = (url) => {
-    if (url) Linking.openURL(url);
+  const handleDownload = async (url) => {
+    const resolvedUrl = resolveDownloadUrl(url);
+    if (!resolvedUrl) return;
+
+    try {
+      await Linking.openURL(resolvedUrl);
+    } catch (error) {
+      Alert.alert("Unable to open document", "The document link is invalid or not accessible yet.");
+    }
   };
 
   const handleOpenExternal = async (url) => {

@@ -57,6 +57,34 @@ const extractUploadedFileUrl = (response) => {
     );
 };
 
+const normalizeAppointment = (appointment) => {
+    const source = appointment && typeof appointment === "object" ? appointment : {};
+    const facility = source.facilities || source.facility || null;
+
+    return {
+        ...source,
+        facility,
+        facilities: facility,
+    };
+};
+
+const normalizeAppointmentsResponse = (response) => {
+    const source = response && typeof response === "object" ? response : {};
+    const rawAppointments = Array.isArray(source.appointments)
+        ? source.appointments
+        : Array.isArray(source.items)
+            ? source.items
+            : [];
+
+    const appointments = rawAppointments.map(normalizeAppointment);
+
+    return {
+        ...source,
+        appointments,
+        items: appointments,
+    };
+};
+
 const normalizeActiveVisitPayload = (response) => {
     const source = response && typeof response === "object" ? response : {};
     const patient = source.patient || source.patient_profile || null;
@@ -192,7 +220,7 @@ export const getPublicDirectoryFacilities = async (options = {}) => {
 export const getAppointments = async () => {
     try {
         const response = await api.get("/patient-portal/appointments");
-        return response;
+        return normalizeAppointmentsResponse(response);
     } catch (error) {
         console.error("Failed to fetch appointments:", error);
         throw error;
