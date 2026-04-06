@@ -88,36 +88,40 @@ const normalizeAppointmentsResponse = (response) => {
 const normalizeActiveVisitPayload = (response) => {
     const source = response && typeof response === "object" ? response : {};
     const patient = source.patient || source.patient_profile || null;
-    const rawActiveVisit = source.activeVisit || source.active_visit || null;
+    const rawActiveVisits = Array.isArray(source.activeVisits)
+        ? source.activeVisits
+        : Array.isArray(source.active_visits)
+            ? source.active_visits
+            : Array.isArray(source.visits)
+                ? source.visits
+                : source.activeVisit || source.active_visit
+                    ? [source.activeVisit || source.active_visit]
+                    : [];
 
-    if (!rawActiveVisit) {
-        return {
-            ...source,
-            patient,
-            activeVisit: null,
-            active_visit: null,
-        };
-    }
-
-    const normalizedActiveVisit = {
-        ...rawActiveVisit,
-        journey_timeline: Array.isArray(rawActiveVisit.journey_timeline)
-            ? rawActiveVisit.journey_timeline
-            : Array.isArray(rawActiveVisit.journeyTimeline)
-                ? rawActiveVisit.journeyTimeline
-                : [],
-        current_journey_stage:
-            rawActiveVisit.current_journey_stage ||
-            rawActiveVisit.currentJourneyStage ||
-            rawActiveVisit.status ||
-            "registered",
-    };
+    const activeVisits = rawActiveVisits
+        .filter((entry) => entry && typeof entry === "object")
+        .map((rawActiveVisit) => ({
+            ...rawActiveVisit,
+            journey_timeline: Array.isArray(rawActiveVisit.journey_timeline)
+                ? rawActiveVisit.journey_timeline
+                : Array.isArray(rawActiveVisit.journeyTimeline)
+                    ? rawActiveVisit.journeyTimeline
+                    : [],
+            current_journey_stage:
+                rawActiveVisit.current_journey_stage ||
+                rawActiveVisit.currentJourneyStage ||
+                rawActiveVisit.status ||
+                "registered",
+        }));
+    const activeVisit = activeVisits[0] || null;
 
     return {
         ...source,
         patient,
-        activeVisit: normalizedActiveVisit,
-        active_visit: normalizedActiveVisit,
+        activeVisits,
+        active_visits: activeVisits,
+        activeVisit: activeVisit,
+        active_visit: activeVisit,
     };
 };
 
@@ -165,7 +169,7 @@ const normalizeVisitDetailsPayload = (response) => {
  */
 export const getActiveVisit = async () => {
     try {
-        const response = await api.get("/mobile/patient/active-visit");
+        const response = await api.get("/patient-portal/visits/active");
         return normalizeActiveVisitPayload(response);
     } catch (error) {
         console.error("Failed to fetch active visit:", error);
@@ -191,7 +195,7 @@ export const getPatientStats = async () => {
  */
 export const getVisitHistory = async (limit = 10) => {
     try {
-        const response = await api.get(`/mobile/patient/visit-history?limit=${limit}`);
+        const response = await api.get(`/patient-portal/visits/history?limit=${limit}`);
         return normalizeVisitHistoryPayload(response);
     } catch (error) {
         console.error("Failed to fetch visit history:", error);
@@ -217,7 +221,7 @@ export const getSyncedRecords = async (limit = 80) => {
  */
 export const getVisitDetails = async (visitId) => {
     try {
-        const response = await api.get(`/visits/${visitId}`);
+        const response = await api.get(`/patient-portal/visits/${visitId}`);
         return normalizeVisitDetailsPayload(response);
     } catch (error) {
         console.error("Failed to fetch visit details:", error);

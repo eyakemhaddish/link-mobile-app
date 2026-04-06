@@ -11,6 +11,7 @@ import {
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import HeroHeader from "../components/ui/HeroHeader";
 import { colors, radius, spacing, typography } from "../theme/tokens";
 import { useToast } from "../context/ToastContext";
 import { getFacilities, getPublicDirectoryFacilities } from "../services/patientService";
@@ -134,13 +135,12 @@ const FacilityFinderScreen = ({ navigation }) => {
 
   return (
     <Screen backgroundColor={palette.background}>
-      <View style={styles.header}>
-        <View style={styles.headerBadge}>
-          <Text style={styles.headerBadgeText}>Care directory</Text>
-        </View>
-        <Text style={styles.title}>Find a clinic</Text>
-        <Text style={styles.subtitle}>Discover Link-enabled clinics and providers near you.</Text>
-      </View>
+      <HeroHeader
+        badge="Care directory"
+        title="Find a clinic"
+        subtitle="Discover Link-enabled clinics and providers near you."
+        style={styles.header}
+      />
 
       <Card style={styles.searchCard}>
         <View style={styles.searchCardHeader}>
@@ -269,30 +269,6 @@ const FacilityFinderScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.md,
-    gap: spacing.xs,
-  },
-  headerBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: palette.tertiaryFixed,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  headerBadgeText: {
-    ...typography.caption,
-    color: palette.tertiary,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: palette.primary,
-    fontFamily: "Manrope",
-  },
-  subtitle: {
-    ...typography.body,
-    color: palette.textMuted,
   },
   searchCard: {
     gap: spacing.sm,
@@ -309,16 +285,15 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   searchCardTitle: {
-    fontSize: 16,
-    fontWeight: "800",
+    ...typography.h3,
     color: palette.text,
-    fontFamily: "Manrope",
   },
   searchCardBody: {
-    ...typography.caption,
+    ...typography.body,
     color: palette.textMuted,
     marginTop: 4,
     maxWidth: 260,
+    lineHeight: 20,
   },
   searchCardIconWrap: {
     width: 44,
@@ -425,11 +400,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     ...typography.h3,
     color: palette.text,
-    fontFamily: "Manrope",
   },
   facilityLocation: {
     ...typography.body,
     color: palette.textMuted,
+    lineHeight: 20,
   },
   typeBadge: {
     ...typography.caption,

@@ -98,6 +98,86 @@ const WEB_MOCK_RESPONSES = {
     facility_id: "demo-facility-zelalem-001",
     facility_name: "Zelalem Hospital",
   },
+  "/patient-portal/visits/active": {
+    patient: {
+      id: "demo-patient-abebe-001",
+      full_name: "Abebe Metaferia Alemey",
+      first_name: "Abebe",
+      last_name: "Alemey",
+      date_of_birth: "1985-06-20",
+      sex: "male",
+      phone: "+251911000001",
+      village: "Kirkos",
+      kebele: "Kebele 03",
+      woreda: "Kirkos",
+    },
+    activeVisits: [
+      {
+        id: "demo-triage-visit-001",
+        facility_id: "demo-facility-zelalem-001",
+        facility_name: "Zelalem Hospital",
+        visit_date: new Date().toISOString(),
+        visit_type: "outpatient",
+        status: "at_pharmacy",
+        current_journey_stage: "at_pharmacy",
+        chief_complaint: "Fever, difficulty breathing",
+        priority: "urgent",
+        provider: "Dr. Kebede",
+        notes: "Diagnosed with acute bronchitis. Prescribed amoxicillin 500mg TID x7 days + paracetamol PRN. Lab CBC normal, CRP mildly elevated. SpO2 improved to 97% post-nebulization.",
+        vitals: {
+          bp_systolic: 128,
+          bp_diastolic: 82,
+          heart_rate: 88,
+          temperature: 37.2,
+          weight_kg: 54,
+          height_cm: 161,
+          spo2_pct: 97,
+          respiratory_rate: 18,
+        },
+        orders: {
+          lab: [
+            { id: "lo-001", test_name: "Complete Blood Count (CBC)", status: "completed", payment_status: "paid" },
+            { id: "lo-002", test_name: "C-Reactive Protein (CRP)", status: "completed", payment_status: "paid" },
+          ],
+          imaging: [],
+          medication: [
+            { id: "mo-001", medication_name: "Amoxicillin 500mg", status: "dispensing", payment_status: "paid" },
+            { id: "mo-002", medication_name: "Paracetamol 500mg", status: "dispensing", payment_status: "paid" },
+          ],
+        },
+        journey_timeline: [
+          { stage: "registered", arrived_at: new Date(Date.now() - 180 * 60000).toISOString(), completed_at: new Date(Date.now() - 170 * 60000).toISOString(), wait_time_minutes: 5, notes: "Patient registered at reception" },
+          { stage: "at_triage", arrived_at: new Date(Date.now() - 170 * 60000).toISOString(), completed_at: new Date(Date.now() - 155 * 60000).toISOString(), wait_time_minutes: 10, notes: "Triage complete â€” urgent priority assigned" },
+          { stage: "vitals_taken", arrived_at: new Date(Date.now() - 155 * 60000).toISOString(), completed_at: new Date(Date.now() - 145 * 60000).toISOString(), wait_time_minutes: 5, notes: "Vitals recorded: temp 38.4Â°C, SpO2 93%, BP 138/88" },
+          { stage: "with_doctor", arrived_at: new Date(Date.now() - 145 * 60000).toISOString(), completed_at: new Date(Date.now() - 110 * 60000).toISOString(), wait_time_minutes: 20, notes: "Consultation with Dr. Kebede â€” acute bronchitis diagnosed" },
+          { stage: "at_lab", arrived_at: new Date(Date.now() - 110 * 60000).toISOString(), completed_at: new Date(Date.now() - 60 * 60000).toISOString(), wait_time_minutes: 30, notes: "CBC and CRP tests completed â€” results normal/mild elevation" },
+          { stage: "at_pharmacy", arrived_at: new Date(Date.now() - 15 * 60000).toISOString(), completed_at: null, wait_time_minutes: null, notes: "Awaiting medication dispensing â€” amoxicillin + paracetamol" },
+        ],
+      },
+      {
+        id: "demo-followup-visit-002",
+        facility_id: "fac-addis-001",
+        facility_name: "Addis Clinic",
+        visit_date: new Date(Date.now() - 24 * 60000).toISOString(),
+        visit_type: "follow_up",
+        status: "with_doctor",
+        current_journey_stage: "with_doctor",
+        chief_complaint: "Medication review",
+        priority: "routine",
+        provider: "Dr. Hana",
+        notes: "Scheduled follow-up for blood pressure review.",
+        orders: {
+          lab: [],
+          imaging: [],
+          medication: [],
+        },
+        journey_timeline: [
+          { stage: "registered", arrived_at: new Date(Date.now() - 60 * 60000).toISOString(), completed_at: new Date(Date.now() - 52 * 60000).toISOString(), wait_time_minutes: 4, notes: "Follow-up visit registered." },
+          { stage: "with_doctor", arrived_at: new Date(Date.now() - 24 * 60000).toISOString(), completed_at: null, wait_time_minutes: null, notes: "Waiting for consultation wrap-up." },
+        ],
+      },
+    ],
+  },
   "/mobile/patient/active-visit": {
     patient: {
       id: "demo-patient-abebe-001",
@@ -159,7 +239,7 @@ const WEB_MOCK_RESPONSES = {
     activeTasks: 2,
     visitsToday: 1,
   },
-  "/mobile/patient/visit-history": {
+  "/patient-portal/visits/history": {
     visits: [
       {
         id: "demo-triage-visit-001",
@@ -189,6 +269,30 @@ const WEB_MOCK_RESPONSES = {
         diagnosis: "Routine check-up — all normal",
         provider: "Dr. Abebe",
         chief_complaint: "Annual physical",
+        priority: "routine",
+      },
+    ],
+  },
+  "/mobile/patient/visit-history": {
+    visits: [
+      {
+        id: "demo-triage-visit-001",
+        facility_name: "Zelalem Hospital",
+        date: new Date().toISOString(),
+        status: "at_pharmacy",
+        diagnosis: "Acute bronchitis â€” prescribed amoxicillin + paracetamol",
+        provider: "Dr. Kebede",
+        chief_complaint: "Fever, difficulty breathing",
+        priority: "urgent",
+      },
+      {
+        id: "v-hist-001",
+        facility_name: "Zelalem Hospital",
+        date: "2026-02-20T10:00:00Z",
+        status: "completed",
+        diagnosis: "Upper respiratory infection",
+        provider: "Dr. Kebede",
+        chief_complaint: "Persistent cough for 5 days",
         priority: "routine",
       },
     ],
@@ -459,6 +563,33 @@ const WEB_MOCK_RESPONSES = {
 const webMockRequest = (path) => {
   // Strip query params for matching
   const cleanPath = path.split("?")[0];
+  if (/^\/patient-portal\/visits\/[^/]+$/i.test(cleanPath)) {
+    return Promise.resolve({
+      visit: {
+        id: cleanPath.split("/").pop(),
+        status: "at_pharmacy",
+        visit_date: new Date().toISOString(),
+        facility_id: "demo-facility-zelalem-001",
+        facility_name: "Zelalem Hospital",
+        provider: "Dr. Kebede",
+        current_journey_stage: "at_pharmacy",
+        chief_complaint: "Fever, difficulty breathing",
+        orders: {
+          lab: [
+            { id: "lo-001", test_name: "Complete Blood Count (CBC)", status: "completed", payment_status: "paid" },
+          ],
+          imaging: [],
+          medication: [
+            { id: "mo-001", medication_name: "Amoxicillin 500mg", status: "dispensing", payment_status: "paid" },
+          ],
+        },
+        journey_timeline: [
+          { stage: "registered", arrived_at: new Date(Date.now() - 180 * 60000).toISOString(), completed_at: new Date(Date.now() - 170 * 60000).toISOString(), wait_time_minutes: 5, notes: "Patient registered at reception" },
+          { stage: "at_pharmacy", arrived_at: new Date(Date.now() - 15 * 60000).toISOString(), completed_at: null, wait_time_minutes: null, notes: "Awaiting medication dispensing" },
+        ],
+      },
+    });
+  }
   if (/^\/visits\/[^/]+$/i.test(cleanPath)) {
     return Promise.resolve({
       id: cleanPath.split("/").pop(),
@@ -490,10 +621,28 @@ const withTimeout = (promise, timeoutMs) => {
   ]).finally(() => clearTimeout(timeoutId));
 };
 
+const API_PREFIX = "/api/v1";
+
+const normalizeApiBase = (value) => {
+  const raw = String(value || "").trim().replace(/\/+$/, "");
+  if (!raw) return API_PREFIX;
+
+  if (/\/api\/v1$/i.test(raw)) return raw;
+  if (/\/api$/i.test(raw)) return `${raw}/v1`;
+
+  return `${raw}${API_PREFIX}`;
+};
+
 const buildUrl = (path) => {
   if (path.startsWith("http")) return path;
-  const base = API_BASE_URL.replace(/\/$/, "");
-  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const prefixedPath = normalizedPath.startsWith(API_PREFIX)
+    ? normalizedPath
+    : `${API_PREFIX}${normalizedPath}`;
+
+  const base = normalizeApiBase(API_BASE_URL);
+  return `${base}${prefixedPath.replace(/^\/api\/v1/i, "")}`;
 };
 
 // ── In-flight request deduplication ──────────────────────────────────────
