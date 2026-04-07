@@ -13371,6 +13371,50 @@
         }
       }
     },
+    "/api/v1/patient-portal/feed": {
+      "get": {
+        "tags": [
+          "PatientPortal"
+        ],
+        "parameters": [
+          {
+            "name": "since",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/patient-portal/feed/stream": {
+      "get": {
+        "tags": [
+          "PatientPortal"
+        ],
+        "parameters": [
+          {
+            "name": "since",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/patient-portal/documents/upload": {
       "post": {
         "tags": [

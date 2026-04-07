@@ -61,11 +61,17 @@ const humanizeStage = (stage) => {
 };
 
 const pickTimelineTimestamp = (entry) =>
+  entry?.completedAt ||
   entry?.completed_at ||
+  entry?.occurred_at ||
+  entry?.occurredAt ||
   entry?.timestamp ||
   entry?.arrived_at ||
+  entry?.arrivedAt ||
   entry?.created_at ||
+  entry?.createdAt ||
   entry?.updated_at ||
+  entry?.updatedAt ||
   null;
 
 const parseDate = (value) => {
@@ -92,12 +98,19 @@ const getTimelineEntries = (visit) => {
     ? visit.journey_timeline
     : Array.isArray(visit?.journeyTimeline)
       ? visit.journeyTimeline
+      : Array.isArray(visit?.timeline)
+        ? visit.timeline
       : [];
 
   return rawTimeline
     .map((entry, index) => {
       const stage = normalizeStage(
-        entry?.stage || entry?.status || entry?.name,
+        entry?.stage ||
+          entry?.status ||
+          entry?.name ||
+          entry?.code ||
+          entry?.current_stage?.code ||
+          entry?.currentStage?.code,
       );
       if (!stage) return null;
 
@@ -150,7 +163,11 @@ export const mapVisitToJourneySteps = (visit) => {
   }
 
   const fallbackStage = normalizeStage(
-    visit.current_journey_stage || visit.status || "registered",
+    visit.current_journey_stage ||
+      visit.current_stage?.code ||
+      visit.currentStage?.code ||
+      visit.status ||
+      "registered",
   );
   const currentStage = fallbackStage || "registered";
   const currentStageIndex = STAGE_ORDER.indexOf(currentStage);
@@ -221,14 +238,28 @@ export const formatVisitForDisplay = (visit) => {
       ? timelineEntries[timelineEntries.length - 1]
       : null;
   const fallbackStage = normalizeStage(
-    visit.current_journey_stage || visit.status || "registered",
+    visit.current_journey_stage ||
+      visit.current_stage?.code ||
+      visit.currentStage?.code ||
+      visit.status ||
+      "registered",
   );
   const currentStage =
     latestTimelineEntry?.stage || fallbackStage || "registered";
+  const currentStageLabel =
+    visit.current_stage?.label ||
+    visit.currentStage?.label ||
+    getStageLabel(currentStage);
   const stageUpdatedAt =
     latestTimelineEntry?.timestamp ||
+    visit.current_stage?.updated_at ||
+    visit.current_stage?.updatedAt ||
+    visit.currentStage?.updated_at ||
+    visit.currentStage?.updatedAt ||
     visit.updated_at ||
+    visit.updatedAt ||
     visit.created_at ||
+    visit.createdAt ||
     visit.visit_date ||
     null;
 
@@ -237,11 +268,12 @@ export const formatVisitForDisplay = (visit) => {
     visitDate: visit.visit_date,
     reason: visit.reason,
     provider: visit.provider || "Staff",
-    currentStage: getStageLabel(currentStage),
+    currentStage: currentStageLabel,
     currentStageRaw: currentStage,
     currentStageUpdatedAt: stageUpdatedAt,
     currentStageUpdatedLabel: formatDateTime(stageUpdatedAt),
     urgency: visit.triage_urgency,
+    patientActionRequired: Boolean(visit.patient_action_required),
     hasTimeline: timelineEntries.length > 0,
     journeySteps: mapVisitToJourneySteps({
       ...visit,

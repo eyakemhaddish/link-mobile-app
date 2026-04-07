@@ -13,11 +13,88 @@ import { Feather } from "@expo/vector-icons";
 
 import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
+import { useAuth } from "../context/AuthContext";
 import { colors, spacing, shadow } from "../theme/tokens";
 import { patientPortalPalette as palette } from "../theme/patientPortal";
 import { getActiveVisit, getPatientRealtimeFeed, getPatientStats } from "../services/patientService";
 import { inferPatientFeedAction, performPatientFeedAction } from "../utils/patientFeedActions";
+import { subscribeToPatientFeed } from "../services/realtimeService";
+import { processPatientFeedNotifications } from "../services/notificationService";
 import { formatVisitForDisplay, getOrdersSummary } from "../utils/journeyMapper";
+
+const mergeFeedItems = (currentItems, nextItems, limit = 4) => {
+  const byId = new Map();
+
+  [...nextItems, ...currentItems].forEach((item) => {
+    if (!item?.id) return;
+    byId.set(item.id, item);
+  });
+
+  return Array.from(byId.values())
+    .sort((left, right) => {
+      const leftTimestamp = left?.updated_at || left?.occurred_at || "";
+      const rightTimestamp = right?.updated_at || right?.occurred_at || "";
+      return String(rightTimestamp).localeCompare(String(leftTimestamp));
+    })
+    .slice(0, limit);
+};
+
+const toDisplayText = (value, fallback = "") => {
+  if (typeof value === "string" || typeof value === "number") {
+    const normalized = String(value).trim();
+    return normalized || fallback;
+  }
+
+  if (value && typeof value === "object") {
+    return toDisplayText(
+      value.name ||
+        value.full_name ||
+        value.fullName ||
+        value.title ||
+        value.label ||
+        value.description,
+      fallback,
+    );
+  }
+
+  return fallback;
+};
+
+const getRelativeTimeLabel = (value) => {
+  if (!value) return "Updated recently";
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Updated recently";
+
+  const diffMinutes = Math.max(0, Math.round((Date.now() - parsed.getTime()) / 60000));
+  if (diffMinutes < 1) return "Updated just now";
+  if (diffMinutes < 60) return `Updated ${diffMinutes} min ago`;
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `Updated ${diffHours} hr ago`;
+
+  const diffDays = Math.round(diffHours / 24);
+  return `Updated ${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+};
+
+const selectPrimaryVisit = (visits) =>
+  [...visits].sort((left, right) => {
+    const leftDisplay = formatVisitForDisplay(left);
+    const rightDisplay = formatVisitForDisplay(right);
+
+    if (leftDisplay.patientActionRequired !== rightDisplay.patientActionRequired) {
+      return leftDisplay.patientActionRequired ? -1 : 1;
+    }
+
+    const leftUpdated = new Date(
+      leftDisplay.currentStageUpdatedAt || left.updated_at || left.visit_date || 0,
+    ).getTime();
+    const rightUpdated = new Date(
+      rightDisplay.currentStageUpdatedAt || right.updated_at || right.visit_date || 0,
+    ).getTime();
+
+    return rightUpdated - leftUpdated;
+  })[0] || null;
 
 const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
@@ -32,26 +109,36 @@ const HomeScreen = () => {
     visitsToday: 0,
   });
   const navigation = useNavigation();
+  const { user } = useAuth();
+
+  const loadSummary = useCallback(async () => {
+    const [visitResponse, statsResponse] = await Promise.all([
+      getActiveVisit(),
+      getPatientStats(),
+    ]);
+
+    setPatientData(visitResponse?.patient || null);
+    setActiveVisits(
+      Array.isArray(visitResponse?.activeVisits)
+        ? visitResponse.activeVisits
+        : visitResponse?.activeVisit
+          ? [visitResponse.activeVisit]
+          : [],
+    );
+    setStats(statsResponse || { totalVisits: 0, activeTasks: 0, visitsToday: 0 });
+  }, []);
+
+  const loadFeed = useCallback(async () => {
+    const feedResponse = await getPatientRealtimeFeed().catch(() => ({ items: [] }));
+    const items = Array.isArray(feedResponse?.items) ? feedResponse.items : [];
+    setFeedItems(items.slice(0, 4));
+    await processPatientFeedNotifications(items, { emitInitial: false });
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
       setError(null);
-      const [visitResponse, statsResponse, feedResponse] = await Promise.all([
-        getActiveVisit(),
-        getPatientStats(),
-        getPatientRealtimeFeed().catch(() => ({ items: [] })),
-      ]);
-
-      setPatientData(visitResponse?.patient || null);
-      setActiveVisits(
-        Array.isArray(visitResponse?.activeVisits)
-          ? visitResponse.activeVisits
-          : visitResponse?.activeVisit
-            ? [visitResponse.activeVisit]
-            : [],
-      );
-      setFeedItems(Array.isArray(feedResponse?.items) ? feedResponse.items.slice(0, 4) : []);
-      setStats(statsResponse || { totalVisits: 0, activeTasks: 0, visitsToday: 0 });
+      await Promise.all([loadSummary(), loadFeed()]);
     } catch (err) {
       console.error("Failed to fetch patient data:", err);
       setError(err?.message || "Failed to load patient data");
@@ -65,13 +152,59 @@ const HomeScreen = () => {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      loadSummary().catch((error) => {
+        console.warn("Failed to refresh patient summary:", error?.message || error);
+      });
+    }, 10000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [loadSummary]);
+
+  useEffect(() => {
+    let unsubscribe = () => {};
+
+    const startRealtime = async () => {
+      unsubscribe = await subscribeToPatientFeed({
+        onItems: (items) => {
+          setFeedItems((currentItems) => mergeFeedItems(currentItems, items));
+          processPatientFeedNotifications(items, { emitInitial: true }).catch((error) => {
+            console.warn("Failed to process patient notifications:", error?.message || error);
+          });
+          loadSummary().catch((error) => {
+            console.error("Failed to refresh patient summary after realtime update:", error);
+          });
+        },
+        onError: (error) => {
+          console.warn("Patient realtime subscription warning:", error?.message || error);
+        },
+      });
+    };
+
+    startRealtime();
+
+    return () => {
+      unsubscribe();
+    };
+  }, [loadSummary]);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchData();
   }, [fetchData]);
 
-  const patientName = patientData?.first_name || patientData?.full_name || "Patient";
-  const primaryVisit = activeVisits[0] || null;
+  const patientName =
+    toDisplayText(patientData?.first_name) ||
+    toDisplayText(user?.first_name) ||
+    toDisplayText(patientData?.full_name) ||
+    toDisplayText(user?.full_name) ||
+    "Patient";
+  const primaryVisit = selectPrimaryVisit(activeVisits);
+  const primaryVisitDisplay = primaryVisit ? formatVisitForDisplay(primaryVisit) : null;
+  const primaryVisitOrders = primaryVisit?.orders_summary || getOrdersSummary(primaryVisit?.orders);
 
   if (loading) {
     return (
@@ -121,7 +254,6 @@ const HomeScreen = () => {
                 <Text style={styles.topBarSubtext}>Patient portal</Text>
               </View>
             </View>
-            <View style={styles.topBarDot} />
           </View>
 
           {primaryVisit ? (
@@ -135,7 +267,6 @@ const HomeScreen = () => {
                 })
               }
             >
-              <View style={styles.primaryStatusGlow} />
               <View style={styles.primaryStatusInner}>
                 <View style={styles.primaryStatusBadgeRow}>
                   <View style={styles.statusIconBadge}>
@@ -144,16 +275,42 @@ const HomeScreen = () => {
                   <Text style={styles.primaryStatusEyebrow}>Active Visit Case</Text>
                 </View>
                 <Text style={styles.primaryStatusTitle}>
-                  {primaryVisit.facility_name || "Current visit"}
+                  {toDisplayText(primaryVisit.facility_name, "Current visit")}
                 </Text>
-                <Text style={styles.primaryStatusBody}>
-                  {formatVisitForDisplay(primaryVisit)?.currentStage || "In progress"} with{" "}
-                  {formatVisitForDisplay(primaryVisit)?.provider ||
-                    primaryVisit.provider ||
-                    "care team"}
+                <View style={styles.primaryStatusMetaRow}>
+                  <View
+                    style={[
+                      styles.primaryStageBadge,
+                      primaryVisitDisplay?.patientActionRequired && styles.primaryStageBadgeAlert,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.primaryStageBadgeText,
+                        primaryVisitDisplay?.patientActionRequired && styles.primaryStageBadgeTextAlert,
+                      ]}
+                    >
+                      {toDisplayText(primaryVisitDisplay?.currentStage, "In progress")}
+                    </Text>
+                  </View>
+                  <Text style={styles.primaryStatusUpdated}>
+                    {getRelativeTimeLabel(
+                      primaryVisitDisplay?.currentStageUpdatedAt || primaryVisit?.updated_at,
+                    )}
+                  </Text>
+                </View>
+                <Text style={styles.primaryStatusSupport}>
+                  {toDisplayText(
+                    primaryVisit.chief_complaint,
+                    "Open the visit to track progress and next actions.",
+                  )}
+                </Text>
+                <Text style={styles.primaryStatusOrders}>
+                  {primaryVisitOrders.total || 0} total orders · {primaryVisitOrders.pending || 0} pending ·{" "}
+                  {primaryVisitOrders.completed || 0} completed
                 </Text>
                 <Pressable
-                  style={styles.primaryStatusAction}
+                  style={styles.primaryStatusActionLink}
                   onPress={() =>
                     navigation.navigate("PatientVisitDetails", {
                       visitId: primaryVisit.id,
@@ -162,7 +319,7 @@ const HomeScreen = () => {
                     })
                   }
                 >
-                  <Text style={styles.primaryStatusActionText}>View visit details</Text>
+                  <Text style={styles.primaryStatusActionLinkText}>View visit details</Text>
                 </Pressable>
               </View>
             </Pressable>
@@ -198,9 +355,9 @@ const HomeScreen = () => {
                         />
                       </View>
                       <View style={styles.feedCopy}>
-                        <Text style={styles.feedTitle}>{item.title || "Update"}</Text>
+                        <Text style={styles.feedTitle}>{toDisplayText(item.title, "Update")}</Text>
                         <Text style={styles.feedBody}>
-                          {item.description || "A new update is available."}
+                          {toDisplayText(item.description, "A new update is available.")}
                         </Text>
                         <Text style={styles.feedMeta}>
                           {item.facility_name || "Facility"} · {item.resource_type || "update"}
@@ -283,7 +440,7 @@ const HomeScreen = () => {
               </Text>
               <Text style={styles.highlightBody}>
                 {primaryVisit
-                  ? `${getOrdersSummary(primaryVisit.orders).total} orders currently attached to your main active visit.`
+                  ? `${primaryVisitOrders.total || 0} orders currently attached to your main active visit.`
                   : "Your dashboard will show live orders and results here once a visit starts."}
               </Text>
             </View>
@@ -333,7 +490,7 @@ const HomeScreen = () => {
           ) : (
             activeVisits.map((visit) => {
               const displayVisit = formatVisitForDisplay(visit);
-              const orderSummary = getOrdersSummary(visit?.orders);
+              const orderSummary = visit?.orders_summary || getOrdersSummary(visit?.orders);
               return (
                 <Pressable
                   key={visit.id}
@@ -349,19 +506,22 @@ const HomeScreen = () => {
                   <View style={styles.visitCardHeader}>
                     <View style={styles.visitCardCopy}>
                       <Text style={styles.visitCardTitle}>
-                        {visit.facility_name || "Active visit"}
+                        {toDisplayText(visit.facility_name, "Active visit")}
                       </Text>
                       <Text style={styles.visitCardMeta}>
                         {displayVisit?.currentStage || "In progress"} ·{" "}
-                        {displayVisit?.provider || visit.provider || "Care team"}
+                        {toDisplayText(displayVisit?.provider || visit.provider, "Care team")}
                       </Text>
                     </View>
                     <View style={styles.livePill}>
                       <Text style={styles.livePillText}>Live</Text>
                     </View>
                   </View>
+                  <Text style={styles.visitUpdatedText}>
+                    {getRelativeTimeLabel(displayVisit?.currentStageUpdatedAt || visit?.updated_at)}
+                  </Text>
                   <Text style={styles.visitCardBody}>
-                    {visit.chief_complaint || "Visit details available in the timeline."}
+                    {toDisplayText(visit.chief_complaint, "Visit details available in the timeline.")}
                   </Text>
                   <Text style={styles.visitCardHint}>
                     Orders: {orderSummary.total} total · {orderSummary.completed} completed ·{" "}
@@ -423,14 +583,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 2,
   },
-  topBarDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: palette.primaryFixed,
-    borderWidth: 2,
-    borderColor: palette.primary,
-  },
   primaryStatusCard: {
     position: "relative",
     overflow: "hidden",
@@ -439,15 +591,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.xl,
     ...shadow.card,
-  },
-  primaryStatusGlow: {
-    position: "absolute",
-    top: -40,
-    right: -40,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: "rgba(255,255,255,0.08)",
   },
   primaryStatusInner: {
     gap: spacing.sm,
@@ -482,18 +625,55 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: "rgba(255,255,255,0.86)",
   },
-  primaryStatusAction: {
+  primaryStatusMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  primaryStageBadge: {
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  primaryStageBadgeAlert: {
+    backgroundColor: palette.dangerSurface,
+  },
+  primaryStageBadgeText: {
+    color: palette.textOnDark,
+    fontSize: 13,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  primaryStageBadgeTextAlert: {
+    color: palette.dangerText,
+  },
+  primaryStatusUpdated: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  primaryStatusSupport: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "rgba(255,255,255,0.78)",
+  },
+  primaryStatusOrders: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.9)",
+  },
+  primaryStatusActionLink: {
     alignSelf: "flex-start",
     marginTop: spacing.xs,
-    backgroundColor: "#AEEECB",
-    borderRadius: 14,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
+    paddingVertical: 4,
   },
-  primaryStatusActionText: {
-    color: "#0E5138",
+  primaryStatusActionLinkText: {
+    color: palette.textOnDark,
     fontSize: 14,
     fontWeight: "800",
+    textDecorationLine: "underline",
   },
   emptyStatusCard: {
     borderRadius: 24,
@@ -840,6 +1020,12 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: palette.primary,
     textTransform: "uppercase",
+  },
+  visitUpdatedText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: palette.secondaryText,
+    marginBottom: spacing.xs,
   },
   visitCardBody: {
     fontSize: 13,

@@ -64,11 +64,11 @@ const SymptomCheckerScreen = ({ navigation }) => {
 
   const openFacilities = useCallback(() => {
     const routeNames = navigation?.getState?.()?.routeNames || [];
-    if (routeNames.includes("Facilities")) {
-      navigation.navigate("Facilities");
+    if (routeNames.includes("Care")) {
+      navigation.navigate("Care");
       return;
     }
-    navigation.navigate("Main", { screen: "Facilities" });
+    navigation.navigate("Main", { screen: "Care" });
   }, [navigation]);
 
   const openAppointments = useCallback(() => {

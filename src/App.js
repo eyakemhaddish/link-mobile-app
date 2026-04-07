@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "./components/ErrorBoundary";
+import NotificationBridge from "./components/NotificationBridge";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { trackEvent } from "./lib/telemetry";
 import LoginScreen from "./screens/LoginScreen";
@@ -43,6 +44,7 @@ export default function App() {
             <FeatureFlagsProvider>
               <AppLockProvider>
                 <ToastProvider>
+                  <NotificationBridge />
                   <AppNavigator />
                 </ToastProvider>
               </AppLockProvider>

@@ -39,6 +39,27 @@ const pickFirstString = (...values) => {
     return null;
 };
 
+const pickDisplayText = (...values) => {
+    for (const value of values) {
+        if (typeof value === "string" && value.trim()) return value.trim();
+
+        if (value && typeof value === "object") {
+            const nested = pickFirstString(
+                value.name,
+                value.full_name,
+                value.fullName,
+                value.title,
+                value.label,
+                value.description,
+                value.code
+            );
+            if (nested) return nested;
+        }
+    }
+
+    return null;
+};
+
 const extractUploadedFileUrl = (response) => {
     if (!response || typeof response !== "object") return null;
 
@@ -85,9 +106,40 @@ const normalizeAppointmentsResponse = (response) => {
     };
 };
 
+const getVisitStageCode = (visit) =>
+    visit?.current_journey_stage ||
+    visit?.currentJourneyStage ||
+    visit?.current_stage?.code ||
+    visit?.currentStage?.code ||
+    visit?.current_stage_code ||
+    visit?.currentStageCode ||
+    visit?.stage?.code ||
+    visit?.stageCode ||
+    visit?.status ||
+    "registered";
+
+const getVisitTimeline = (visit) => {
+    if (Array.isArray(visit?.journey_timeline)) return visit.journey_timeline;
+    if (Array.isArray(visit?.journeyTimeline)) return visit.journeyTimeline;
+    if (Array.isArray(visit?.timeline)) return visit.timeline;
+    return [];
+};
+
+const unwrapVisit = (visit) => {
+    const source = visit && typeof visit === "object" ? visit : {};
+    if (source.visit && typeof source.visit === "object") return source.visit;
+    if (source.data && typeof source.data === "object" && source.data.id) return source.data;
+    return source;
+};
+
 const normalizeActiveVisitPayload = (response) => {
     const source = response && typeof response === "object" ? response : {};
-    const patient = source.patient || source.patient_profile || null;
+    const patient =
+        source.patient ||
+        source.patient_profile ||
+        source.patientProfile ||
+        source.profile ||
+        null;
     const rawActiveVisits = Array.isArray(source.activeVisits)
         ? source.activeVisits
         : Array.isArray(source.active_visits)
@@ -100,19 +152,15 @@ const normalizeActiveVisitPayload = (response) => {
 
     const activeVisits = rawActiveVisits
         .filter((entry) => entry && typeof entry === "object")
-        .map((rawActiveVisit) => ({
-            ...rawActiveVisit,
-            journey_timeline: Array.isArray(rawActiveVisit.journey_timeline)
-                ? rawActiveVisit.journey_timeline
-                : Array.isArray(rawActiveVisit.journeyTimeline)
-                    ? rawActiveVisit.journeyTimeline
-                    : [],
-            current_journey_stage:
-                rawActiveVisit.current_journey_stage ||
-                rawActiveVisit.currentJourneyStage ||
-                rawActiveVisit.status ||
-                "registered",
-        }));
+        .map((rawActiveVisit) => {
+            const normalizedVisit = normalizeVisit(rawActiveVisit);
+
+            return {
+                ...normalizedVisit,
+                journey_timeline: getVisitTimeline(normalizedVisit),
+                current_journey_stage: getVisitStageCode(normalizedVisit),
+            };
+        });
     const activeVisit = activeVisits[0] || null;
 
     return {
@@ -126,10 +174,43 @@ const normalizeActiveVisitPayload = (response) => {
 };
 
 const normalizeVisit = (visit) => {
-    const source = visit && typeof visit === "object" ? visit : {};
+    const source = unwrapVisit(visit);
+    const facilityName = pickDisplayText(
+        source.facility_name,
+        source.facilityName,
+        source.facility?.name,
+        source.facility,
+        source.location,
+    );
+    const providerName = pickDisplayText(
+        source.provider_name,
+        source.providerName,
+        source.provider?.full_name,
+        source.provider?.name,
+        source.provider,
+        source.assigned_provider?.full_name,
+        source.assigned_provider?.name,
+        source.assigned_provider,
+    );
+    const chiefComplaint = pickDisplayText(
+        source.chief_complaint,
+        source.chiefComplaint,
+        source.reason,
+        source.reason_for_visit,
+        source.reasonForVisit,
+    );
 
     return {
         ...source,
+        facility_name: facilityName || "",
+        facilityName: facilityName || "",
+        provider: providerName || source.provider || null,
+        provider_name: providerName || source.provider_name || null,
+        chief_complaint: chiefComplaint || source.chief_complaint || null,
+        current_journey_stage: getVisitStageCode(source),
+        current_stage: source.current_stage || source.currentStage || null,
+        currentStage: source.currentStage || source.current_stage || null,
+        journey_timeline: getVisitTimeline(source),
         orders: source.orders || {
             lab: source.lab_orders || source.labOrders || [],
             imaging: source.imaging_orders || source.imagingOrders || [],
@@ -164,8 +245,22 @@ const normalizeVisitDetailsPayload = (response) => {
     };
 };
 
-const normalizePatientFeedItem = (item) => {
+export const normalizePatientFeedItem = (item) => {
     const source = item && typeof item === "object" ? item : {};
+    const facilityName = pickDisplayText(
+        source.facility_name,
+        source.facilityName,
+        source.facility?.name,
+        source.facility,
+    );
+    const title = pickDisplayText(source.title, source.metadata?.title) || "";
+    const description = pickDisplayText(
+        source.description,
+        source.metadata?.description,
+        source.metadata?.summary,
+    ) || "";
+    const resourceType = pickDisplayText(source.resource_type, source.resourceType) || "";
+    const status = pickDisplayText(source.status) || "";
 
     return {
         ...source,
@@ -173,13 +268,13 @@ const normalizePatientFeedItem = (item) => {
         patient_id: source.patient_id || source.patientId || null,
         visit_id: source.visit_id || source.visitId || null,
         facility_id: source.facility_id || source.facilityId || null,
-        facility_name: source.facility_name || source.facilityName || "",
-        resource_type: source.resource_type || source.resourceType || "",
+        facility_name: facilityName,
+        resource_type: resourceType,
         resource_id: source.resource_id || source.resourceId || "",
         event_type: source.event_type || source.eventType || "",
-        status: source.status || "",
-        title: source.title || "",
-        description: source.description || "",
+        status,
+        title,
+        description,
         priority: source.priority || "medium",
         occurred_at: source.occurred_at || source.occurredAt || null,
         updated_at: source.updated_at || source.updatedAt || null,
@@ -188,7 +283,7 @@ const normalizePatientFeedItem = (item) => {
     };
 };
 
-const normalizePatientFeedResponse = (response) => {
+export const normalizePatientFeedResponse = (response) => {
     const source = response && typeof response === "object" ? response : {};
     const rawItems = Array.isArray(source.items) ? source.items : [];
     const items = rawItems.map(normalizePatientFeedItem);

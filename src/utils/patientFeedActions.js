@@ -6,7 +6,6 @@ export const inferPatientFeedAction = (item) => {
   const resourceType = normalize(item?.resource_type || item?.resourceType);
   const status = normalize(item?.status);
   const visitId = item?.visit_id || item?.visitId || null;
-  const facilityName = item?.facility_name || item?.facilityName || "Facility";
 
   switch (resourceType) {
     case "visit":

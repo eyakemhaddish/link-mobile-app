@@ -4,9 +4,9 @@ import { Feather } from "@expo/vector-icons";
 import { colors, spacing, typography } from "../theme/tokens";
 
 import HomeScreen from "../screens/HomeScreen";
-import SymptomCheckerScreen from "../screens/SymptomCheckerScreen";
+import PatientHealthRecordsScreen from "../screens/PatientHealthRecordsScreen";
+import PatientAppointmentsScreen from "../screens/PatientAppointmentsScreen";
 import FacilityFinderScreen from "../screens/FacilityFinderScreen";
-import HealthFeedScreen from "../screens/HealthFeedScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
@@ -20,12 +20,12 @@ const MainTabs = () => {
 
                     if (route.name === "Home") {
                         iconName = "home";
-                    } else if (route.name === "Symptoms") {
-                        iconName = "activity";
-                    } else if (route.name === "Facilities") {
+                    } else if (route.name === "Records") {
+                        iconName = "folder";
+                    } else if (route.name === "Appointments") {
+                        iconName = "calendar";
+                    } else if (route.name === "Care") {
                         iconName = "map-pin";
-                    } else if (route.name === "Feed") {
-                        iconName = "layers";
                     } else if (route.name === "Profile") {
                         iconName = "user";
                     }
@@ -63,19 +63,19 @@ const MainTabs = () => {
                 options={{ title: "Home" }}
             />
             <Tab.Screen
-                name="Symptoms"
-                component={SymptomCheckerScreen}
-                options={{ title: "Symptoms" }}
+                name="Records"
+                component={PatientHealthRecordsScreen}
+                options={{ title: "Records" }}
             />
             <Tab.Screen
-                name="Facilities"
+                name="Appointments"
+                component={PatientAppointmentsScreen}
+                options={{ title: "Appointments" }}
+            />
+            <Tab.Screen
+                name="Care"
                 component={FacilityFinderScreen}
-                options={{ title: "Facilities" }}
-            />
-            <Tab.Screen
-                name="Feed"
-                component={HealthFeedScreen}
-                options={{ title: "Health Feed" }}
+                options={{ title: "Care" }}
             />
             <Tab.Screen
                 name="Profile"
