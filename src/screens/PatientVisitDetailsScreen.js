@@ -74,6 +74,26 @@ const getOrderTitle = (order) =>
   order?.order_name ||
   "Order";
 
+const toDisplayText = (value, fallback = "Not recorded") => {
+  if (typeof value === "string" || typeof value === "number") {
+    const normalized = String(value).trim();
+    return normalized || fallback;
+  }
+
+  if (value && typeof value === "object") {
+    const nested =
+      value.name ||
+      value.full_name ||
+      value.fullName ||
+      value.title ||
+      value.label ||
+      value.description;
+    return toDisplayText(nested, fallback);
+  }
+
+  return fallback;
+};
+
 const getVitalRows = (vitals) => {
   if (!vitals || typeof vitals !== "object") return [];
 
@@ -228,7 +248,7 @@ const PatientVisitDetailsScreen = ({ route }) => {
             <View style={styles.summaryCell}>
               <Text style={styles.summaryLabel}>Chief complaint</Text>
               <Text style={styles.summaryValue}>
-                {visit?.chief_complaint || visit?.reason || "Not recorded"}
+                {toDisplayText(visit?.chief_complaint || visit?.reason, "Not recorded")}
               </Text>
             </View>
             <View style={styles.summaryCell}>

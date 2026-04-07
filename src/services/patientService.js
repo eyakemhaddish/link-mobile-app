@@ -60,6 +60,47 @@ const pickDisplayText = (...values) => {
     return null;
 };
 
+const formatComplaintValue = (value) => {
+    if (!value) return null;
+
+    if (Array.isArray(value)) {
+        const labels = value
+            .map((entry) => {
+                if (typeof entry === "string") return entry.trim();
+                if (entry && typeof entry === "object") {
+                    return pickFirstString(entry.label, entry.name, entry.description, entry.code);
+                }
+                return null;
+            })
+            .filter(Boolean);
+
+        return labels.length ? labels.join(", ") : null;
+    }
+
+    if (typeof value === "string") {
+        const raw = value.trim();
+        if (!raw) return null;
+
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed !== value) {
+                const formatted = formatComplaintValue(parsed);
+                if (formatted) return formatted;
+            }
+        } catch {
+            // Not JSON; keep raw string as-is.
+        }
+
+        return raw;
+    }
+
+    if (value && typeof value === "object") {
+        return pickDisplayText(value);
+    }
+
+    return null;
+};
+
 const extractUploadedFileUrl = (response) => {
     if (!response || typeof response !== "object") return null;
 
@@ -193,11 +234,11 @@ const normalizeVisit = (visit) => {
         source.assigned_provider,
     );
     const chiefComplaint = pickDisplayText(
-        source.chief_complaint,
-        source.chiefComplaint,
-        source.reason,
-        source.reason_for_visit,
-        source.reasonForVisit,
+        formatComplaintValue(source.chief_complaint),
+        formatComplaintValue(source.chiefComplaint),
+        formatComplaintValue(source.reason),
+        formatComplaintValue(source.reason_for_visit),
+        formatComplaintValue(source.reasonForVisit),
     );
 
     return {
@@ -207,6 +248,7 @@ const normalizeVisit = (visit) => {
         provider: providerName || source.provider || null,
         provider_name: providerName || source.provider_name || null,
         chief_complaint: chiefComplaint || source.chief_complaint || null,
+        notes: formatComplaintValue(source.notes) || source.notes || null,
         current_journey_stage: getVisitStageCode(source),
         current_stage: source.current_stage || source.currentStage || null,
         currentStage: source.currentStage || source.current_stage || null,

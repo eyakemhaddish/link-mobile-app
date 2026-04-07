@@ -7,7 +7,7 @@ const STAGE_LABELS = {
   at_triage: "Triage",
   vitals_taken: "Vitals Capture",
   with_doctor: "Consultation",
-  at_lab: "Lab / Diagnostic",
+  at_lab: "Diagnostic",
   at_imaging: "Imaging",
   at_pharmacy: "Pharmacy",
   paying_consultation: "Paying Consultation",
@@ -36,6 +36,7 @@ const STATUS_MAP = {
   with_doctor: "with_doctor",
   lab: "at_lab",
   at_lab: "at_lab",
+  diagnostic: "at_lab",
   procedure: "at_imaging", // map procedure/imaging to "at_imaging"
   imaging: "at_imaging",
   at_imaging: "at_imaging",
@@ -148,9 +149,10 @@ export const mapVisitToJourneySteps = (visit) => {
     const isVisitCompleted =
       latestTimelineEntry?.stage === "completed" ||
       normalizeStage(visit.status) === "completed";
+    const orderedEntries = [...timelineEntries].reverse();
 
-    return timelineEntries.map((entry, index) => {
-      const isLatest = index === timelineEntries.length - 1;
+    return orderedEntries.map((entry, index) => {
+      const isLatest = index === 0;
       return {
         id: index + 1,
         label: getStageLabel(entry.stage),
@@ -247,9 +249,11 @@ export const formatVisitForDisplay = (visit) => {
   const currentStage =
     latestTimelineEntry?.stage || fallbackStage || "registered";
   const currentStageLabel =
-    visit.current_stage?.label ||
-    visit.currentStage?.label ||
-    getStageLabel(currentStage);
+    humanizeStage(
+      visit.current_stage?.label ||
+        visit.currentStage?.label ||
+        getStageLabel(currentStage),
+    );
   const stageUpdatedAt =
     latestTimelineEntry?.timestamp ||
     visit.current_stage?.updated_at ||

@@ -14,6 +14,7 @@ import { Feather } from "@expo/vector-icons";
 import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { colors, spacing, shadow } from "../theme/tokens";
 import { patientPortalPalette as palette } from "../theme/patientPortal";
 import { getActiveVisit, getPatientRealtimeFeed, getPatientStats } from "../services/patientService";
@@ -21,6 +22,14 @@ import { inferPatientFeedAction, performPatientFeedAction } from "../utils/patie
 import { subscribeToPatientFeed } from "../services/realtimeService";
 import { processPatientFeedNotifications } from "../services/notificationService";
 import { formatVisitForDisplay, getOrdersSummary } from "../utils/journeyMapper";
+import MedicationReminderSetupModal from "../components/patient/MedicationReminderSetupModal";
+import {
+  buildEquallySpacedMedicationTimes,
+  getMedicationReminderDefaults,
+  markMedicationReminderDismissed,
+  saveMedicationReminderSchedule,
+  shouldPromptMedicationReminder,
+} from "../services/medicationReminderService";
 
 const mergeFeedItems = (currentItems, nextItems, limit = 4) => {
   const byId = new Map();
@@ -103,6 +112,11 @@ const HomeScreen = () => {
   const [patientData, setPatientData] = useState(null);
   const [activeVisits, setActiveVisits] = useState([]);
   const [feedItems, setFeedItems] = useState([]);
+  const [medicationPromptItem, setMedicationPromptItem] = useState(null);
+  const [medicationTimesPerDay, setMedicationTimesPerDay] = useState(3);
+  const [medicationStartTime, setMedicationStartTime] = useState("08:00");
+  const [savingMedicationReminder, setSavingMedicationReminder] = useState(false);
+  const [medicationReminderError, setMedicationReminderError] = useState("");
   const [stats, setStats] = useState({
     totalVisits: 0,
     activeTasks: 0,
@@ -110,6 +124,7 @@ const HomeScreen = () => {
   });
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const loadSummary = useCallback(async () => {
     const [visitResponse, statsResponse] = await Promise.all([
@@ -191,10 +206,79 @@ const HomeScreen = () => {
     };
   }, [loadSummary]);
 
+  useEffect(() => {
+    let active = true;
+
+    const maybePromptMedicationReminder = async () => {
+      if (medicationPromptItem || !feedItems.length) return;
+
+      for (const item of feedItems) {
+        if (!(await shouldPromptMedicationReminder(item))) continue;
+
+        const defaults = getMedicationReminderDefaults(item);
+        if (!active) return;
+
+        setMedicationPromptItem(item);
+        setMedicationTimesPerDay(defaults.timesPerDay);
+        setMedicationStartTime(defaults.startTime);
+        setMedicationReminderError("");
+        return;
+      }
+    };
+
+    maybePromptMedicationReminder();
+
+    return () => {
+      active = false;
+    };
+  }, [feedItems, medicationPromptItem]);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchData();
   }, [fetchData]);
+
+  const generatedMedicationTimes = React.useMemo(
+    () =>
+      buildEquallySpacedMedicationTimes({
+        timesPerDay: medicationTimesPerDay,
+        startTime: medicationStartTime,
+      }),
+    [medicationStartTime, medicationTimesPerDay],
+  );
+
+  const dismissMedicationPrompt = useCallback(async () => {
+    if (medicationPromptItem) {
+      await markMedicationReminderDismissed(medicationPromptItem);
+    }
+    setMedicationPromptItem(null);
+    setMedicationReminderError("");
+  }, [medicationPromptItem]);
+
+  const saveMedicationReminder = useCallback(async () => {
+    if (!medicationPromptItem) return;
+
+    try {
+      setSavingMedicationReminder(true);
+      setMedicationReminderError("");
+      const saved = await saveMedicationReminderSchedule(medicationPromptItem, {
+        timesPerDay: medicationTimesPerDay,
+        startTime: medicationStartTime,
+      });
+
+      showToast(
+        `${saved.medicationName} reminders scheduled for ${saved.times.length} times each day.`,
+        "success",
+      );
+      setMedicationPromptItem(null);
+    } catch (saveError) {
+      setMedicationReminderError(
+        saveError?.message || "Unable to save medication reminders.",
+      );
+    } finally {
+      setSavingMedicationReminder(false);
+    }
+  }, [medicationPromptItem, medicationStartTime, medicationTimesPerDay, showToast]);
 
   const patientName =
     toDisplayText(patientData?.first_name) ||
@@ -230,18 +314,19 @@ const HomeScreen = () => {
 
   return (
     <Screen backgroundColor={palette.background} style={styles.screenContainer} scrollable={false}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={palette.primary}
-          />
-        }
-      >
-        <View style={styles.canvas} testID="home-screen">
+      <>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={palette.primary}
+            />
+          }
+        >
+          <View style={styles.canvas} testID="home-screen">
           <View style={styles.topBar}>
             <View style={styles.topBarIdentity}>
               <View style={styles.avatarCircle}>
@@ -531,8 +616,28 @@ const HomeScreen = () => {
               );
             })
           )}
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+        <MedicationReminderSetupModal
+          visible={Boolean(medicationPromptItem)}
+          medicationName={
+            medicationPromptItem?.metadata?.medication_name ||
+            medicationPromptItem?.metadata?.medicationName ||
+            medicationPromptItem?.title ||
+            "Medication"
+          }
+          facilityName={medicationPromptItem?.facility_name || "your facility"}
+          timesPerDay={medicationTimesPerDay}
+          startTime={medicationStartTime}
+          generatedTimes={generatedMedicationTimes}
+          saving={savingMedicationReminder}
+          error={medicationReminderError}
+          onTimesPerDayChange={setMedicationTimesPerDay}
+          onStartTimeChange={setMedicationStartTime}
+          onSave={saveMedicationReminder}
+          onDismiss={dismissMedicationPrompt}
+        />
+      </>
     </Screen>
   );
 };

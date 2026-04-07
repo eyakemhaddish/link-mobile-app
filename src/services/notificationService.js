@@ -1,10 +1,14 @@
 import { getItem, setItem } from "../lib/storage";
 import { log, warn } from "../lib/logger";
 import { trackEvent } from "../lib/telemetry";
+import {
+  initializeNotificationTransport,
+  isSystemNotificationAvailable,
+  requestNotificationPermission,
+  sendSystemNotification,
+} from "./notificationTransport";
 
 const NOTIFICATION_STATE_KEY = "patient_notification_state_v1";
-
-const sinks = new Set();
 
 const defaultState = () => ({
   seenEvents: {},
@@ -60,13 +64,8 @@ const emitNotification = (notification) => {
     dedupeKey: notification.dedupeKey,
     priority: notification.priority,
   });
-
-  sinks.forEach((sink) => {
-    try {
-      sink(notification);
-    } catch (error) {
-      warn("Notification sink failed", error?.message || error);
-    }
+  sendSystemNotification(notification).catch((error) => {
+    warn("System notification failed", error?.message || error);
   });
 };
 
@@ -99,15 +98,19 @@ const buildGenericFeedNotification = (item) => ({
   data: item,
 });
 
-export const registerNotificationSink = (sink) => {
-  sinks.add(sink);
-  return () => {
-    sinks.delete(sink);
-  };
-};
-
 export const notify = (notification) => {
   emitNotification(notification);
+};
+
+export const initializeNotifications = async () => {
+  return initializeNotificationTransport();
+};
+
+export const isNotificationPermissionSupported = () =>
+  isSystemNotificationAvailable();
+
+export const ensureNotificationPermission = async () => {
+  return requestNotificationPermission();
 };
 
 export const processPatientFeedNotifications = async (

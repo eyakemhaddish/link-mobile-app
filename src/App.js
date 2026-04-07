@@ -1,9 +1,9 @@
 import React from "react";
+import { Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "./components/ErrorBoundary";
-import NotificationBridge from "./components/NotificationBridge";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { trackEvent } from "./lib/telemetry";
 import LoginScreen from "./screens/LoginScreen";
@@ -27,6 +27,10 @@ import {
   registerBackgroundSyncAsync,
   unregisterBackgroundSyncAsync,
 } from "./services/backgroundSyncService";
+import {
+  initializeNotifications,
+  isNotificationPermissionSupported,
+} from "./services/notificationService";
 
 const Stack = createNativeStackNavigator();
 const LoadingScreen = () => null;
@@ -44,7 +48,6 @@ export default function App() {
             <FeatureFlagsProvider>
               <AppLockProvider>
                 <ToastProvider>
-                  <NotificationBridge />
                   <AppNavigator />
                 </ToastProvider>
               </AppLockProvider>
@@ -60,6 +63,7 @@ const AppNavigator = () => {
   const { isAuthenticated, loading, role, user } = useAuth();
   const { isLocked, hasPinSet, loading: lockLoading } = useAppLock();
   const { linkAgentMvp } = useFeatureFlags();
+  const notificationPermissionRequested = React.useRef(false);
 
   const workspaceType = user?.workspace?.workspaceType || user?.workspace_type || null;
   const teamMode = user?.workspace?.teamMode || user?.team_mode || null;
@@ -93,6 +97,28 @@ const AppNavigator = () => {
 
     configureBackgroundSync();
   }, [isAuthenticated]);
+
+  React.useEffect(() => {
+    const configureNotifications = async () => {
+      try {
+        if (!isAuthenticated) {
+          notificationPermissionRequested.current = false;
+          return;
+        }
+        if (Platform.OS === "web") return;
+        if (!hasPinSet || isLocked) return;
+        if (notificationPermissionRequested.current) return;
+        if (!isNotificationPermissionSupported()) return;
+
+        await initializeNotifications();
+        notificationPermissionRequested.current = true;
+      } catch (error) {
+        console.warn("[notifications] setup failed:", error?.message || error);
+      }
+    };
+
+    configureNotifications();
+  }, [hasPinSet, isAuthenticated, isLocked]);
 
   // Show nothing while auth OR lock context is still initialising
   if (loading || (isAuthenticated && lockLoading)) {
