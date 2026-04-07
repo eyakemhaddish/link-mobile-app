@@ -20,6 +20,7 @@ import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import TrackerOptionsSheet from "../components/patient/TrackerOptionsSheet";
+import MedicationReminderSetupModal from "../components/patient/MedicationReminderSetupModal";
 import { API_BASE_URL } from "../lib/env";
 import { colors, spacing, radius, shadow } from "../theme/tokens";
 import { patientPortalPalette as palette } from "../theme/patientPortal";
@@ -38,6 +39,11 @@ import {
   getTrackableItems,
   getTrackerActions,
 } from "../services/healthTrackingService";
+import {
+  buildEquallySpacedMedicationTimes,
+  getCustomReminderDefaults,
+  saveCustomReminderSchedule,
+} from "../services/medicationReminderService";
 import { useToast } from "../context/ToastContext";
 import { useFeatureFlags } from "../context/FeatureFlagsContext";
 import { formatVisitForDisplay, getOrdersSummary } from "../utils/journeyMapper";
@@ -92,6 +98,12 @@ const PatientHealthRecordsScreen = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showFilterPicker, setShowFilterPicker] = useState(false);
   const [selectedTrackerId, setSelectedTrackerId] = useState(null);
+  const [showCustomReminderModal, setShowCustomReminderModal] = useState(false);
+  const [customReminderName, setCustomReminderName] = useState("");
+  const [customReminderTimesPerDay, setCustomReminderTimesPerDay] = useState(1);
+  const [customReminderStartTime, setCustomReminderStartTime] = useState("08:00");
+  const [savingCustomReminder, setSavingCustomReminder] = useState(false);
+  const [customReminderError, setCustomReminderError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [growthLinks, setGrowthLinks] = useState(null);
   const { showToast } = useToast();
@@ -318,6 +330,53 @@ const PatientHealthRecordsScreen = () => {
   const selectedTracker = getTrackableItemById(selectedTrackerId);
   const trackerActions = getTrackerActions(selectedTracker);
   const bluetoothPreset = getBluetoothConnectionPreset(selectedTracker);
+  const generatedCustomReminderTimes = buildEquallySpacedMedicationTimes({
+    timesPerDay: customReminderTimesPerDay,
+    startTime: customReminderStartTime,
+  });
+
+  const openCustomReminderModal = useCallback(() => {
+    const defaults = getCustomReminderDefaults("");
+    setCustomReminderName(defaults.reminderName);
+    setCustomReminderTimesPerDay(defaults.timesPerDay);
+    setCustomReminderStartTime(defaults.startTime);
+    setCustomReminderError("");
+    setShowCustomReminderModal(true);
+  }, []);
+
+  const closeCustomReminderModal = useCallback(() => {
+    setShowCustomReminderModal(false);
+    setCustomReminderError("");
+  }, []);
+
+  const handleSaveCustomReminder = useCallback(async () => {
+    try {
+      setSavingCustomReminder(true);
+      setCustomReminderError("");
+      const saved = await saveCustomReminderSchedule({
+        reminderName: customReminderName,
+        timesPerDay: customReminderTimesPerDay,
+        startTime: customReminderStartTime,
+      });
+      showToast(
+        `${saved.reminderName} reminders scheduled for ${saved.times.length} times each day.`,
+        "success",
+      );
+      closeCustomReminderModal();
+    } catch (saveError) {
+      setCustomReminderError(
+        saveError?.message || "Unable to save your reminder.",
+      );
+    } finally {
+      setSavingCustomReminder(false);
+    }
+  }, [
+    closeCustomReminderModal,
+    customReminderName,
+    customReminderStartTime,
+    customReminderTimesPerDay,
+    showToast,
+  ]);
 
   if (loading) {
     return (
@@ -345,7 +404,11 @@ const PatientHealthRecordsScreen = () => {
 
         <Card style={styles.trackerCard}>
           <View style={styles.trackerHeader}>
-              <Text style={styles.trackerTitle}>Measurements</Text>
+            <Text style={styles.trackerTitle}>Measurements</Text>
+            <Pressable style={styles.addReminderButton} onPress={openCustomReminderModal}>
+              <Feather name="bell" size={14} color={palette.primary} />
+              <Text style={styles.addReminderButtonText}>Add reminder</Text>
+            </Pressable>
           </View>
 
           <View style={styles.trackerGrid}>
@@ -596,6 +659,25 @@ const PatientHealthRecordsScreen = () => {
         onClose={() => setSelectedTrackerId(null)}
       />
 
+      <MedicationReminderSetupModal
+        visible={showCustomReminderModal}
+        title="Add a reminder"
+        subtitle="Create your own daily reminder with the same schedule flow."
+        reminderName={customReminderName}
+        reminderNameEditable
+        timesPerDay={customReminderTimesPerDay}
+        startTime={customReminderStartTime}
+        generatedTimes={generatedCustomReminderTimes}
+        saving={savingCustomReminder}
+        error={customReminderError}
+        saveLabel="Save reminder"
+        onReminderNameChange={setCustomReminderName}
+        onTimesPerDayChange={setCustomReminderTimesPerDay}
+        onStartTimeChange={setCustomReminderStartTime}
+        onSave={handleSaveCustomReminder}
+        onDismiss={closeCustomReminderModal}
+      />
+
       {/* Upload modal */}
       <Modal visible={showUploadModal} animationType="slide" transparent onRequestClose={() => setShowUploadModal(false)}>
         <View style={styles.modalOverlay}>
@@ -721,9 +803,26 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   trackerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: spacing.sm,
   },
   trackerTitle: { fontSize: 18, fontWeight: "700", color: palette.black },
+  addReminderButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: palette.primaryFixed,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  addReminderButtonText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: palette.primary,
+  },
   trackerGrid: {
     flexDirection: "row",
     flexWrap: "wrap",

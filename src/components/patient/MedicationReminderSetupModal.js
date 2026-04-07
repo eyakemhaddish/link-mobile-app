@@ -2,8 +2,10 @@ import React from "react";
 import {
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import Button from "../ui/Button";
@@ -55,13 +57,17 @@ const TimeStepper = ({ label, value, step = 1, max, onChange }) => {
 
 const MedicationReminderSetupModal = ({
   visible,
-  medicationName,
-  facilityName,
+  title = "Schedule reminder",
+  subtitle,
+  reminderName,
+  reminderNameEditable = false,
   timesPerDay,
   startTime,
   generatedTimes,
   saving,
   error,
+  saveLabel = "Save reminders",
+  onReminderNameChange,
   onTimesPerDayChange,
   onStartTimeChange,
   onSave,
@@ -73,71 +79,96 @@ const MedicationReminderSetupModal = ({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
-          <Text style={styles.eyebrow}>Medication reminders</Text>
-          <Text style={styles.title}>Schedule your medications</Text>
-          <Text style={styles.body}>
-            {medicationName || "Medication"} from {facilityName || "your facility"} can be
-            scheduled now. Choose how many times per day and the first dose time.
-          </Text>
+          <ScrollView
+            style={styles.scrollArea}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <Text style={styles.title}>{title}</Text>
+            {subtitle ? <Text style={styles.body}>{subtitle}</Text> : null}
 
-          <View style={styles.section}>
-            <Text style={styles.label}>How many times per day?</Text>
-            <View style={styles.doseRow}>
-              {[1, 2, 3, 4, 5, 6].map((value) => (
-                <DoseButton
-                  key={value}
-                  value={value}
-                  active={value === timesPerDay}
-                  onPress={onTimesPerDayChange}
-                />
-              ))}
-            </View>
-          </View>
+            <View style={styles.setupCard}>
+              <Text style={styles.setupTitle}>Daily setup</Text>
+              <Text style={styles.setupHint}>Pick how many doses and the first time. The rest are spaced automatically.</Text>
 
-          <View style={styles.section}>
-            <Text style={styles.label}>First dose time</Text>
-            <View style={styles.timeSelector}>
-              <TimeStepper
-                label="Hour"
-                value={parsedTime.hour}
-                max={23}
-                onChange={(nextHour) =>
-                  onStartTimeChange(formatTime(nextHour, parsedTime.minute))
-                }
-              />
-              <Text style={styles.timeSeparator}>:</Text>
-              <TimeStepper
-                label="Minute"
-                value={parsedTime.minute}
-                max={55}
-                step={5}
-                onChange={(nextMinute) =>
-                  onStartTimeChange(formatTime(parsedTime.hour, nextMinute))
-                }
-              />
-            </View>
-            <Text style={styles.helpText}>
-              Start with the closest time, then the rest of the doses are spaced evenly.
-            </Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.label}>Daily schedule</Text>
-            <View style={styles.timeGrid}>
-              {generatedTimes.map((time, index) => (
-                <View key={`${time.label}-${index}`} style={styles.timeChip}>
-                  <Text style={styles.timeChipLabel}>Dose {index + 1}</Text>
-                  <Text style={styles.timeChipValue}>{time.label}</Text>
+              {reminderNameEditable ? (
+                <>
+                  <Text style={styles.label}>Reminder name</Text>
+                  <TextInput
+                    value={reminderName}
+                    onChangeText={onReminderNameChange}
+                    placeholder="What should we remind you about?"
+                    placeholderTextColor={palette.textMuted}
+                    style={styles.nameInput}
+                  />
+                </>
+              ) : reminderName ? (
+                <View style={styles.namePreview}>
+                  <Text style={styles.namePreviewLabel}>Reminder</Text>
+                  <Text style={styles.namePreviewValue}>{reminderName}</Text>
                 </View>
-              ))}
-            </View>
-            <Text style={styles.helpText}>
-              Times are spaced evenly across the day and update automatically when you change
-              the first dose or daily count.
-            </Text>
-          </View>
+              ) : null}
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              <Text style={styles.label}>Times per day</Text>
+              <View style={styles.doseRow}>
+                {[1, 2, 3, 4, 5, 6].map((value) => (
+                  <DoseButton
+                    key={value}
+                    value={value}
+                    active={value === timesPerDay}
+                    onPress={onTimesPerDayChange}
+                  />
+                ))}
+              </View>
+
+              <Text style={[styles.label, styles.timeLabel]}>First dose</Text>
+              <View style={styles.timeSelector}>
+                <TimeStepper
+                  label="Hour"
+                  value={parsedTime.hour}
+                  max={23}
+                  onChange={(nextHour) =>
+                    onStartTimeChange(formatTime(nextHour, parsedTime.minute))
+                  }
+                />
+                <Text style={styles.timeSeparator}>:</Text>
+                <TimeStepper
+                  label="Minute"
+                  value={parsedTime.minute}
+                  max={55}
+                  step={5}
+                  onChange={(nextMinute) =>
+                    onStartTimeChange(formatTime(parsedTime.hour, nextMinute))
+                  }
+                />
+              </View>
+
+              <View style={styles.startTimePreview}>
+                <Text style={styles.startTimePreviewLabel}>Starts at</Text>
+                <Text style={styles.startTimePreviewValue}>
+                  {formatTime(parsedTime.hour, parsedTime.minute)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <View style={styles.scheduleHeader}>
+                <Text style={styles.label}>Daily schedule</Text>
+                <Text style={styles.scheduleCount}>{generatedTimes.length} doses</Text>
+              </View>
+              <View style={styles.timeGrid}>
+                {generatedTimes.map((time, index) => (
+                  <View key={`${time.label}-${index}`} style={styles.timeChip}>
+                    <Text style={styles.timeChipLabel}>Dose {index + 1}</Text>
+                    <Text style={styles.timeChipValue}>{time.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          </ScrollView>
 
           <View style={styles.actions}>
             <Button
@@ -147,7 +178,7 @@ const MedicationReminderSetupModal = ({
               style={styles.actionButton}
             />
             <Button
-              title={saving ? "Saving..." : "Save reminders"}
+              title={saving ? "Saving..." : saveLabel}
               onPress={onSave}
               disabled={saving}
               style={styles.actionButton}
@@ -172,34 +203,85 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: palette.border,
+    maxHeight: "88%",
     ...shadow.card,
   },
-  eyebrow: {
-    ...typography.caption,
-    color: palette.primary,
-    fontWeight: "700",
-    marginBottom: spacing.xs,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
+  scrollArea: {
+    maxHeight: "100%",
+  },
+  scrollContent: {
+    paddingBottom: spacing.sm,
   },
   title: {
     ...typography.h2,
     color: palette.text,
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   body: {
     ...typography.body,
     color: palette.textMuted,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   section: {
     marginTop: spacing.lg,
+  },
+  setupCard: {
+    marginTop: spacing.lg,
+    backgroundColor: palette.surfaceLow,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: palette.surfaceBorder,
+    padding: spacing.md,
+  },
+  setupTitle: {
+    ...typography.body,
+    color: palette.text,
+    fontWeight: "700",
+  },
+  setupHint: {
+    ...typography.caption,
+    color: palette.textMuted,
+    marginTop: 4,
+    lineHeight: 18,
+    marginBottom: spacing.md,
+  },
+  nameInput: {
+    ...typography.body,
+    color: palette.text,
+    backgroundColor: palette.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: palette.surfaceBorder,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  namePreview: {
+    backgroundColor: palette.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: palette.surfaceBorder,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  namePreviewLabel: {
+    ...typography.caption,
+    color: palette.textMuted,
+    marginBottom: 4,
+  },
+  namePreviewValue: {
+    ...typography.body,
+    color: palette.text,
+    fontWeight: "700",
   },
   label: {
     ...typography.body,
     color: palette.text,
     fontWeight: "700",
     marginBottom: spacing.sm,
+  },
+  timeLabel: {
+    marginTop: spacing.md,
   },
   doseRow: {
     flexDirection: "row",
@@ -274,10 +356,35 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: spacing.lg,
   },
-  helpText: {
+  startTimePreview: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: palette.surfaceBorder,
+  },
+  startTimePreviewLabel: {
     ...typography.caption,
     color: palette.textMuted,
-    marginTop: spacing.xs,
+    fontWeight: "700",
+  },
+  startTimePreviewValue: {
+    ...typography.body,
+    color: palette.primary,
+    fontWeight: "800",
+  },
+  scheduleHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  scheduleCount: {
+    ...typography.caption,
+    color: palette.textMuted,
+    fontWeight: "700",
   },
   timeGrid: {
     flexDirection: "row",

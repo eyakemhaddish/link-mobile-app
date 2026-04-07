@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -10,10 +11,17 @@ import {
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import MedicationReminderSetupModal from "../components/patient/MedicationReminderSetupModal";
+import { useToast } from "../context/ToastContext";
 import { colors, radius, spacing, typography } from "../theme/tokens";
 import { patientPortalPalette } from "../theme/patientPortal";
 import { getSyncedRecords, getVisitDetails } from "../services/patientService";
 import { formatVisitForDisplay, getOrdersSummary } from "../utils/journeyMapper";
+import {
+  buildEquallySpacedMedicationTimes,
+  getMedicationReminderDefaults,
+  saveMedicationReminderSchedule,
+} from "../services/medicationReminderService";
 
 const ORDER_GROUPS = [
   { key: "lab", title: "Lab orders", empty: "No lab orders" },
@@ -135,6 +143,12 @@ const PatientVisitDetailsScreen = ({ route }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedMedicationOrder, setSelectedMedicationOrder] = useState(null);
+  const [medicationTimesPerDay, setMedicationTimesPerDay] = useState(3);
+  const [medicationStartTime, setMedicationStartTime] = useState("08:00");
+  const [savingMedicationReminder, setSavingMedicationReminder] = useState(false);
+  const [medicationReminderError, setMedicationReminderError] = useState("");
+  const { showToast } = useToast();
 
   const loadData = useCallback(async () => {
     if (!visitId) {
@@ -189,6 +203,70 @@ const PatientVisitDetailsScreen = ({ route }) => {
     }
     return groups;
   }, [artifacts]);
+  const generatedMedicationTimes = useMemo(
+    () =>
+      buildEquallySpacedMedicationTimes({
+        timesPerDay: medicationTimesPerDay,
+        startTime: medicationStartTime,
+      }),
+    [medicationStartTime, medicationTimesPerDay],
+  );
+
+  const openMedicationReminder = useCallback(
+    (order) => {
+      const reminderOrder = {
+        ...order,
+        metadata: {
+          medication_name:
+            order?.medication_name || order?.name || order?.order_name || getOrderTitle(order),
+        },
+        facility_name: visit?.facility_name,
+        visit_id: visit?.id,
+      };
+      const defaults = getMedicationReminderDefaults(reminderOrder);
+
+      setSelectedMedicationOrder(reminderOrder);
+      setMedicationTimesPerDay(defaults.timesPerDay);
+      setMedicationStartTime(defaults.startTime);
+      setMedicationReminderError("");
+    },
+    [visit?.facility_name, visit?.id],
+  );
+
+  const closeMedicationReminder = useCallback(() => {
+    setSelectedMedicationOrder(null);
+    setMedicationReminderError("");
+  }, []);
+
+  const saveMedicationReminder = useCallback(async () => {
+    if (!selectedMedicationOrder) return;
+
+    try {
+      setSavingMedicationReminder(true);
+      setMedicationReminderError("");
+      const saved = await saveMedicationReminderSchedule(selectedMedicationOrder, {
+        timesPerDay: medicationTimesPerDay,
+        startTime: medicationStartTime,
+      });
+      showToast(
+        `${saved.medicationName} reminders scheduled for ${saved.times.length} times each day.`,
+        "success",
+      );
+      closeMedicationReminder();
+    } catch (saveError) {
+      setMedicationReminderError(
+        saveError?.message || "Unable to save medication reminders.",
+      );
+    } finally {
+      setSavingMedicationReminder(false);
+    }
+  }, [
+    closeMedicationReminder,
+    medicationStartTime,
+    medicationTimesPerDay,
+    selectedMedicationOrder,
+    showToast,
+  ]);
 
   if (loading) {
     return (
@@ -297,6 +375,14 @@ const PatientVisitDetailsScreen = ({ route }) => {
                             Status: {humanize(item?.status || "pending")}
                             {item?.payment_status ? `  ·  Payment: ${humanize(item.payment_status)}` : ""}
                           </Text>
+                          {group.key === "medication" ? (
+                            <Pressable
+                              onPress={() => openMedicationReminder(item)}
+                              style={styles.orderActionLink}
+                            >
+                              <Text style={styles.orderActionLinkText}>Set reminder</Text>
+                            </Pressable>
+                          ) : null}
                         </View>
                         <View style={[styles.itemStatus, { backgroundColor: statusStyle.backgroundColor }]}>
                           <Text style={[styles.itemStatusText, { color: statusStyle.color }]}>
@@ -342,6 +428,20 @@ const PatientVisitDetailsScreen = ({ route }) => {
                     <Text style={styles.itemMeta}>
                       {artifact.provider_name || "Link visit"}  ·  {artifact.document_date || "Date unavailable"}
                     </Text>
+                    {type === "prescription" ? (
+                      <Pressable
+                        onPress={() =>
+                          openMedicationReminder({
+                            id: artifact.id,
+                            medication_name:
+                              artifact.description || ARTIFACT_LABELS[type] || "Prescription",
+                          })
+                        }
+                        style={styles.orderActionLink}
+                      >
+                        <Text style={styles.orderActionLinkText}>Set reminder</Text>
+                      </Pressable>
+                    ) : null}
                   </View>
                 ))}
               </View>
@@ -375,6 +475,30 @@ const PatientVisitDetailsScreen = ({ route }) => {
           )}
         </Card>
       </ScrollView>
+      <MedicationReminderSetupModal
+        visible={Boolean(selectedMedicationOrder)}
+        title="Schedule your medication"
+        subtitle={
+          selectedMedicationOrder
+            ? `Set reminders for ${visit?.facility_name || "your facility"}.`
+            : ""
+        }
+        reminderName={
+          selectedMedicationOrder?.medication_name ||
+          selectedMedicationOrder?.name ||
+          selectedMedicationOrder?.order_name ||
+          "Medication"
+        }
+        timesPerDay={medicationTimesPerDay}
+        startTime={medicationStartTime}
+        generatedTimes={generatedMedicationTimes}
+        saving={savingMedicationReminder}
+        error={medicationReminderError}
+        onTimesPerDayChange={setMedicationTimesPerDay}
+        onStartTimeChange={setMedicationStartTime}
+        onSave={saveMedicationReminder}
+        onDismiss={closeMedicationReminder}
+      />
     </Screen>
   );
 };
@@ -414,6 +538,13 @@ const styles = StyleSheet.create({
   itemCopy: { flex: 1, gap: 4 },
   itemTitle: { ...typography.body, fontWeight: "600", color: palette.black },
   itemMeta: { ...typography.caption, color: colors.muted },
+  orderActionLink: { alignSelf: "flex-start", marginTop: 6 },
+  orderActionLinkText: {
+    ...typography.caption,
+    color: palette.darkPurple,
+    fontWeight: "800",
+    textDecorationLine: "underline",
+  },
   itemStatus: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   itemStatusText: { ...typography.caption, fontWeight: "700" },
   vitalsGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },

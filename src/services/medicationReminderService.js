@@ -11,6 +11,7 @@ const MEDICATION_REMINDER_STATE_KEY = "medication_reminder_state_v1";
 const defaultState = () => ({
   prompts: {},
   schedules: {},
+  customSchedules: {},
 });
 
 const normalizeMedicationName = (item) =>
@@ -30,12 +31,18 @@ const getState = async () => {
     ? {
         prompts: stored.prompts || {},
         schedules: stored.schedules || {},
+        customSchedules: stored.customSchedules || {},
       }
     : defaultState();
 };
 
 const persistState = async (state) => {
   await setItem(MEDICATION_REMINDER_STATE_KEY, state);
+};
+
+const normalizeReminderTitle = (value, fallback = "Reminder") => {
+  const normalized = String(value || "").trim();
+  return normalized || fallback;
 };
 
 const clampDailyDoses = (value) => {
@@ -68,6 +75,64 @@ const minutesToTime = (totalMinutes) => {
     hour,
     minute,
     label: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+  };
+};
+
+const saveScheduledReminder = async ({
+  title,
+  body,
+  data,
+  timesPerDay,
+  startTime,
+  existingSchedule,
+}) => {
+  if (!isSystemNotificationAvailable()) {
+    throw new Error("Reminders need native notifications on Android or iPhone.");
+  }
+
+  const normalizedTimesPerDay = clampDailyDoses(timesPerDay);
+  const normalizedStartTime = normalizeTime(startTime)?.label;
+  if (!normalizedStartTime) {
+    throw new Error("Enter a valid start time.");
+  }
+
+  const permission = await requestNotificationPermission();
+  if (!permission.granted) {
+    throw new Error("Notification permission is required to schedule reminders.");
+  }
+
+  const times = buildEquallySpacedMedicationTimes({
+    timesPerDay: normalizedTimesPerDay,
+    startTime: normalizedStartTime,
+  });
+
+  if (existingSchedule?.notificationIds?.length) {
+    await cancelSystemNotifications(existingSchedule.notificationIds);
+  }
+
+  const notificationIds = [];
+  for (const time of times) {
+    const notificationId = await scheduleDailySystemNotification({
+      title,
+      body,
+      data: {
+        ...(data || {}),
+        time: time.label,
+      },
+      hour: time.hour,
+      minute: time.minute,
+    });
+    if (notificationId) notificationIds.push(notificationId);
+  }
+
+  return {
+    enabled: true,
+    title,
+    timesPerDay: normalizedTimesPerDay,
+    startTime: normalizedStartTime,
+    times,
+    notificationIds,
+    updatedAt: new Date().toISOString(),
   };
 };
 
@@ -144,57 +209,27 @@ export const saveMedicationReminderSchedule = async (item, scheduleInput) => {
     throw new Error("Medication order ID is missing.");
   }
 
-  if (!isSystemNotificationAvailable()) {
-    throw new Error("Medication reminders need native notifications on Android or iPhone.");
-  }
-
-  const timesPerDay = clampDailyDoses(scheduleInput?.timesPerDay);
-  const startTime = normalizeTime(scheduleInput?.startTime)?.label;
-  if (!startTime) {
-    throw new Error("Enter a valid start time in HH:MM format.");
-  }
-
-  const times = buildEquallySpacedMedicationTimes({ timesPerDay, startTime });
-  const permission = await requestNotificationPermission();
-  if (!permission.granted) {
-    throw new Error("Notification permission is required to schedule reminders.");
-  }
-
   const state = await getState();
   const existingSchedule = state.schedules[orderId];
-  if (existingSchedule?.notificationIds?.length) {
-    await cancelSystemNotifications(existingSchedule.notificationIds);
-  }
-
   const medicationName = normalizeMedicationName(item);
   const facilityName = String(item?.facility_name || "your facility").trim();
-
-  const notificationIds = [];
-  for (const time of times) {
-    const notificationId = await scheduleDailySystemNotification({
-      title: medicationName,
-      body: `Time to take ${medicationName}. Scheduled from ${facilityName}.`,
-      data: {
-        kind: "medication_reminder",
-        orderId,
-        visitId: item?.visit_id || null,
-        medicationName,
-        time: time.label,
-      },
-      hour: time.hour,
-      minute: time.minute,
-    });
-    if (notificationId) notificationIds.push(notificationId);
-  }
+  const schedule = await saveScheduledReminder({
+    title: medicationName,
+    body: `Time to take ${medicationName}. Scheduled from ${facilityName}.`,
+    data: {
+      kind: "medication_reminder",
+      orderId,
+      visitId: item?.visit_id || null,
+      medicationName,
+    },
+    timesPerDay: scheduleInput?.timesPerDay,
+    startTime: scheduleInput?.startTime,
+    existingSchedule,
+  });
 
   state.schedules[orderId] = {
-    enabled: true,
+    ...schedule,
     medicationName,
-    timesPerDay,
-    startTime,
-    times,
-    notificationIds,
-    updatedAt: new Date().toISOString(),
   };
 
   state.prompts[orderId] = {
@@ -207,15 +242,62 @@ export const saveMedicationReminderSchedule = async (item, scheduleInput) => {
   return {
     orderId,
     medicationName,
-    timesPerDay,
-    startTime,
-    times,
+    timesPerDay: schedule.timesPerDay,
+    startTime: schedule.startTime,
+    times: schedule.times,
     available: isSystemNotificationAvailable(),
-    scheduledCount: notificationIds.length,
+    scheduledCount: schedule.notificationIds.length,
   };
 };
 
 export const getMedicationReminderSchedule = async (orderId) => {
   const state = await getState();
   return state.schedules[String(orderId || "").trim()] || null;
+};
+
+export const getCustomReminderDefaults = (title = "") => ({
+  reminderName: normalizeReminderTitle(title, ""),
+  timesPerDay: 1,
+  startTime: "08:00",
+  generatedTimes: buildEquallySpacedMedicationTimes({
+    timesPerDay: 1,
+    startTime: "08:00",
+  }),
+});
+
+export const saveCustomReminderSchedule = async (scheduleInput) => {
+  const state = await getState();
+  const reminderName = normalizeReminderTitle(scheduleInput?.reminderName, "Reminder");
+  const customReminderId =
+    String(scheduleInput?.customReminderId || "").trim() ||
+    `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const existingSchedule = state.customSchedules[customReminderId];
+
+  const schedule = await saveScheduledReminder({
+    title: reminderName,
+    body: `Reminder: ${reminderName}.`,
+    data: {
+      kind: "custom_reminder",
+      customReminderId,
+      reminderName,
+    },
+    timesPerDay: scheduleInput?.timesPerDay,
+    startTime: scheduleInput?.startTime,
+    existingSchedule,
+  });
+
+  state.customSchedules[customReminderId] = {
+    ...schedule,
+    reminderName,
+  };
+  await persistState(state);
+
+  return {
+    customReminderId,
+    reminderName,
+    timesPerDay: schedule.timesPerDay,
+    startTime: schedule.startTime,
+    times: schedule.times,
+    scheduledCount: schedule.notificationIds.length,
+  };
 };

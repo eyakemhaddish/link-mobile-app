@@ -620,13 +620,18 @@ const HomeScreen = () => {
         </ScrollView>
         <MedicationReminderSetupModal
           visible={Boolean(medicationPromptItem)}
-          medicationName={
+          title="Schedule your medication"
+          subtitle={
+            medicationPromptItem
+              ? `Set daily reminders for ${medicationPromptItem?.facility_name || "your facility"}.`
+              : ""
+          }
+          reminderName={
             medicationPromptItem?.metadata?.medication_name ||
             medicationPromptItem?.metadata?.medicationName ||
             medicationPromptItem?.title ||
             "Medication"
           }
-          facilityName={medicationPromptItem?.facility_name || "your facility"}
           timesPerDay={medicationTimesPerDay}
           startTime={medicationStartTime}
           generatedTimes={generatedMedicationTimes}
