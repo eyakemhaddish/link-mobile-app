@@ -164,6 +164,43 @@ const normalizeVisitDetailsPayload = (response) => {
     };
 };
 
+const normalizePatientFeedItem = (item) => {
+    const source = item && typeof item === "object" ? item : {};
+
+    return {
+        ...source,
+        id: source.id || null,
+        patient_id: source.patient_id || source.patientId || null,
+        visit_id: source.visit_id || source.visitId || null,
+        facility_id: source.facility_id || source.facilityId || null,
+        facility_name: source.facility_name || source.facilityName || "",
+        resource_type: source.resource_type || source.resourceType || "",
+        resource_id: source.resource_id || source.resourceId || "",
+        event_type: source.event_type || source.eventType || "",
+        status: source.status || "",
+        title: source.title || "",
+        description: source.description || "",
+        priority: source.priority || "medium",
+        occurred_at: source.occurred_at || source.occurredAt || null,
+        updated_at: source.updated_at || source.updatedAt || null,
+        expires_at: source.expires_at || source.expiresAt || null,
+        metadata: source.metadata && typeof source.metadata === "object" ? source.metadata : {},
+    };
+};
+
+const normalizePatientFeedResponse = (response) => {
+    const source = response && typeof response === "object" ? response : {};
+    const rawItems = Array.isArray(source.items) ? source.items : [];
+    const items = rawItems.map(normalizePatientFeedItem);
+
+    return {
+        ...source,
+        items,
+        next_cursor: source.next_cursor || source.nextCursor || null,
+        server_time: source.server_time || source.serverTime || null,
+    };
+};
+
 /**
  * Fetch the active visit for the authenticated patient
  */
@@ -225,6 +262,22 @@ export const getVisitDetails = async (visitId) => {
         return normalizeVisitDetailsPayload(response);
     } catch (error) {
         console.error("Failed to fetch visit details:", error);
+        throw error;
+    }
+};
+
+export const getPatientRealtimeFeed = async (options = {}) => {
+    try {
+        const params = [];
+        if (options?.since) params.push(`since=${encodeURIComponent(options.since)}`);
+        const path = params.length
+            ? `/patient-portal/feed?${params.join("&")}`
+            : "/patient-portal/feed";
+
+        const response = await api.get(path);
+        return normalizePatientFeedResponse(response);
+    } catch (error) {
+        console.error("Failed to fetch patient realtime feed:", error);
         throw error;
     }
 };

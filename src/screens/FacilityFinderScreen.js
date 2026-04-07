@@ -8,11 +8,13 @@ import {
   TextInput,
   Linking,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import HeroHeader from "../components/ui/HeroHeader";
 import { colors, radius, spacing, typography } from "../theme/tokens";
+import { patientPortalPalette as palette } from "../theme/patientPortal";
 import { useToast } from "../context/ToastContext";
 import { getFacilities, getPublicDirectoryFacilities } from "../services/patientService";
 
@@ -30,22 +32,6 @@ const formatFacilityType = (value) => {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-};
-
-const palette = {
-  background: "#F7FAF9",
-  surfaceLow: "#F1F4F3",
-  surfaceLowest: "#FFFFFF",
-  surfaceBorder: "#E0E3E2",
-  primary: "#004277",
-  primaryContainer: "#005A9E",
-  primaryFixed: "#D3E4FF",
-  secondary: "#2C694E",
-  secondaryFixed: "#B1F0CE",
-  tertiary: "#683200",
-  tertiaryFixed: "#FFDCC5",
-  text: "#181C1C",
-  textMuted: "#414750",
 };
 
 const FacilityFinderScreen = ({ navigation }) => {
@@ -149,7 +135,7 @@ const FacilityFinderScreen = ({ navigation }) => {
             <Text style={styles.searchCardBody}>Use the directory below to find care and move directly into booking.</Text>
           </View>
           <View style={styles.searchCardIconWrap}>
-            <Text style={styles.searchCardIcon}>+</Text>
+            <Feather name="search" size={20} color={palette.primary} />
           </View>
         </View>
         <TextInput
@@ -204,7 +190,7 @@ const FacilityFinderScreen = ({ navigation }) => {
                 <View style={styles.facilityHeader}>
                   <View style={styles.facilityIdentity}>
                     <View style={styles.facilityIcon}>
-                      <Text style={styles.facilityIconText}>+</Text>
+                      <Feather name="map-pin" size={18} color={palette.secondary} />
                     </View>
                     <View style={styles.facilityTitleWrap}>
                       <Text style={styles.cardTitle}>{facility.name}</Text>
@@ -273,7 +259,7 @@ const styles = StyleSheet.create({
   searchCard: {
     gap: spacing.sm,
     marginBottom: spacing.md,
-    backgroundColor: palette.surfaceLowest,
+    backgroundColor: palette.surface,
     borderColor: palette.surfaceBorder,
     borderRadius: 20,
     padding: spacing.md,
@@ -302,12 +288,6 @@ const styles = StyleSheet.create({
     backgroundColor: palette.primaryFixed,
     alignItems: "center",
     justifyContent: "center",
-  },
-  searchCardIcon: {
-    fontSize: 24,
-    lineHeight: 24,
-    fontWeight: "700",
-    color: palette.primary,
   },
   searchInput: {
     borderWidth: 1,
@@ -363,7 +343,7 @@ const styles = StyleSheet.create({
   card: {
     gap: spacing.sm,
     marginBottom: spacing.sm,
-    backgroundColor: palette.surfaceLowest,
+    backgroundColor: palette.surface,
     borderColor: palette.surfaceBorder,
     borderRadius: radius.lg,
     padding: spacing.md,
@@ -386,12 +366,6 @@ const styles = StyleSheet.create({
     backgroundColor: palette.secondaryFixed,
     alignItems: "center",
     justifyContent: "center",
-  },
-  facilityIconText: {
-    fontSize: 24,
-    lineHeight: 24,
-    fontWeight: "700",
-    color: palette.secondary,
   },
   facilityTitleWrap: {
     flex: 1,

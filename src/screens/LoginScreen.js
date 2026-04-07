@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, ActivityIndicator, Platform, Pressable } from "react-native";
+
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -17,39 +18,10 @@ import {
 } from "../lib/auth";
 
 const isWeb = Platform.OS === "web";
-
-const DEMO_USERS = {
-  "1234": {
-    token: "demo-token-abebe",
-    label: "Patient",
-    profile: {
-      id: "demo-patient-abebe-001",
-      role: "patient",
-      full_name: "Abebe Metaferia Alemey",
-      first_name: "Abebe",
-      last_name: "Alemey",
-      email: "abebe.metaferia@linkhc.org",
-      phone: "+251911000001",
-      facility_id: "demo-facility-zelalem-001",
-      facility_name: "Zelalem Hospital",
-    },
-  },
-  "5678": {
-    token: "demo-token-birtukan-hew",
-    label: "Health Extension Worker",
-    profile: {
-      id: "demo-hew-birtukan-001",
-      role: "hew",
-      full_name: "Birtukan Tadesse",
-      first_name: "Birtukan",
-      last_name: "Tadesse",
-      email: "birtukan.tadesse@linkhc.org",
-      phone: "+251911000099",
-      facility_id: "demo-facility-zelalem-001",
-      facility_name: "Zelalem Hospital",
-    },
-  },
-};
+const GENDER_OPTIONS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+];
 
 const normalizePhoneNumber = (value) => (value || "").replace(/\s+/g, "").trim();
 
@@ -73,13 +45,13 @@ const buildPatientProfile = (authResponse, fallbackPhone) => {
     patientSource.patient_account_id,
     userSource.patient_id,
     userSource.patient_account_id,
-    source.id
+    source.id,
   );
   const userId = pickFirstTruthy(
     userSource.id,
     patientSource.user_id,
     source.user_id,
-    source.id
+    source.id,
   );
   const fullName = pickFirstTruthy(
     userSource.name,
@@ -87,7 +59,7 @@ const buildPatientProfile = (authResponse, fallbackPhone) => {
     userSource.fullName,
     patientSource.name,
     patientSource.full_name,
-    patientSource.fullName
+    patientSource.fullName,
   ) || "Patient";
   const [firstName, ...lastNameParts] = String(fullName).trim().split(/\s+/);
 
@@ -98,12 +70,35 @@ const buildPatientProfile = (authResponse, fallbackPhone) => {
     user_id: userId || null,
     role: "patient",
     full_name: fullName,
-    first_name: pickFirstTruthy(userSource.first_name, patientSource.first_name, firstName) || "Patient",
-    last_name: pickFirstTruthy(userSource.last_name, patientSource.last_name, lastNameParts.join(" ")),
-    phone: pickFirstTruthy(userSource.phone, userSource.phone_number, patientSource.phone, patientSource.phone_number, fallbackPhone) || "",
-    phone_number: pickFirstTruthy(userSource.phone_number, patientSource.phone_number, userSource.phone, patientSource.phone, fallbackPhone) || "",
+    first_name:
+      pickFirstTruthy(userSource.first_name, patientSource.first_name, firstName) || "Patient",
+    last_name: pickFirstTruthy(
+      userSource.last_name,
+      patientSource.last_name,
+      lastNameParts.join(" "),
+    ),
+    phone:
+      pickFirstTruthy(
+        userSource.phone,
+        userSource.phone_number,
+        patientSource.phone,
+        patientSource.phone_number,
+        fallbackPhone,
+      ) || "",
+    phone_number:
+      pickFirstTruthy(
+        userSource.phone_number,
+        patientSource.phone_number,
+        userSource.phone,
+        patientSource.phone,
+        fallbackPhone,
+      ) || "",
     facility_id: pickFirstTruthy(patientSource.facility_id, userSource.facility_id, source.facility_id),
-    facility_name: pickFirstTruthy(patientSource.facility_name, userSource.facility_name, source.facility_name),
+    facility_name: pickFirstTruthy(
+      patientSource.facility_name,
+      userSource.facility_name,
+      source.facility_name,
+    ),
     tenant_id: pickFirstTruthy(patientSource.tenant_id, userSource.tenant_id, source.tenant_id),
   };
 };
@@ -134,7 +129,6 @@ const LoginScreen = () => {
   const [patientPasswordConfirm, setPatientPasswordConfirm] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [pin, setPin] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [mode, setMode] = React.useState("patient");
@@ -189,25 +183,30 @@ const LoginScreen = () => {
     setError("");
   }, []);
 
-  const completePatientSignIn = React.useCallback(async ({ authResponse, fallbackPhone }) => {
-    const sessionToken = getAuthTokenFromResponse(authResponse);
-    if (!sessionToken) {
-      setError("Unable to start patient session. Please try again.");
-      return false;
-    }
+  const completePatientSignIn = React.useCallback(
+    async ({ authResponse, fallbackPhone }) => {
+      const sessionToken = getAuthTokenFromResponse(authResponse);
+      if (!sessionToken) {
+        setError("Unable to start patient session. Please try again.");
+        return false;
+      }
 
-    const profile = buildPatientProfile(authResponse, fallbackPhone);
-    const resolvedPhone = normalizePhoneNumber(profile.phone_number || profile.phone || fallbackPhone);
+      const profile = buildPatientProfile(authResponse, fallbackPhone);
+      const resolvedPhone = normalizePhoneNumber(
+        profile.phone_number || profile.phone || fallbackPhone,
+      );
 
-    await signInWithToken(sessionToken, profile);
-    if (resolvedPhone) {
-      await setStoredPatientPhone(resolvedPhone);
-      setStoredPatientPhoneState(resolvedPhone);
-      setPhoneNumber(resolvedPhone);
-    }
-    showToast(`Welcome, ${profile.first_name}!`, "success");
-    return true;
-  }, [showToast, signInWithToken]);
+      await signInWithToken(sessionToken, profile);
+      if (resolvedPhone) {
+        await setStoredPatientPhone(resolvedPhone);
+        setStoredPatientPhoneState(resolvedPhone);
+        setPhoneNumber(resolvedPhone);
+      }
+      showToast(`Welcome, ${profile.first_name}!`, "success");
+      return true;
+    },
+    [showToast, signInWithToken],
+  );
 
   const handleRequestOtp = async () => {
     if (loading) return;
@@ -221,11 +220,7 @@ const LoginScreen = () => {
     setLoading(true);
     setError("");
     try {
-      await api.post(
-        "/patient-auth/request-otp",
-        { phone_number: normalizedPhone },
-        { auth: false }
-      );
+      await api.post("/patient-auth/request-otp", { phone_number: normalizedPhone }, { auth: false });
       setOtpRequested(true);
       setRequiresRegistration(false);
       showToast("Verification code sent.", "success");
@@ -255,7 +250,7 @@ const LoginScreen = () => {
       const response = await api.post(
         "/patient-auth/verify-otp",
         { phone_number: normalizedPhone, otp },
-        { auth: false }
+        { auth: false },
       );
 
       const signedIn = await completePatientSignIn({
@@ -316,13 +311,13 @@ const LoginScreen = () => {
           otp,
           name: name.trim(),
           date_of_birth: dateOfBirth.trim() || undefined,
-          gender: gender.trim() || undefined,
+          gender: gender || undefined,
           emergency_contact_name: emergencyContactName.trim() || undefined,
           emergency_contact_phone: normalizedEmergencyPhone || undefined,
           tenant_id: PATIENT_TENANT_ID || undefined,
           password: patientPassword,
         },
-        { auth: false }
+        { auth: false },
       );
       await completePatientSignIn({
         authResponse: response,
@@ -368,7 +363,7 @@ const LoginScreen = () => {
           phone_number: normalizedPhone,
           password: patientPassword,
         },
-        { auth: false }
+        { auth: false },
       );
       await completePatientSignIn({
         authResponse: response,
@@ -391,48 +386,6 @@ const LoginScreen = () => {
     switchMode("patient_onboarding");
   };
 
-  const handlePinLogin = async () => {
-    if (loading) return;
-
-    if (pin.length !== 4) {
-      setError("Please enter a 4-digit PIN");
-      return;
-    }
-
-    const match = DEMO_USERS[pin];
-    if (!match) {
-      setError("Invalid PIN. Try 1234 (Patient) or 5678 (HEW).");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    try {
-      const response = await api.post(
-        "/patient-auth/dev-login",
-        { phone_number: match.profile.phone, pin },
-        { auth: false }
-      );
-
-      const token = getAuthTokenFromResponse(response) || match.token;
-      const profile = buildPatientProfile(
-        {
-          user: response?.user || match.profile,
-          patient: response?.patient || match.profile,
-        },
-        match.profile.phone
-      );
-
-      showToast(`Welcome, ${profile.first_name}! (${match.label})`, "success");
-      await signInWithToken(token, profile);
-      await setStoredPatientPhone(normalizePhoneNumber(match.profile.phone));
-    } catch (err) {
-      setError(err?.message || "Login failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleClinicianLogin = async () => {
     if (loading) return;
 
@@ -450,7 +403,7 @@ const LoginScreen = () => {
           username: email.trim(),
           password,
         },
-        { auth: false }
+        { auth: false },
       );
 
       const token = getAuthTokenFromResponse(response);
@@ -463,10 +416,7 @@ const LoginScreen = () => {
       await api.get("/users/me").catch(() => null);
     } catch (err) {
       const payloadMessage =
-        err?.payload?.message ||
-        err?.payload?.error ||
-        err?.message ||
-        "Sign in failed.";
+        err?.payload?.message || err?.payload?.error || err?.message || "Sign in failed.";
       setError(payloadMessage);
     } finally {
       setLoading(false);
@@ -498,7 +448,9 @@ const LoginScreen = () => {
         <Card style={styles.card}>
           <Text style={styles.label}>Phone number on this device</Text>
           <View style={styles.readonlyField}>
-            <Text style={styles.readonlyValue}>{storedPatientPhone || "No stored phone number"}</Text>
+            <Text style={styles.readonlyValue}>
+              {storedPatientPhone || "No stored phone number"}
+            </Text>
           </View>
 
           <Text style={styles.label}>Password</Text>
@@ -529,9 +481,6 @@ const LoginScreen = () => {
         <View style={styles.testActions}>
           <Pressable onPress={() => switchMode("email")} style={styles.switchMode}>
             <Text style={styles.switchModeText}>Clinician or HEW sign in</Text>
-          </Pressable>
-          <Pressable onPress={() => switchMode("pin")} style={styles.switchMode}>
-            <Text style={styles.switchModeText}>Use demo PIN instead</Text>
           </Pressable>
         </View>
       </Screen>
@@ -628,12 +577,27 @@ const LoginScreen = () => {
               />
 
               <Text style={styles.label}>Gender (optional)</Text>
-              <Input
-                value={gender}
-                onChangeText={setGender}
-                placeholder="female / male / other"
-                autoCapitalize="none"
-              />
+              <View style={styles.optionRow}>
+                {GENDER_OPTIONS.map((option) => {
+                  const active = gender === option.value;
+                  return (
+                    <Pressable
+                      key={option.value}
+                      style={[styles.optionChip, active && styles.optionChipActive]}
+                      onPress={() => {
+                        setGender(option.value);
+                        setError("");
+                      }}
+                    >
+                      <Text
+                        style={[styles.optionChipText, active && styles.optionChipTextActive]}
+                      >
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
 
               <Text style={styles.label}>Emergency contact name (optional)</Text>
               <Input
@@ -684,77 +648,14 @@ const LoginScreen = () => {
             style={styles.switchMode}
           >
             <Text style={styles.switchModeText}>
-              {storedPatientPhone ? "Back to password sign in" : "Password sign in available after account setup"}
+              {storedPatientPhone
+                ? "Back to password sign in"
+                : "Password sign in available after account setup"}
             </Text>
           </Pressable>
           <Pressable onPress={() => switchMode("email")} style={styles.switchMode}>
             <Text style={styles.switchModeText}>Clinician or HEW sign in</Text>
           </Pressable>
-        </View>
-      </Screen>
-    );
-  }
-
-  if (mode === "pin") {
-    return (
-      <Screen variant="hero">
-        <HeroHeader
-          badge="Demo Access"
-          eyebrow="Link Health"
-          title="Demo Mode"
-          subtitle="Use demo PINs only for sandbox testing."
-          style={styles.header}
-        />
-
-        <Card style={styles.card}>
-          <Text style={styles.label}>PIN</Text>
-          <Input
-            value={pin}
-            onChangeText={(text) => {
-              const digits = text.replace(/\D/g, "").slice(0, 4);
-              setPin(digits);
-              setError("");
-            }}
-            keyboardType="numeric"
-            secureTextEntry
-            placeholder="••••"
-            maxLength={4}
-            testID="login-pin"
-          />
-
-          <View style={styles.pinDots}>
-            {[0, 1, 2, 3].map((i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  i < pin.length && styles.dotFilled,
-                ]}
-              />
-            ))}
-          </View>
-
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-
-          <View style={styles.actions}>
-            <Button title="Sign in with demo PIN" onPress={handlePinLogin} />
-            {loading ? <ActivityIndicator color={colors.primary} /> : null}
-          </View>
-        </Card>
-
-        <View style={styles.testActions}>
-          <Text style={styles.hintText}>1234 = Patient (Abebe) · 5678 = HEW (Birtukan)</Text>
-          <Pressable
-            onPress={() => switchMode(storedPatientPhone ? "patient" : "patient_onboarding")}
-            style={styles.switchMode}
-          >
-            <Text style={styles.switchModeText}>Back to patient sign in</Text>
-          </Pressable>
-          {!isWeb ? (
-            <Pressable onPress={() => switchMode("email")} style={styles.switchMode}>
-              <Text style={styles.switchModeText}>Use clinician email sign in</Text>
-            </Pressable>
-          ) : null}
         </View>
       </Screen>
     );
@@ -799,15 +700,14 @@ const LoginScreen = () => {
       </Card>
 
       <View style={styles.testActions}>
-        <Pressable
-          onPress={() => switchMode(storedPatientPhone ? "patient" : "patient_onboarding")}
-          style={styles.switchMode}
-        >
-          <Text style={styles.switchModeText}>Back to patient sign in</Text>
-        </Pressable>
-        <Pressable onPress={() => switchMode("pin")} style={styles.switchMode}>
-          <Text style={styles.switchModeText}>Use demo PIN instead</Text>
-        </Pressable>
+        {!isWeb ? (
+          <Pressable
+            onPress={() => switchMode(storedPatientPhone ? "patient" : "patient_onboarding")}
+            style={styles.switchMode}
+          >
+            <Text style={styles.switchModeText}>Back to patient sign in</Text>
+          </Pressable>
+        ) : null}
       </View>
     </Screen>
   );
@@ -815,103 +715,87 @@ const LoginScreen = () => {
 
 const styles = StyleSheet.create({
   header: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   card: {
     gap: spacing.sm,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: "#E0E6EA",
-    shadowColor: "#004277",
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 4,
   },
   label: {
     ...typography.caption,
-    color: "#52616B",
+    color: colors.textSecondary,
     fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-  registrationHint: {
-    ...typography.caption,
-    color: "#3B5E74",
-    marginBottom: spacing.xs,
-    backgroundColor: "#EFF6FB",
-    borderRadius: 16,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    textTransform: "uppercase",
+    marginBottom: 4,
   },
   readonlyField: {
+    minHeight: 52,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#D8E1E7",
-    borderRadius: 18,
-    paddingVertical: spacing.sm,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSoft,
+    justifyContent: "center",
     paddingHorizontal: spacing.md,
-    backgroundColor: "#F4F7F8",
   },
   readonlyValue: {
     ...typography.body,
-    color: "#18384C",
+    color: colors.text,
+    fontWeight: "600",
+  },
+  registrationHint: {
+    ...typography.body,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  optionRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  optionChip: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+  },
+  optionChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  optionChipText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    fontWeight: "700",
+  },
+  optionChipTextActive: {
+    color: colors.primaryDark,
+  },
+  error: {
+    color: colors.danger,
+    fontSize: 13,
     fontWeight: "600",
   },
   actions: {
-    marginTop: spacing.md,
     gap: spacing.sm,
+    marginTop: spacing.sm,
   },
   testActions: {
-    marginTop: spacing.xl,
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: "#DCE5E8",
+    gap: spacing.sm,
+    marginTop: spacing.md,
     alignItems: "center",
   },
-  error: {
-    color: "#B42318",
-    ...typography.caption,
-    backgroundColor: "#FFF1F1",
-    borderRadius: 14,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  pinDots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 12,
-    marginVertical: spacing.sm,
-  },
-  dot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: "#D2DDE4",
-    backgroundColor: "transparent",
-  },
-  dotFilled: {
-    backgroundColor: "#005A9E",
-    borderColor: "#005A9E",
-  },
-  hintText: {
-    fontSize: 12,
-    color: "#61717C",
-    textAlign: "center",
-    lineHeight: 18,
-  },
   switchMode: {
-    marginTop: spacing.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: 999,
-    backgroundColor: "#F4F7F8",
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
   },
   switchModeText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#005A9E",
+    ...typography.body,
+    color: colors.primary,
+    fontWeight: "700",
     textAlign: "center",
   },
   loadingShell: {
@@ -922,7 +806,7 @@ const styles = StyleSheet.create({
   },
   loadingShellText: {
     ...typography.body,
-    color: "#53626E",
+    color: colors.textSecondary,
   },
 });
 

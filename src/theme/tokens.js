@@ -3,8 +3,8 @@ export const colors = {
   primaryDark: "#004277",
   primarySoft: "#D7E8FF",
   primaryFixed: "#D3E4FF",
-  secondary: "#2C694E",
-  secondarySoft: "#DFF2E8",
+  secondary: "#8A5A2B",
+  secondarySoft: "#F5E7D8",
   ink: "#18384C",
   text: "#18384C",
   textSecondary: "#53626E",
@@ -18,7 +18,7 @@ export const colors = {
   warning: "#B45309",
   danger: "#B91C1C",
   dangerSoft: "#FFF1F1",
-  green: "#B9F0D8",
+  green: "#F1DFC8",
 };
 
 export const typography = {

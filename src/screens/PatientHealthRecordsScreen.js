@@ -20,6 +20,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { API_BASE_URL } from "../lib/env";
 import { colors, spacing, radius, shadow } from "../theme/tokens";
+import { patientPortalPalette as palette } from "../theme/patientPortal";
 import {
   getActiveVisit,
   getDocuments,
@@ -613,17 +614,6 @@ const PatientHealthRecordsScreen = () => {
   );
 };
 
-const palette = {
-  primary: "#004277",
-  primaryContainer: "#005A9E",
-  primaryFixed: "#D3E4FF",
-  tertiaryFixed: "#FFDCC5",
-  black: "#181C1C",
-  white: "#FFFFFF",
-  softWhite: "#F7FAF9",
-  softPanel: "#F1F4F3",
-};
-
 const styles = StyleSheet.create({
   screen: { padding: 0 },
   scroll: { flex: 1 },
@@ -644,7 +634,7 @@ const styles = StyleSheet.create({
     color: "#713700",
     textTransform: "uppercase",
   },
-  heading: { fontSize: 28, fontWeight: "800", color: palette.primary, marginBottom: 4, fontFamily: "Manrope" },
+  heading: { fontSize: 28, fontWeight: "800", color: palette.primary, marginBottom: 4 },
   subtitle: { fontSize: 14, color: colors.muted, opacity: 1, marginBottom: spacing.md },
   visitHeroCard: {
     marginBottom: spacing.md,
@@ -657,7 +647,7 @@ const styles = StyleSheet.create({
   },
   visitHeroHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   visitHeroEyebrow: { fontSize: 12, fontWeight: "700", color: palette.primary, textTransform: "uppercase" },
-  visitHeroTitle: { fontSize: 18, fontWeight: "700", color: palette.black, marginTop: 4, fontFamily: "Manrope" },
+  visitHeroTitle: { fontSize: 18, fontWeight: "700", color: palette.black, marginTop: 4 },
   visitHeroMeta: { fontSize: 13, color: palette.black, opacity: 0.72, marginTop: 2 },
   liveBadge: {
     backgroundColor: palette.primaryContainer,
@@ -670,7 +660,7 @@ const styles = StyleSheet.create({
   visitPrimaryButton: { paddingHorizontal: spacing.lg },
   visitSectionCard: { marginBottom: spacing.md, padding: spacing.md, backgroundColor: palette.white, borderColor: "#E0E3E2" },
   visitSectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
-  visitSectionTitle: { fontSize: 17, fontWeight: "700", color: palette.black, fontFamily: "Manrope" },
+  visitSectionTitle: { fontSize: 17, fontWeight: "700", color: palette.black },
   visitSectionCaption: { fontSize: 12, color: palette.black, opacity: 0.55 },
   visitListCard: {
     borderTopWidth: 1,
@@ -704,7 +694,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.white,
     ...shadow.card,
   },
-  growthTitle: { fontSize: 14, fontWeight: "700", color: palette.primary, marginBottom: 6, fontFamily: "Manrope" },
+  growthTitle: { fontSize: 14, fontWeight: "700", color: palette.primary, marginBottom: 6 },
   growthBody: { fontSize: 13, color: palette.black, opacity: 0.72, lineHeight: 18 },
   growthActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: spacing.sm },
   growthActionBtn: {

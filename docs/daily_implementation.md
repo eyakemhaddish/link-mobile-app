@@ -100,6 +100,18 @@ We need the patient auth contract to support:
 - confirm `GET /patient-auth/me` returns a usable patient profile after registration and password login
 - confirm how phone number is stored/retrieved on device for later patient sign-in
 
+### Smoke test status on 2026-04-06
+
+- backend seed completed successfully through `GET /api/v1/seed`
+- test phone number: `+251922335151`
+- `POST /api/v1/patient-auth/request-otp` is reachable and accepts the raw request body shape:
+  - `{ "phone_number": "+251922335151" }`
+- the endpoint is currently blocked by a backend database error, not a mobile request-shape error:
+  - `Npgsql.PostgresException: column "patient_id" of relation "otp_codes" does not exist`
+- because OTP request currently fails server-side, full registration and password sign-in smoke testing cannot complete yet
+- `GET /api/v1/facilities/public` is working
+- `GET /api/v1/patient-portal/facilities` returns `401 Unauthorized` without a patient token, which is expected
+
 ### Acceptance criteria
 
 - new patient with no facility can register successfully

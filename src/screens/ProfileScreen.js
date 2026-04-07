@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -7,18 +8,7 @@ import HeroHeader from "../components/ui/HeroHeader";
 import Screen from "../components/ui/Screen";
 import { useAuth } from "../context/AuthContext";
 import { spacing, typography, shadow } from "../theme/tokens";
-
-const palette = {
-  primary: "#004277",
-  primaryFixed: "#D3E4FF",
-  secondaryFixed: "#B1F0CE",
-  tertiaryFixed: "#FFDCC5",
-  surface: "#F7FAF9",
-  surfaceLow: "#F1F4F3",
-  surfaceLowest: "#FFFFFF",
-  text: "#181C1C",
-  textMuted: "#414750",
-};
+import { patientPortalPalette as palette } from "../theme/patientPortal";
 
 const pickFirstTruthy = (...values) => {
   for (const value of values) {
@@ -124,7 +114,7 @@ const ProfileScreen = () => {
       <Card style={styles.preferencesCard}>
         <View style={styles.preferenceTile}>
           <View style={[styles.preferenceIconWrap, styles.preferenceBlue]}>
-            <Text style={styles.preferenceIcon}>!</Text>
+            <Feather name="bell" size={20} color={palette.primary} />
           </View>
           <View style={styles.preferenceCopy}>
             <Text style={styles.preferenceTitle}>Reminders</Text>
@@ -133,7 +123,7 @@ const ProfileScreen = () => {
         </View>
         <View style={styles.preferenceTile}>
           <View style={[styles.preferenceIconWrap, styles.preferenceGreen]}>
-            <Text style={styles.preferenceIcon}>+</Text>
+            <Feather name="users" size={20} color={palette.primary} />
           </View>
           <View style={styles.preferenceCopy}>
             <Text style={styles.preferenceTitle}>Caregivers</Text>
@@ -184,7 +174,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "800",
     color: palette.text,
-    fontFamily: "Manrope",
   },
   identitySubtext: {
     ...typography.body,
@@ -222,7 +211,6 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     ...typography.h3,
-    fontFamily: "Manrope",
   },
   detailRow: {
     paddingVertical: spacing.sm,
@@ -256,11 +244,6 @@ const styles = StyleSheet.create({
   },
   preferenceGreen: {
     backgroundColor: palette.secondaryFixed,
-  },
-  preferenceIcon: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: palette.primary,
   },
   preferenceCopy: {
     flex: 1,

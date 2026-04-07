@@ -13,10 +13,12 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
+import { patientPortalPalette as APPOINTMENT_PALETTE } from "../theme/patientPortal";
 import {
   getAppointments,
   getFacilities,
@@ -37,21 +39,6 @@ const TIME_SLOTS = [
   { value: "afternoon", label: "Afternoon (12PM - 5PM)" },
   { value: "evening", label: "Evening (5PM - 8PM)" },
 ];
-
-const APPOINTMENT_PALETTE = {
-  primary: "#004277",
-  primaryContainer: "#005A9E",
-  primaryFixed: "#D3E4FF",
-  secondary: "#2C694E",
-  secondaryFixed: "#B1F0CE",
-  tertiaryFixed: "#FFDCC5",
-  surface: "#F7FAF9",
-  surfaceLow: "#F1F4F3",
-  surfaceLowest: "#FFFFFF",
-  surfaceBorder: "#E0E3E2",
-  text: "#181C1C",
-  textMuted: "#414750",
-};
 
 const formatDisplayDate = (value) => {
   if (!value) return "Date pending";
@@ -214,7 +201,7 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
 
   if (loading) {
     return (
-      <Screen backgroundColor={palette.white} style={styles.screen}>
+      <Screen backgroundColor={APPOINTMENT_PALETTE.surface} style={styles.screen}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={palette.darkPurple} />
           <Text style={styles.loadingText}>Loading appointments...</Text>
@@ -224,7 +211,7 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
   }
 
   return (
-    <Screen backgroundColor={palette.white} style={styles.screen}>
+    <Screen backgroundColor={APPOINTMENT_PALETTE.surface} style={styles.screen}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -270,7 +257,7 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
                 <View style={styles.cardHeader}>
                   <View style={styles.facilityHeaderWrap}>
                     <View style={styles.facilityIcon}>
-                      <Text style={styles.facilityIconText}>+</Text>
+                      <Feather name="calendar" size={18} color={APPOINTMENT_PALETTE.primary} />
                     </View>
                     <View style={styles.facilityCopy}>
                       <Text style={styles.facilityName}>{facility?.name || "Unknown Facility"}</Text>
@@ -398,12 +385,12 @@ const PatientAppointmentsScreen = ({ route, navigation }) => {
 };
 
 const palette = {
-  darkPurple: "#4D2C91",
-  lightPurple: "#D7C8F5",
-  green: "#B9F0D8",
-  black: "#121214",
-  white: "#FFFFFF",
-  softWhite: "#F7F5FB",
+  darkPurple: APPOINTMENT_PALETTE.primary,
+  lightPurple: APPOINTMENT_PALETTE.primaryFixed,
+  green: APPOINTMENT_PALETTE.secondaryFixed,
+  black: APPOINTMENT_PALETTE.text,
+  white: APPOINTMENT_PALETTE.surface,
+  softWhite: APPOINTMENT_PALETTE.background,
 };
 
 const styles = StyleSheet.create({
@@ -426,7 +413,7 @@ const styles = StyleSheet.create({
   },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: spacing.xl },
   loadingText: { marginTop: spacing.md, fontSize: 14, color: palette.darkPurple },
-  heading: { fontSize: 28, fontWeight: "800", color: APPOINTMENT_PALETTE.primary, marginBottom: 4, fontFamily: "Manrope" },
+  heading: { fontSize: 28, fontWeight: "800", color: APPOINTMENT_PALETTE.primary, marginBottom: 4 },
   subtitle: { fontSize: 14, color: APPOINTMENT_PALETTE.textMuted, opacity: 1, marginBottom: 0 },
   heroCard: {
     marginBottom: spacing.lg,
@@ -462,7 +449,6 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "800",
     color: APPOINTMENT_PALETTE.text,
-    fontFamily: "Manrope",
   },
   heroMeta: {
     ...typography.body,
@@ -496,14 +482,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  facilityIconText: {
-    fontSize: 24,
-    lineHeight: 24,
-    fontWeight: "700",
-    color: APPOINTMENT_PALETTE.primary,
-  },
   facilityCopy: { flex: 1, gap: 3 },
-  facilityName: { fontSize: 16, fontWeight: "800", color: APPOINTMENT_PALETTE.text, fontFamily: "Manrope" },
+  facilityName: { fontSize: 16, fontWeight: "800", color: APPOINTMENT_PALETTE.text },
   facilitySubtext: { ...typography.caption, color: APPOINTMENT_PALETTE.textMuted },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   badgeText: { fontSize: 11, fontWeight: "700" },

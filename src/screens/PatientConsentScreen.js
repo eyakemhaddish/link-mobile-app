@@ -17,6 +17,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import HeroHeader from "../components/ui/HeroHeader";
 import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
+import { patientPortalPalette } from "../theme/patientPortal";
 import { getFacilities, grantConsent, revokeConsent, getConsentHistory } from "../services/patientService";
 import { useToast } from "../context/ToastContext";
 
@@ -554,12 +555,12 @@ const PatientConsentScreen = () => {
 };
 
 const palette = {
-  darkPurple: "#005A9E",
-  lightPurple: "#D7E8FF",
-  green: "#B9F0D8",
-  black: "#18384C",
-  white: "#FFFFFF",
-  softWhite: "#F4F7F8",
+  darkPurple: patientPortalPalette.primaryContainer,
+  lightPurple: patientPortalPalette.primaryFixed,
+  green: patientPortalPalette.secondaryFixed,
+  black: patientPortalPalette.text,
+  white: patientPortalPalette.surface,
+  softWhite: patientPortalPalette.background,
 };
 
 const styles = StyleSheet.create({

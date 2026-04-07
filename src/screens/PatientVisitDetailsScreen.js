@@ -11,6 +11,7 @@ import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { colors, radius, spacing, typography } from "../theme/tokens";
+import { patientPortalPalette } from "../theme/patientPortal";
 import { getSyncedRecords, getVisitDetails } from "../services/patientService";
 import { formatVisitForDisplay, getOrdersSummary } from "../utils/journeyMapper";
 
@@ -30,12 +31,12 @@ const ARTIFACT_LABELS = {
 };
 
 const palette = {
-  darkPurple: colors.primary,
-  lightPurple: colors.primarySoft,
-  green: colors.green,
-  white: colors.surface,
-  softWhite: colors.background,
-  black: colors.text,
+  darkPurple: patientPortalPalette.primary,
+  lightPurple: patientPortalPalette.primaryFixed,
+  green: patientPortalPalette.secondaryFixed,
+  white: patientPortalPalette.surface,
+  softWhite: patientPortalPalette.background,
+  black: patientPortalPalette.text,
   line: "#EDE7FB",
   blueBg: "#DBEAFE",
   blueText: "#1D4ED8",
