@@ -15,7 +15,7 @@
         {
           "enableFTS": true,
           "useSQLCipher": true,
-          "android": { "enableFTS": true, "useSQLCipher": true },
+          "android": { "enableFTS": true, "useSQLCipher": true,"package": "com.link.mobileapp" },
           "ios": { "enableFTS": true, "useSQLCipher": true }
         }
       ]

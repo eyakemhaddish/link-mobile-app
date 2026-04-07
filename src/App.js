@@ -11,6 +11,7 @@ import SymptomCheckerConversationalScreen from "./screens/SymptomCheckerConversa
 import PatientAppointmentsScreen from "./screens/PatientAppointmentsScreen";
 import PatientConsentScreen from "./screens/PatientConsentScreen";
 import PatientHealthRecordsScreen from "./screens/PatientHealthRecordsScreen";
+import MeasurementTrendsScreen from "./screens/MeasurementTrendsScreen";
 import PatientVisitDetailsScreen from "./screens/PatientVisitDetailsScreen";
 
 import MainTabs from "./navigation/MainTabs";
@@ -205,6 +206,11 @@ const AppNavigator = () => {
           name="PatientHealthRecords"
           component={PatientHealthRecordsScreen}
           options={{ title: "Health Records" }}
+        />
+        <Stack.Screen
+          name="MeasurementTrends"
+          component={MeasurementTrendsScreen}
+          options={{ title: "Measurements" }}
         />
         <Stack.Screen
           name="PatientVisitDetails"

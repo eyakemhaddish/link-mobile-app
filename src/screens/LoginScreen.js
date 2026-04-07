@@ -104,11 +104,29 @@ const buildPatientProfile = (authResponse, fallbackPhone) => {
 };
 
 const getAuthTokenFromResponse = (response) =>
+  response?.session?.access_token ||
+  response?.session?.accessToken ||
+  response?.login?.session?.access_token ||
+  response?.login?.session?.accessToken ||
   response?.sessionToken ||
   response?.session_token ||
   response?.access_token ||
   response?.token ||
   response?.accessToken ||
+  null;
+
+const getProfileFromAuthResponse = (response) =>
+  (response?.user && typeof response.user === "object" ? response.user : null) ||
+  (response?.login?.user && typeof response.login.user === "object"
+    ? response.login.user
+    : null) ||
+  (response?.session?.user && typeof response.session.user === "object"
+    ? response.session.user
+    : null) ||
+  (response?.login?.session?.user &&
+  typeof response.login.session.user === "object"
+    ? response.login.session.user
+    : null) ||
   null;
 
 const LoginScreen = () => {
@@ -412,7 +430,7 @@ const LoginScreen = () => {
         return;
       }
 
-      await signInWithToken(token);
+      await signInWithToken(token, getProfileFromAuthResponse(response));
       await api.get("/users/me").catch(() => null);
     } catch (err) {
       const payloadMessage =

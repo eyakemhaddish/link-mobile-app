@@ -1,14 +1,17 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import HeroHeader from "../components/ui/HeroHeader";
+import Input from "../components/ui/Input";
 import Screen from "../components/ui/Screen";
 import { useAuth } from "../context/AuthContext";
-import { spacing, typography, shadow } from "../theme/tokens";
+import { useToast } from "../context/ToastContext";
+import { updatePatientProfile } from "../services/patientService";
 import { patientPortalPalette as palette } from "../theme/patientPortal";
+import { shadow, spacing, typography } from "../theme/tokens";
 
 const pickFirstTruthy = (...values) => {
   for (const value of values) {
@@ -25,8 +28,27 @@ const formatRole = (role) => {
     .replace(/\b\w/g, (match) => match.toUpperCase());
 };
 
+const GENDER_OPTIONS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+];
+
+const ChoiceChip = ({ label, active, onPress }) => (
+  <Pressable
+    onPress={onPress}
+    style={[styles.choiceChip, active && styles.choiceChipActive]}
+  >
+    <Text style={[styles.choiceChipText, active && styles.choiceChipTextActive]}>
+      {label}
+    </Text>
+  </Pressable>
+);
+
+const toInputValue = (value) => (typeof value === "string" ? value : value ? String(value) : "");
+
 const ProfileScreen = () => {
-  const { signOut, user } = useAuth();
+  const { signOut, signInWithToken, token, user } = useAuth();
+  const { showToast } = useToast();
 
   const displayName =
     pickFirstTruthy(
@@ -48,6 +70,12 @@ const ProfileScreen = () => {
     ) || "Not available";
 
   const patientId = pickFirstTruthy(user?.patient_id, user?.patient_account_id);
+  const patientAccountId = pickFirstTruthy(
+    user?.user_id,
+    user?.patient_account_id,
+    user?.auth_user_id,
+    user?.id,
+  );
   const userId = pickFirstTruthy(user?.user_id, user?.auth_user_id, user?.id);
   const phoneNumber =
     pickFirstTruthy(
@@ -61,6 +89,108 @@ const ProfileScreen = () => {
   const email =
     pickFirstTruthy(user?.email, user?.email_address, user?.contact?.email) ||
     "Not available";
+
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [form, setForm] = React.useState({
+    name: toInputValue(
+      pickFirstTruthy(
+        user?.full_name,
+        user?.fullName,
+        user?.name,
+        [user?.first_name, user?.last_name].filter(Boolean).join(" "),
+      ),
+    ),
+    date_of_birth: toInputValue(user?.date_of_birth),
+    gender: toInputValue(user?.gender || user?.sex).toLowerCase(),
+    emergency_contact_name: toInputValue(user?.emergency_contact_name),
+    emergency_contact_phone: toInputValue(user?.emergency_contact_phone),
+  });
+
+  React.useEffect(() => {
+    setForm({
+      name: toInputValue(
+        pickFirstTruthy(
+          user?.full_name,
+          user?.fullName,
+          user?.name,
+          [user?.first_name, user?.last_name].filter(Boolean).join(" "),
+        ),
+      ),
+      date_of_birth: toInputValue(user?.date_of_birth),
+      gender: toInputValue(user?.gender || user?.sex).toLowerCase(),
+      emergency_contact_name: toInputValue(user?.emergency_contact_name),
+      emergency_contact_phone: toInputValue(user?.emergency_contact_phone),
+    });
+  }, [user]);
+
+  const updateField = React.useCallback((key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+  }, []);
+
+  const cancelEditing = React.useCallback(() => {
+    setIsEditing(false);
+    setError("");
+    setForm({
+      name: toInputValue(
+        pickFirstTruthy(
+          user?.full_name,
+          user?.fullName,
+          user?.name,
+          [user?.first_name, user?.last_name].filter(Boolean).join(" "),
+        ),
+      ),
+      date_of_birth: toInputValue(user?.date_of_birth),
+      gender: toInputValue(user?.gender || user?.sex).toLowerCase(),
+      emergency_contact_name: toInputValue(user?.emergency_contact_name),
+      emergency_contact_phone: toInputValue(user?.emergency_contact_phone),
+    });
+  }, [user]);
+
+  const saveProfile = React.useCallback(async () => {
+    if (!form.name.trim()) {
+      setError("Full name is required.");
+      return;
+    }
+    if (!form.gender || !["male", "female"].includes(form.gender)) {
+      setError("Select male or female.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+
+      const response = await updatePatientProfile(patientAccountId, {
+        name: form.name.trim(),
+        date_of_birth: form.date_of_birth.trim() || undefined,
+        gender: form.gender,
+        emergency_contact_name: form.emergency_contact_name.trim() || undefined,
+        emergency_contact_phone: form.emergency_contact_phone.trim() || undefined,
+      });
+
+      const nextProfile = {
+        ...user,
+        ...(response && typeof response === "object" ? response : {}),
+        full_name: form.name.trim(),
+        name: form.name.trim(),
+        date_of_birth: form.date_of_birth.trim() || null,
+        gender: form.gender,
+        sex: form.gender,
+        emergency_contact_name: form.emergency_contact_name.trim() || null,
+        emergency_contact_phone: form.emergency_contact_phone.trim() || null,
+      };
+
+      await signInWithToken(token, nextProfile);
+      setIsEditing(false);
+      showToast("Profile updated successfully.", "success");
+    } catch (saveError) {
+      setError(saveError?.message || "Unable to update profile.");
+    } finally {
+      setSaving(false);
+    }
+  }, [form, patientAccountId, showToast, signInWithToken, token, user]);
 
   return (
     <Screen backgroundColor={palette.surface}>
@@ -92,23 +222,124 @@ const ProfileScreen = () => {
       </Card>
 
       <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Primary details</Text>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Facility</Text>
-          <Text style={styles.detailValue}>{facility}</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Primary details</Text>
+          {!isEditing ? (
+            <Pressable style={styles.inlineAction} onPress={() => setIsEditing(true)}>
+              <Feather name="edit-2" size={16} color={palette.primary} />
+              <Text style={styles.inlineActionText}>Edit</Text>
+            </Pressable>
+          ) : null}
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>User ID</Text>
-          <Text style={styles.detailValue}>{userId || "Not available"}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Email</Text>
-          <Text style={styles.detailValue}>{email}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Phone</Text>
-          <Text style={styles.detailValue}>{phoneNumber}</Text>
-        </View>
+
+        {isEditing ? (
+          <View style={styles.form}>
+            <View style={styles.fieldBlock}>
+              <Text style={styles.fieldLabel}>Full name</Text>
+              <Input value={form.name} onChangeText={(value) => updateField("name", value)} />
+            </View>
+
+            <View style={styles.fieldBlock}>
+              <Text style={styles.fieldLabel}>Date of birth</Text>
+              <Input
+                value={form.date_of_birth}
+                onChangeText={(value) => updateField("date_of_birth", value)}
+                placeholder="YYYY-MM-DD"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View style={styles.fieldBlock}>
+              <Text style={styles.fieldLabel}>Gender</Text>
+              <View style={styles.choiceRow}>
+                {GENDER_OPTIONS.map((option) => (
+                  <ChoiceChip
+                    key={option.value}
+                    label={option.label}
+                    active={form.gender === option.value}
+                    onPress={() => updateField("gender", option.value)}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.fieldBlock}>
+              <Text style={styles.fieldLabel}>Emergency contact name</Text>
+              <Input
+                value={form.emergency_contact_name}
+                onChangeText={(value) => updateField("emergency_contact_name", value)}
+              />
+            </View>
+
+            <View style={styles.fieldBlock}>
+              <Text style={styles.fieldLabel}>Emergency contact phone</Text>
+              <Input
+                value={form.emergency_contact_phone}
+                onChangeText={(value) => updateField("emergency_contact_phone", value)}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <View style={styles.formActions}>
+              <Button
+                title="Cancel"
+                variant="secondary"
+                onPress={cancelEditing}
+                style={styles.formAction}
+              />
+              <Button
+                title={saving ? "Saving..." : "Save profile"}
+                onPress={saveProfile}
+                disabled={saving}
+                style={styles.formAction}
+              />
+            </View>
+          </View>
+        ) : (
+          <>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Facility</Text>
+              <Text style={styles.detailValue}>{facility}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>User ID</Text>
+              <Text style={styles.detailValue}>{userId || "Not available"}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Email</Text>
+              <Text style={styles.detailValue}>{email}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Phone</Text>
+              <Text style={styles.detailValue}>{phoneNumber}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Date of birth</Text>
+              <Text style={styles.detailValue}>{user?.date_of_birth || "Not available"}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Gender</Text>
+              <Text style={styles.detailValue}>
+                {formatRole(user?.gender || user?.sex) || "Not available"}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Emergency contact</Text>
+              <Text style={styles.detailValue}>
+                {pickFirstTruthy(user?.emergency_contact_name) || "Not available"}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Emergency phone</Text>
+              <Text style={styles.detailValue}>
+                {pickFirstTruthy(user?.emergency_contact_phone) || "Not available"}
+              </Text>
+            </View>
+          </>
+        )}
       </Card>
 
       <Card style={styles.preferencesCard}>
@@ -133,7 +364,9 @@ const ProfileScreen = () => {
       </Card>
 
       <View style={styles.actions}>
-        <Button title="Update profile" onPress={() => {}} variant="secondary" />
+        {!isEditing ? (
+          <Button title="Update profile" onPress={() => setIsEditing(true)} variant="secondary" />
+        ) : null}
         <Button
           title="Sign out"
           onPress={async () => {
@@ -203,6 +436,71 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     backgroundColor: palette.surfaceLowest,
     borderColor: "#E0E3E2",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.xs,
+  },
+  inlineAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  inlineActionText: {
+    ...typography.caption,
+    color: palette.primary,
+    fontWeight: "700",
+  },
+  form: {
+    gap: spacing.md,
+  },
+  fieldBlock: {
+    gap: spacing.xs,
+  },
+  fieldLabel: {
+    ...typography.caption,
+    color: palette.textMuted,
+    textTransform: "uppercase",
+    fontWeight: "700",
+  },
+  choiceRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  choiceChip: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: palette.surfaceBorder,
+    backgroundColor: palette.surfaceLow,
+    borderRadius: 999,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  choiceChipActive: {
+    backgroundColor: palette.primary,
+    borderColor: palette.primary,
+  },
+  choiceChipText: {
+    ...typography.body,
+    color: palette.text,
+    fontWeight: "700",
+  },
+  choiceChipTextActive: {
+    color: palette.textOnDark,
+  },
+  errorText: {
+    ...typography.body,
+    color: palette.dangerText,
+  },
+  formActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  formAction: {
+    flex: 1,
   },
   preferencesCard: {
     gap: spacing.md,

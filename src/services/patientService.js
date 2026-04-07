@@ -619,3 +619,27 @@ export const deleteDocument = async (documentId) => {
         throw error;
     }
 };
+
+export const updatePatientProfile = async (accountId, data) => {
+    try {
+        if (!accountId) {
+            throw new Error("Patient account ID is required.");
+        }
+
+        const payload = {
+            name: data?.name || undefined,
+            date_of_birth: data?.date_of_birth || data?.dateOfBirth || undefined,
+            gender: data?.gender || undefined,
+            emergency_contact_name:
+                data?.emergency_contact_name || data?.emergencyContactName || undefined,
+            emergency_contact_phone:
+                data?.emergency_contact_phone || data?.emergencyContactPhone || undefined,
+        };
+
+        const response = await api.patch(`/patient-portal/accounts/${accountId}`, payload);
+        return response;
+    } catch (error) {
+        console.error("Failed to update patient profile:", error);
+        throw error;
+    }
+};

@@ -15,9 +15,11 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as DocumentPicker from "expo-document-picker";
+import { Feather } from "@expo/vector-icons";
 import Screen from "../components/ui/Screen";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import TrackerOptionsSheet from "../components/patient/TrackerOptionsSheet";
 import { API_BASE_URL } from "../lib/env";
 import { colors, spacing, radius, shadow } from "../theme/tokens";
 import { patientPortalPalette as palette } from "../theme/patientPortal";
@@ -30,6 +32,12 @@ import {
   uploadDocumentFile,
   deleteDocument,
 } from "../services/patientService";
+import {
+  getBluetoothConnectionPreset,
+  getTrackableItemById,
+  getTrackableItems,
+  getTrackerActions,
+} from "../services/healthTrackingService";
 import { useToast } from "../context/ToastContext";
 import { useFeatureFlags } from "../context/FeatureFlagsContext";
 import { formatVisitForDisplay, getOrdersSummary } from "../utils/journeyMapper";
@@ -83,6 +91,7 @@ const PatientHealthRecordsScreen = () => {
   const [filterType, setFilterType] = useState("all");
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showFilterPicker, setShowFilterPicker] = useState(false);
+  const [selectedTrackerId, setSelectedTrackerId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [growthLinks, setGrowthLinks] = useState(null);
   const { showToast } = useToast();
@@ -305,6 +314,10 @@ const PatientHealthRecordsScreen = () => {
   const activeVisitSummary = activeVisit ? formatVisitForDisplay(activeVisit) : null;
   const activeOrderSummary = getOrdersSummary(activeVisit?.orders);
   const visibleVisitHistory = visitHistory.filter((visit) => visit?.id && visit.id !== activeVisit?.id);
+  const trackers = getTrackableItems();
+  const selectedTracker = getTrackableItemById(selectedTrackerId);
+  const trackerActions = getTrackerActions(selectedTracker);
+  const bluetoothPreset = getBluetoothConnectionPreset(selectedTracker);
 
   if (loading) {
     return (
@@ -329,6 +342,41 @@ const PatientHealthRecordsScreen = () => {
         </View>
         <Text style={styles.heading}>Health Records</Text>
         <Text style={styles.subtitle}>Your synced visit records and uploaded documents</Text>
+
+        <Card style={styles.trackerCard}>
+          <View style={styles.trackerHeader}>
+              <Text style={styles.trackerTitle}>Measurements</Text>
+          </View>
+
+          <View style={styles.trackerGrid}>
+            {trackers.map((tracker) => (
+              <Pressable
+                key={tracker.id}
+                style={styles.trackerTile}
+                onPress={() => setSelectedTrackerId(tracker.id)}
+              >
+                <View style={styles.trackerTileTopRow}>
+                  <View style={styles.trackerIconWrap}>
+                    <Feather
+                      name={tracker.icon || "activity"}
+                      size={18}
+                      color={palette.primary}
+                    />
+                  </View>
+                </View>
+                <Text style={styles.trackerTileTitle}>{tracker.title}</Text>
+                <Text style={styles.trackerTileMeta}>
+                  {tracker.id === "other"
+                    ? "Date, time, and note"
+                    : tracker.supportsBluetooth
+                      ? "Bluetooth supported"
+                      : "Manual entry"}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </Card>
+
         {activeVisitSummary && (
           <Card style={styles.visitHeroCard}>
             <View style={styles.visitHeroHeader}>
@@ -521,6 +569,33 @@ const PatientHealthRecordsScreen = () => {
         </Pressable>
       </View>
 
+      <TrackerOptionsSheet
+        visible={Boolean(selectedTracker)}
+        item={selectedTracker}
+        actions={trackerActions}
+        bluetoothPreset={bluetoothPreset}
+        onSelectAction={(actionId) => {
+          if (actionId === "connect_bluetooth") {
+            navigation.navigate("MeasurementTrends", {
+              trackerId: selectedTracker?.id,
+              mode: "connect_bluetooth",
+            });
+          } else if (actionId === "manual_entry") {
+            navigation.navigate("MeasurementTrends", {
+              trackerId: selectedTracker?.id,
+              mode: "manual_entry",
+            });
+          } else {
+            navigation.navigate("MeasurementTrends", {
+              trackerId: selectedTracker?.id,
+              mode: "history",
+            });
+          }
+          setSelectedTrackerId(null);
+        }}
+        onClose={() => setSelectedTrackerId(null)}
+      />
+
       {/* Upload modal */}
       <Modal visible={showUploadModal} animationType="slide" transparent onRequestClose={() => setShowUploadModal(false)}>
         <View style={styles.modalOverlay}>
@@ -636,6 +711,53 @@ const styles = StyleSheet.create({
   },
   heading: { fontSize: 28, fontWeight: "800", color: palette.primary, marginBottom: 4 },
   subtitle: { fontSize: 14, color: colors.muted, opacity: 1, marginBottom: spacing.md },
+  trackerCard: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: "#E0E3E2",
+    backgroundColor: palette.white,
+    ...shadow.card,
+  },
+  trackerHeader: {
+    marginBottom: spacing.sm,
+  },
+  trackerTitle: { fontSize: 18, fontWeight: "700", color: palette.black },
+  trackerGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    justifyContent: "space-between",
+    alignItems: "stretch",
+  },
+  trackerTile: {
+    width: "47.5%",
+    minHeight: 136,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: palette.softWhite,
+    padding: spacing.md,
+    gap: spacing.sm,
+    justifyContent: "flex-start",
+  },
+  trackerTileTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  trackerIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: palette.primaryFixed,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  trackerTileTitle: { fontSize: 16, fontWeight: "700", color: palette.black },
+  trackerTileMeta: { fontSize: 12, color: palette.primary, fontWeight: "700", marginTop: "auto" },
   visitHeroCard: {
     marginBottom: spacing.md,
     padding: spacing.md,
