@@ -17,6 +17,10 @@ expo.log
 # Build directories
 ios/build/
 android/app/build/
+android/build/
+android/.gradle/
+android/.kotlin/
+android/app/.cxx/
 
 # Generated files
 *.apk
@@ -24,3 +28,6 @@ android/app/build/
 
 # Expo files
 .expo/
+
+# Expo prebuild / local native output
+android/

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { api } from "../lib/api";
+import { api, onUnauthorized } from "../lib/api";
 import {
   getAuthToken,
   setAuthToken,
@@ -8,6 +8,7 @@ import {
   getAuthProfile,
   setAuthProfile,
   clearAuthProfile,
+  clearStoredPatientPhone,
 } from "../lib/auth";
 
 const AuthContext = React.createContext(null);
@@ -266,9 +267,19 @@ export const AuthProvider = ({ children }) => {
     }
     await clearAuthToken();
     await clearAuthProfile();
+    await clearStoredPatientPhone();
     setToken(null);
     setUser(null);
   };
+
+  React.useEffect(() => {
+    const unsubscribe = onUnauthorized(() => {
+      setToken(null);
+      setUser(null);
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
 
   const role = resolveRole(user);
 

@@ -1,7 +1,7 @@
 import { Platform } from "react-native";
 import { API_BASE_URL } from "./env";
 import { error as logError } from "./logger";
-import { getAuthToken } from "./auth";
+import { clearAuthProfile, clearAuthToken, clearStoredPatientPhone, getAuthToken } from "./auth";
 
 const isWeb = Platform.OS === "web";
 const useWebMock =
@@ -10,6 +10,36 @@ const useWebMock =
     .trim()
     .toLowerCase() === "true";
 const DEFAULT_TIMEOUT_MS = 15000;
+const unauthorizedListeners = new Set();
+let unauthorizedInFlight = false;
+
+export const onUnauthorized = (listener) => {
+  if (typeof listener !== "function") return () => {};
+  unauthorizedListeners.add(listener);
+  return () => unauthorizedListeners.delete(listener);
+};
+
+const handleUnauthorized = async () => {
+  if (unauthorizedInFlight) return;
+  unauthorizedInFlight = true;
+  try {
+    await Promise.allSettled([
+      clearAuthToken(),
+      clearAuthProfile(),
+      clearStoredPatientPhone(),
+    ]);
+    inFlightRequests.clear();
+    unauthorizedListeners.forEach((listener) => {
+      try {
+        listener();
+      } catch {
+        // Ignore listener errors; auth clearing is already complete.
+      }
+    });
+  } finally {
+    unauthorizedInFlight = false;
+  }
+};
 
 // ── Web mock data — Abebe Metaferia Alemey @ Zelalem Hospital ────────────
 // Returns realistic clinical data without hitting the real API (blocked by CORS on web).
@@ -499,10 +529,42 @@ const WEB_MOCK_RESPONSES = {
   },
   "/patient-portal/consents/grant": { success: true, created: true, consentId: "consent-new-001" },
   "/patient-portal/consents/revoke": { success: true, revoked: true },
+  "/patient-portal/consents/active": {
+    active_consents: [
+      {
+        id: "consent-001",
+        consent_id: "consent-001",
+        facility_id: "demo-facility-zelalem-001",
+        facility_name: "Zelalem Hospital",
+        scope: "shared_medical_history",
+        provider_target_type: "facility_care_team",
+        created_at: "2026-01-15T10:00:00Z",
+      },
+    ],
+  },
+  "/record-access/requests": {
+    requests: [
+      {
+        id: "rar-001",
+        patient_id: "demo-patient-abebe-001",
+        source_facility_id: "demo-facility-zelalem-001",
+        source_facility_name: "Zelalem Hospital",
+        requesting_facility_id: "fac-addis-001",
+        requesting_facility_name: "Addis Clinic",
+        scope: "shared_medical_history",
+        purpose: "Follow-up consultation",
+        reason: "Review previous prescriptions and visit summaries.",
+        status: "pending",
+        created_at: "2026-04-08T09:00:00Z",
+      },
+    ],
+  },
+  "/record-access/requests/rar-001/approve": { success: true, approved: true },
+  "/record-access/requests/rar-001/decline": { success: true, declined: true },
   "/patient-portal/consents/history": {
     history: [
-      { id: "hist-001", consentId: "consent-001", facilityId: "demo-facility-zelalem-001", facilityName: "Zelalem Hospital", consentType: "records_access", action: "grant", reason: null, createdAt: "2026-01-15T10:00:00Z", metadata: { comprehensionLanguage: "en", providerTargetType: "facility_care_team" } },
-      { id: "hist-002", consentId: "consent-002", facilityId: "fac-addis-001", facilityName: "Addis Clinic", consentType: "records_access", action: "grant", reason: null, createdAt: "2026-02-01T09:30:00Z", metadata: { comprehensionLanguage: "am", providerTargetType: "facility_care_team" } },
+      { id: "hist-001", consentId: "consent-001", facilityId: "demo-facility-zelalem-001", facilityName: "Zelalem Hospital", scope: "shared_medical_history", action: "grant", reason: null, createdAt: "2026-01-15T10:00:00Z", metadata: { comprehensionLanguage: "en", providerTargetType: "facility_care_team" } },
+      { id: "hist-002", consentId: "consent-002", facilityId: "fac-addis-001", facilityName: "Addis Clinic", scope: "shared_medical_history", action: "grant", reason: null, createdAt: "2026-02-01T09:30:00Z", metadata: { comprehensionLanguage: "am", providerTargetType: "facility_care_team" } },
     ],
   },
 
@@ -711,6 +773,9 @@ const request = async (path, { method = "GET", body, headers, auth = true } = {}
       requestError.status = response.status;
       requestError.code = payload?.code || null;
       requestError.payload = payload;
+      if (response.status === 401) {
+        await handleUnauthorized();
+      }
       throw requestError;
     }
 

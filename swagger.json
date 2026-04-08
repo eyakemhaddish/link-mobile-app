@@ -13640,15 +13640,16 @@
                 "$ref": "#/components/schemas/GrantPatientConsentDto"
               },
               "example": {
-                "facilityId": "b2e70557-d695-4c4a-b7ff-0b756a04f07f",
-                "consentType": "records_access",
-                "comprehensionText": "I understand and consent.",
-                "comprehensionLanguage": "en",
-                "uiLanguage": "en",
+                "facility_id": "b2e70557-d695-4c4a-b7ff-0b756a04f07f",
+                "scope": "shared_medical_history",
+                "provider_target_type": "facility_care_team",
+                "provider_target_name": "General OPD",
                 "purpose": "Continuity of care",
-                "highRiskOverride": false,
-                "providerTargetType": "facility_care_team",
-                "providerTargetName": "General OPD"
+                "comprehension_text": "I understand this facility can view my shared health records.",
+                "comprehension_language": "en",
+                "ui_language": "en",
+                "high_risk_override": false,
+                "override_reason": ""
               }
             },
             "text/json": {
@@ -13682,8 +13683,7 @@
                 "$ref": "#/components/schemas/RevokePatientConsentDto"
               },
               "example": {
-                "facilityId": "b2e70557-d695-4c4a-b7ff-0b756a04f07f",
-                "consentType": "records_access",
+                "consent_id": "cons_123",
                 "reason": "No longer needed"
               }
             },
@@ -13706,12 +13706,32 @@
         }
       }
     },
+    "/api/v1/patient-portal/consents/active": {
+      "get": {
+        "tags": [
+          "PatientPortal"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/patient-portal/consents/history": {
       "get": {
         "tags": [
           "PatientPortal"
         ],
         "parameters": [
+          {
+            "name": "facility_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "facilityId",
             "in": "query",
@@ -13721,10 +13741,191 @@
             }
           },
           {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "consentType",
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/patients/{patientId}/shared-history": {
+      "get": {
+        "tags": [
+          "PatientSharedHistory"
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "requesting_facility_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "source_facility_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "include_orders",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "include_documents",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/patients/{patientId}/shared-history/visits/{visitId}": {
+      "get": {
+        "tags": [
+          "PatientSharedHistory"
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "visitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "requesting_facility_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "source_facility_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_documents",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -14695,6 +14896,182 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/record-access/requests": {
+      "post": {
+        "tags": [
+          "RecordAccess"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordAccessRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordAccessRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordAccessRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "RecordAccess"
+        ],
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "source_facility_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "requesting_facility_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/record-access/requests/{requestId}/approve": {
+      "post": {
+        "tags": [
+          "RecordAccess"
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRecordAccessRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRecordAccessRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRecordAccessRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/record-access/requests/{requestId}/decline": {
+      "post": {
+        "tags": [
+          "RecordAccess"
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineRecordAccessRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineRecordAccessRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineRecordAccessRequestDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -19199,6 +19576,29 @@
         },
         "additionalProperties": false
       },
+      "ApproveRecordAccessRequestDto": {
+        "type": "object",
+        "properties": {
+          "approved_by_patient_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approved_scope": {
+            "type": "string",
+            "nullable": true
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ApproveStaffRequestDto": {
         "type": "object",
         "properties": {
@@ -22483,6 +22883,47 @@
         },
         "additionalProperties": false
       },
+      "CreateRecordAccessRequestDto": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "source_facility_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requesting_facility_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "requesting_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "scope": {
+            "type": "string",
+            "nullable": true
+          },
+          "purpose": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "expires_in_days": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateResupplyRequestCommand": {
         "type": "object",
         "properties": {
@@ -23310,6 +23751,16 @@
         },
         "additionalProperties": false
       },
+      "DeclineRecordAccessRequestDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Dhis2DataValueDto": {
         "type": "object",
         "properties": {
@@ -23826,34 +24277,23 @@
       "GrantPatientConsentDto": {
         "type": "object",
         "properties": {
+          "facility_id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "facilityId": {
             "type": "string",
             "format": "uuid"
+          },
+          "scope": {
+            "type": "string",
+            "nullable": true
           },
           "consentType": {
             "type": "string",
             "nullable": true
           },
-          "comprehensionText": {
-            "type": "string",
-            "nullable": true
-          },
-          "comprehensionLanguage": {
-            "type": "string",
-            "nullable": true
-          },
-          "uiLanguage": {
-            "type": "string",
-            "nullable": true
-          },
-          "purpose": {
-            "type": "string",
-            "nullable": true
-          },
-          "highRiskOverride": {
-            "type": "boolean"
-          },
-          "overrideReason": {
+          "provider_target_type": {
             "type": "string",
             "nullable": true
           },
@@ -23861,7 +24301,57 @@
             "type": "string",
             "nullable": true
           },
+          "provider_target_name": {
+            "type": "string",
+            "nullable": true
+          },
           "providerTargetName": {
+            "type": "string",
+            "nullable": true
+          },
+          "purpose": {
+            "type": "string",
+            "nullable": true
+          },
+          "purposeLegacy": {
+            "type": "string",
+            "nullable": true
+          },
+          "comprehension_text": {
+            "type": "string",
+            "nullable": true
+          },
+          "comprehensionText": {
+            "type": "string",
+            "nullable": true
+          },
+          "comprehension_language": {
+            "type": "string",
+            "nullable": true
+          },
+          "comprehensionLanguage": {
+            "type": "string",
+            "nullable": true
+          },
+          "ui_language": {
+            "type": "string",
+            "nullable": true
+          },
+          "uiLanguage": {
+            "type": "string",
+            "nullable": true
+          },
+          "high_risk_override": {
+            "type": "boolean"
+          },
+          "highRiskOverride": {
+            "type": "boolean"
+          },
+          "override_reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "overrideReason": {
             "type": "string",
             "nullable": true
           }
@@ -25120,9 +25610,27 @@
       "RevokePatientConsentDto": {
         "type": "object",
         "properties": {
+          "consent_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "consentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "facility_id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "facilityId": {
             "type": "string",
             "format": "uuid"
+          },
+          "scope": {
+            "type": "string",
+            "nullable": true
           },
           "consentType": {
             "type": "string",

@@ -47,7 +47,7 @@ const SS = Platform.OS === 'web' ? WebStore : SecureStore;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PIN_STORE_KEY = 'link:app_pin_v1';
+const PIN_STORE_KEY = 'link_app_pin_v1';
 const LOCK_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes background → auto-lock
 
 // ─── Context ──────────────────────────────────────────────────────────────────

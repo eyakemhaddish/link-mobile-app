@@ -289,6 +289,7 @@ const HomeScreen = () => {
   const primaryVisit = selectPrimaryVisit(activeVisits);
   const primaryVisitDisplay = primaryVisit ? formatVisitForDisplay(primaryVisit) : null;
   const primaryVisitOrders = primaryVisit?.orders_summary || getOrdersSummary(primaryVisit?.orders);
+  const visibleFeedItems = feedItems.slice(0, 4);
 
   if (loading) {
     return (
@@ -417,13 +418,15 @@ const HomeScreen = () => {
             </View>
           )}
 
-          {feedItems.length > 0 ? (
+          {visibleFeedItems.length > 0 ? (
             <View style={styles.sectionBlock}>
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionTitle}>Live updates</Text>
-                <Text style={styles.sectionCaption}>{feedItems.length} items</Text>
+                <Text style={styles.sectionCaption}>
+                  Showing latest {visibleFeedItems.length}
+                </Text>
               </View>
-              {feedItems.map((item) => {
+              {visibleFeedItems.map((item) => {
                 const inferredAction = inferPatientFeedAction(item);
                 return (
                   <Pressable

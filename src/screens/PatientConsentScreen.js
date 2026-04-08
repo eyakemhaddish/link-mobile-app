@@ -18,7 +18,17 @@ import Card from "../components/ui/Card";
 import HeroHeader from "../components/ui/HeroHeader";
 import { colors, spacing, radius, typography, shadow } from "../theme/tokens";
 import { patientPortalPalette } from "../theme/patientPortal";
-import { getFacilities, grantConsent, revokeConsent, getConsentHistory } from "../services/patientService";
+import {
+  getFacilities,
+  getActiveConsents,
+  grantConsent,
+  revokeConsent,
+  getConsentHistory,
+  getRecordAccessRequests,
+  approveRecordAccessRequest,
+  declineRecordAccessRequest,
+} from "../services/patientService";
+import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 
 // ── Localization ──────────────────────────────────────────────────────────
@@ -105,14 +115,23 @@ const LOCALE = {
   },
 };
 
-const TABS = ["grant", "revoke", "history"];
+const TABS = ["requests", "grant", "revoke", "history"];
+const TAB_LABEL_FALLBACK = {
+  requests: "Requests",
+  grant: "Grant",
+  revoke: "Revoke",
+  history: "History",
+};
 
 const PatientConsentScreen = () => {
   const [lang, setLang] = useState("en");
   const t = LOCALE[lang];
+  const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("grant");
+  const [activeTab, setActiveTab] = useState("requests");
   const [facilities, setFacilities] = useState([]);
+  const [activeConsents, setActiveConsents] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -132,26 +151,30 @@ const PatientConsentScreen = () => {
   const [overrideReason, setOverrideReason] = useState("");
 
   // Revoke state
-  const [revokeFacility, setRevokeFacility] = useState("");
   const [revokeReasonText, setRevokeReasonText] = useState("");
-  const [revokeConfirmPhrase, setRevokeConfirmPhrase] = useState("");
-  const [showRevokeFacilityPicker, setShowRevokeFacilityPicker] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [facRes, histRes] = await Promise.all([
+      const [facRes, activeRes, histRes, requestRes] = await Promise.all([
         getFacilities(),
+        getActiveConsents(),
         getConsentHistory(),
+        getRecordAccessRequests({
+          patientId: user?.patient_id || user?.id,
+          status: "pending",
+        }),
       ]);
       setFacilities(facRes.facilities || []);
+      setActiveConsents(activeRes.active_consents || []);
       setHistory(histRes.history || []);
+      setRequests(requestRes.requests || []);
     } catch (err) {
       console.error("Failed to load consent data:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user?.id, user?.patient_id]);
 
   useEffect(() => {
     fetchData();
@@ -191,16 +214,16 @@ const PatientConsentScreen = () => {
     setSubmitting(true);
     try {
       await grantConsent({
-        facilityId: grantFacility,
-        consentType: "records_access",
-        comprehensionText,
-        comprehensionLanguage: comprehensionLang,
-        uiLanguage: lang,
+        facility_id: grantFacility,
+        scope: "shared_medical_history",
+        comprehension_text: comprehensionText,
+        comprehension_language: comprehensionLang,
+        ui_language: lang,
         purpose: purpose.trim() || undefined,
-        highRiskOverride: warnings.length > 0 ? true : undefined,
-        overrideReason: overrideReason.trim() || undefined,
-        providerTargetType,
-        providerTargetName: providerTargetType === "specific_provider" ? providerTargetName.trim() : undefined,
+        high_risk_override: warnings.length > 0 ? true : undefined,
+        override_reason: overrideReason.trim() || undefined,
+        provider_target_type: providerTargetType,
+        provider_target_name: providerTargetType === "specific_provider" ? providerTargetName.trim() : undefined,
       });
       showToast(lang === "en" ? "Consent granted successfully" : "ፈቃድ በተሳካ ሁኔታ ተሰጥቷል", "success");
       resetGrantForm();
@@ -212,24 +235,17 @@ const PatientConsentScreen = () => {
     }
   };
 
-  const handleRevoke = async () => {
-    if (!revokeFacility) { Alert.alert("Error", t.selectFacility); return; }
-    if (revokeConfirmPhrase.toUpperCase() !== "REVOKE") {
-      Alert.alert("Error", t.confirmPhrase);
-      return;
-    }
-
+  const handleRevoke = async (consent) => {
     setSubmitting(true);
     try {
       await revokeConsent({
-        facilityId: revokeFacility,
-        consentType: "records_access",
+        consent_id: consent.id,
+        facility_id: consent.facility_id,
+        scope: consent.scope || "shared_medical_history",
         reason: revokeReasonText.trim() || undefined,
       });
       showToast(lang === "en" ? "Consent revoked" : "ፈቃድ ተሰርዟል", "success");
-      setRevokeFacility("");
       setRevokeReasonText("");
-      setRevokeConfirmPhrase("");
       fetchData();
     } catch (err) {
       Alert.alert("Error", "Failed to revoke consent.");
@@ -238,8 +254,38 @@ const PatientConsentScreen = () => {
     }
   };
 
+  const handleApproveRequest = async (request) => {
+    if (!request?.id) return;
+    setSubmitting(true);
+    try {
+      await approveRecordAccessRequest(request.id, {
+        approved_by_patient_id: request.patient_id || user?.patient_id || user?.id,
+        approved_scope: request.scope || "shared_medical_history",
+      });
+      showToast("Access request approved", "success");
+      fetchData();
+    } catch (err) {
+      Alert.alert("Error", "Failed to approve request.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeclineRequest = async (request) => {
+    if (!request?.id) return;
+    setSubmitting(true);
+    try {
+      await declineRecordAccessRequest(request.id, {});
+      showToast("Access request declined", "success");
+      fetchData();
+    } catch (err) {
+      Alert.alert("Error", "Failed to decline request.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const grantFacilityName = facilities.find((f) => f.id === grantFacility)?.name || t.selectFacility;
-  const revokeFacilityName = facilities.find((f) => f.id === revokeFacility)?.name || t.selectFacility;
 
   if (loading) {
     return (
@@ -278,7 +324,7 @@ const PatientConsentScreen = () => {
             onPress={() => setActiveTab(tab)}
           >
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {t[`${tab}Tab`]}
+              {t[`${tab}Tab`] || TAB_LABEL_FALLBACK[tab] || tab}
             </Text>
           </Pressable>
         ))}
@@ -296,6 +342,62 @@ const PatientConsentScreen = () => {
           style={styles.heroBlock}
         />
         {/* ── GRANT TAB ──────────────────────────────────────────────── */}
+        {activeTab === "requests" && (
+          <View style={styles.panel}>
+            <Text style={styles.heading}>Access Requests</Text>
+            <Text style={styles.subtitle}>
+              Review facility requests to view your shared medical history and approve only the ones you trust.
+            </Text>
+
+            {requests.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>No pending access requests</Text>
+              </View>
+            ) : (
+              requests.map((request) => (
+                <Card key={request.id} style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <View style={[styles.actionBadge, styles.grantBadge]}>
+                      <Text style={[styles.actionBadgeText, styles.grantBadgeText]}>Pending</Text>
+                    </View>
+                    {!!request.created_at && (
+                      <Text style={styles.historyDate}>
+                        {new Date(request.created_at).toLocaleDateString()}
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.historyFacility}>{request.requesting_facility_name}</Text>
+                  <Text style={styles.historyType}>
+                    {request.scope === "shared_medical_history"
+                      ? "Shared medical history"
+                      : request.scope || "Shared medical history"}
+                  </Text>
+                  {!!request.source_facility_name && (
+                    <Text style={styles.historyMeta}>Source: {request.source_facility_name}</Text>
+                  )}
+                  {!!request.purpose && (
+                    <Text style={styles.historyMeta}>Purpose: {request.purpose}</Text>
+                  )}
+                  {!!request.reason && (
+                    <Text style={styles.historyMeta}>Reason: {request.reason}</Text>
+                  )}
+                  <View style={styles.requestActionsRow}>
+                    <Button
+                      title={submitting ? "..." : "Decline"}
+                      onPress={() => handleDeclineRequest(request)}
+                      style={[styles.requestActionBtn, styles.declineBtn]}
+                    />
+                    <Button
+                      title={submitting ? "..." : "Approve"}
+                      onPress={() => handleApproveRequest(request)}
+                      style={[styles.requestActionBtn, styles.approveBtn]}
+                    />
+                  </View>
+                </Card>
+              ))
+            )}
+          </View>
+        )}
         {activeTab === "grant" && (
           <View style={styles.panel}>
             <Text style={styles.heading}>{t.grantTitle}</Text>
@@ -456,25 +558,6 @@ const PatientConsentScreen = () => {
             <Text style={styles.heading}>{t.revokeTitle}</Text>
             <Text style={styles.subtitle}>{t.revokeDesc}</Text>
 
-            {/* Facility */}
-            <Text style={styles.fieldLabel}>{t.facility} *</Text>
-            <Pressable style={styles.pickerButton} onPress={() => setShowRevokeFacilityPicker(!showRevokeFacilityPicker)}>
-              <Text style={revokeFacility ? styles.pickerText : styles.pickerPlaceholder}>{revokeFacilityName}</Text>
-            </Pressable>
-            {showRevokeFacilityPicker && (
-              <View style={styles.pickerDropdown}>
-                {facilities.map((fac) => (
-                  <Pressable
-                    key={fac.id}
-                    style={[styles.pickerOption, revokeFacility === fac.id && styles.pickerOptionSelected]}
-                    onPress={() => { setRevokeFacility(fac.id); setShowRevokeFacilityPicker(false); }}
-                  >
-                    <Text style={styles.pickerOptionText}>{fac.name}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-
             {/* Reason */}
             <Text style={styles.fieldLabel}>{t.revokeReason}</Text>
             <TextInput
@@ -487,22 +570,41 @@ const PatientConsentScreen = () => {
               placeholderTextColor="#9CA3AF"
             />
 
-            {/* Confirmation phrase */}
-            <Text style={styles.fieldLabel}>{t.confirmPhrase}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="REVOKE"
-              value={revokeConfirmPhrase}
-              onChangeText={setRevokeConfirmPhrase}
-              autoCapitalize="characters"
-              placeholderTextColor="#9CA3AF"
-            />
-
-            <Button
-              title={submitting ? "..." : t.revokeBtn}
-              onPress={handleRevoke}
-              style={[styles.submitBtn, { backgroundColor: "#B91C1C" }]}
-            />
+            {activeConsents.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>{t.noConsents}</Text>
+              </View>
+            ) : (
+              activeConsents.map((consent) => (
+                <Card key={consent.id || consent.facility_id} style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <View style={[styles.actionBadge, styles.grantBadge]}>
+                      <Text style={[styles.actionBadgeText, styles.grantBadgeText]}>Active</Text>
+                    </View>
+                    {!!consent.created_at && (
+                      <Text style={styles.historyDate}>
+                        {new Date(consent.created_at).toLocaleDateString()}
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.historyFacility}>{consent.facility_name}</Text>
+                  <Text style={styles.historyType}>
+                    {consent.scope === "shared_medical_history" ? "Shared medical history" : (consent.scope || "Shared medical history")}
+                  </Text>
+                  {!!consent.provider_target_name && (
+                    <Text style={styles.historyMeta}>{consent.provider_target_name}</Text>
+                  )}
+                  {!!consent.purpose && (
+                    <Text style={styles.historyMeta}>{consent.purpose}</Text>
+                  )}
+                  <Button
+                    title={submitting ? "..." : t.revokeBtn}
+                    onPress={() => handleRevoke(consent)}
+                    style={[styles.submitBtn, styles.revokeActionBtn]}
+                  />
+                </Card>
+              ))
+            )}
           </View>
         )}
 
@@ -518,7 +620,17 @@ const PatientConsentScreen = () => {
               </View>
             ) : (
               history.map((entry) => {
-                const isGrant = entry.action === "grant";
+                const action = String(entry.action || "").toLowerCase();
+                const status = String(entry.status || "").toLowerCase();
+                const isRevoked =
+                  action === "revoke" ||
+                  action === "revoked" ||
+                  status === "revoked" ||
+                  status === "inactive" ||
+                  status === "withdrawn" ||
+                  Boolean(entry.revoked_at) ||
+                  (Boolean(entry.reason) && action !== "grant");
+                const isGrant = !isRevoked;
                 return (
                   <Card key={entry.id} style={styles.card}>
                     <View style={styles.cardHeader}>
@@ -528,12 +640,12 @@ const PatientConsentScreen = () => {
                         </Text>
                       </View>
                       <Text style={styles.historyDate}>
-                        {new Date(entry.createdAt).toLocaleDateString()}
+                        {new Date(entry.revoked_at || entry.created_at || entry.createdAt).toLocaleDateString()}
                       </Text>
                     </View>
-                    <Text style={styles.historyFacility}>{entry.facilityName}</Text>
+                    <Text style={styles.historyFacility}>{entry.facility_name || entry.facilityName}</Text>
                     <Text style={styles.historyType}>
-                      {entry.consentType === "records_access" ? t.recordsAccess : entry.consentType}
+                      {(entry.scope || entry.consentType) === "shared_medical_history" ? "Shared medical history" : (entry.scope || entry.consentType || "Shared medical history")}
                     </Text>
                     {entry.metadata?.comprehensionLanguage && (
                       <Text style={styles.historyMeta}>
@@ -696,6 +808,11 @@ const styles = StyleSheet.create({
   checkLabel: { fontSize: 14, color: palette.black, flex: 1 },
 
   submitBtn: { marginTop: spacing.lg },
+  revokeActionBtn: { backgroundColor: "#B91C1C" },
+  requestActionsRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
+  requestActionBtn: { flex: 1, marginTop: 0 },
+  declineBtn: { backgroundColor: "#B91C1C" },
+  approveBtn: { backgroundColor: palette.darkPurple },
 
   emptyState: { alignItems: "center", paddingVertical: spacing.xl * 2 },
   emptyTitle: { fontSize: 16, fontWeight: "600", color: palette.black, opacity: 0.5 },

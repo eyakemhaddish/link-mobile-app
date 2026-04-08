@@ -437,6 +437,7 @@ export const getPublicDirectoryFacilities = async (options = {}) => {
         if (options.search) params.push(`search=${encodeURIComponent(options.search)}`);
         if (options.type && options.type !== "all") params.push(`type=${encodeURIComponent(options.type)}`);
         if (options.limit) params.push(`limit=${encodeURIComponent(options.limit)}`);
+        if (options.page) params.push(`page=${encodeURIComponent(options.page)}`);
 
         const path = params.length
             ? `/facilities/public?${params.join("&")}`
@@ -524,17 +525,164 @@ export const revokeConsent = async (data) => {
     }
 };
 
-export const getConsentHistory = async (facilityId, consentType) => {
+const normalizeConsentItem = (entry = {}) => {
+    const metadata = entry.metadata || entry.meta || {};
+    return {
+        id: entry.id || entry.consent_id || entry.consentId || null,
+        facility_id: entry.facility_id || entry.facilityId || null,
+        facility_name: entry.facility_name || entry.facilityName || entry.provider_target_name || entry.providerTargetName || "Facility",
+        scope: entry.scope || entry.consent_type || entry.consentType || null,
+        status: entry.status || null,
+        action: entry.action || null,
+        created_at: entry.created_at || entry.createdAt || null,
+        revoked_at: entry.revoked_at || entry.revokedAt || null,
+        provider_target_type: entry.provider_target_type || entry.providerTargetType || null,
+        provider_target_name: entry.provider_target_name || entry.providerTargetName || null,
+        purpose: entry.purpose || metadata.purpose || null,
+        reason: entry.reason || metadata.reason || null,
+        metadata,
+        raw: entry,
+    };
+};
+
+const extractConsentList = (response, keys = []) => {
+    if (Array.isArray(response)) return response.map(normalizeConsentItem);
+    for (const key of keys) {
+        if (Array.isArray(response?.[key])) {
+            return response[key].map(normalizeConsentItem);
+        }
+    }
+    if (Array.isArray(response?.items)) {
+        return response.items.map(normalizeConsentItem);
+    }
+    return [];
+};
+
+const normalizeRecordAccessRequest = (entry = {}) => ({
+    id: entry.id || entry.request_id || entry.requestId || null,
+    patient_id: entry.patient_id || entry.patientId || null,
+    source_facility_id: entry.source_facility_id || entry.sourceFacilityId || null,
+    source_facility_name: entry.source_facility_name || entry.sourceFacilityName || null,
+    requesting_facility_id:
+        entry.requesting_facility_id || entry.requestingFacilityId || null,
+    requesting_facility_name:
+        entry.requesting_facility_name || entry.requestingFacilityName || "Facility",
+    requesting_user_id: entry.requesting_user_id || entry.requestingUserId || null,
+    requesting_user_name: entry.requesting_user_name || entry.requestingUserName || null,
+    scope: entry.scope || null,
+    purpose: entry.purpose || null,
+    reason: entry.reason || null,
+    status: entry.status || null,
+    expires_in_days: entry.expires_in_days || entry.expiresInDays || null,
+    created_at: entry.created_at || entry.createdAt || null,
+    raw: entry,
+});
+
+const extractRecordAccessRequests = (response) => {
+    if (Array.isArray(response)) return response.map(normalizeRecordAccessRequest);
+    if (response?.request && typeof response.request === "object") {
+        return [normalizeRecordAccessRequest(response.request)];
+    }
+    const list =
+        response?.requests ||
+        response?.items ||
+        response?.record_access_requests ||
+        response?.recordAccessRequests ||
+        [];
+    return Array.isArray(list) ? list.map(normalizeRecordAccessRequest) : [];
+};
+
+export const getActiveConsents = async () => {
+    try {
+        const response = await api.get("/patient-portal/consents/active");
+        return {
+            active_consents: extractConsentList(response, ["active_consents", "activeConsents", "consents"]),
+            raw: response,
+        };
+    } catch (error) {
+        console.error("Failed to fetch active consents:", error);
+        throw error;
+    }
+};
+
+export const getConsentHistory = async (facilityId, scope) => {
     try {
         let path = "/patient-portal/consents/history";
         const params = [];
-        if (facilityId) params.push(`facilityId=${facilityId}`);
-        if (consentType) params.push(`consentType=${consentType}`);
+        if (facilityId) params.push(`facility_id=${encodeURIComponent(facilityId)}`);
+        if (scope) params.push(`scope=${encodeURIComponent(scope)}`);
         if (params.length) path += `?${params.join("&")}`;
         const response = await api.get(path);
-        return response;
+        return {
+            history: extractConsentList(response, ["history", "consent_history", "consentHistory"]),
+            raw: response,
+        };
     } catch (error) {
         console.error("Failed to fetch consent history:", error);
+        throw error;
+    }
+};
+
+export const getRecordAccessRequests = async ({
+    patientId,
+    sourceFacilityId,
+    requestingFacilityId,
+    status,
+    page = 1,
+    limit = 20,
+} = {}) => {
+    try {
+        const params = [];
+        if (patientId) params.push(`patient_id=${encodeURIComponent(patientId)}`);
+        if (sourceFacilityId) {
+            params.push(`source_facility_id=${encodeURIComponent(sourceFacilityId)}`);
+        }
+        if (requestingFacilityId) {
+            params.push(
+                `requesting_facility_id=${encodeURIComponent(requestingFacilityId)}`,
+            );
+        }
+        if (status) params.push(`status=${encodeURIComponent(status)}`);
+        params.push(`page=${page}`);
+        params.push(`limit=${limit}`);
+        const response = await api.get(`/record-access/requests?${params.join("&")}`);
+        const requests = extractRecordAccessRequests(response);
+        if (requests.length === 0 && patientId) {
+            const fallbackParams = params.filter(
+                (param) => !param.startsWith("patient_id="),
+            );
+            const fallbackResponse = await api.get(
+                `/record-access/requests?${fallbackParams.join("&")}`,
+            );
+            return {
+                requests: extractRecordAccessRequests(fallbackResponse),
+                raw: fallbackResponse,
+            };
+        }
+        return {
+            requests,
+            raw: response,
+        };
+    } catch (error) {
+        console.error("Failed to fetch record access requests:", error);
+        throw error;
+    }
+};
+
+export const approveRecordAccessRequest = async (requestId, data = {}) => {
+    try {
+        return await api.post(`/record-access/requests/${requestId}/approve`, data);
+    } catch (error) {
+        console.error("Failed to approve record access request:", error);
+        throw error;
+    }
+};
+
+export const declineRecordAccessRequest = async (requestId, data = {}) => {
+    try {
+        return await api.post(`/record-access/requests/${requestId}/decline`, data);
+    } catch (error) {
+        console.error("Failed to decline record access request:", error);
         throw error;
     }
 };

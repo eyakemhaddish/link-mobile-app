@@ -205,6 +205,19 @@ const areSameFacility = (left, right) => {
   return Number.isFinite(distanceKm) ? distanceKm < 0.2 : false;
 };
 
+const MAX_PUBLIC_FACILITY_PAGES = 20;
+const PUBLIC_FACILITY_PAGE_LIMIT = 100;
+
+const extractPaginationMeta = (response) =>
+  response?.meta || {
+    hasMore: Boolean(response?.hasMore),
+    nextPage: response?.nextPage ?? null,
+    total: response?.total ?? null,
+    count: Array.isArray(response?.facilities) ? response.facilities.length : 0,
+    page: response?.page ?? 1,
+    limit: response?.limit ?? PUBLIC_FACILITY_PAGE_LIMIT,
+  };
+
 const FacilityFinderScreen = ({ navigation }) => {
   const { showToast } = useToast();
   const [facilities, setFacilities] = React.useState([]);
@@ -220,23 +233,46 @@ const FacilityFinderScreen = ({ navigation }) => {
   const [viewMode, setViewMode] = React.useState("list");
   const [userLocation, setUserLocation] = React.useState(null);
   const [selectedFacilityId, setSelectedFacilityId] = React.useState(null);
+  const [publicFacilityMeta, setPublicFacilityMeta] = React.useState(null);
 
   const loadFacilities = React.useCallback(async () => {
     setLoading(true);
     try {
-      const [publicResult, connectedResult] = await Promise.allSettled([
-        getPublicDirectoryFacilities({ limit: 200 }),
-        getFacilities(),
-      ]);
+      const connectedResultPromise = getFacilities();
+      let allPublicFacilities = [];
+      let page = 1;
+      let pageCount = 0;
+      let latestMeta = null;
 
-      if (publicResult.status !== "fulfilled") {
-        throw publicResult.reason;
+      while (pageCount < MAX_PUBLIC_FACILITY_PAGES) {
+        const response = await getPublicDirectoryFacilities({
+          limit: PUBLIC_FACILITY_PAGE_LIMIT,
+          page,
+        });
+        const pageFacilities = Array.isArray(response?.facilities)
+          ? response.facilities
+          : [];
+        latestMeta = extractPaginationMeta(response);
+        allPublicFacilities = [...allPublicFacilities, ...pageFacilities];
+        pageCount += 1;
+
+        if (!latestMeta?.hasMore || !latestMeta?.nextPage) {
+          break;
+        }
+
+        page = latestMeta.nextPage;
       }
 
-      const publicFacilities = Array.isArray(publicResult.value?.facilities)
-        ? publicResult.value.facilities
-        : [];
-      setFacilities(publicFacilities);
+      const connectedResult = await Promise.allSettled([connectedResultPromise]).then(
+        (results) => results[0],
+      );
+
+      setFacilities(allPublicFacilities);
+      setPublicFacilityMeta({
+        ...(latestMeta || {}),
+        loadedCount: allPublicFacilities.length,
+        pagesLoaded: pageCount,
+      });
 
       if (connectedResult.status === "fulfilled") {
         const connectedFacilities = Array.isArray(
@@ -253,6 +289,7 @@ const FacilityFinderScreen = ({ navigation }) => {
     } catch (error) {
       setFacilities([]);
       setConnectedFacilityIds(new Set());
+      setPublicFacilityMeta(null);
       showToast(error?.message || "Unable to load facilities.", "error");
     } finally {
       setLoading(false);
@@ -690,8 +727,17 @@ const FacilityFinderScreen = ({ navigation }) => {
 
       <Text style={styles.resultsCount}>
         {discoveredFacilities.length}{" "}
-        {discoveredFacilities.length === 1 ? "facility" : "facilities"} available
+        {discoveredFacilities.length === 1 ? "facility" : "facilities"} shown
       </Text>
+      {publicFacilityMeta ? (
+        <Text style={styles.resultsSubcount}>
+          {publicFacilityMeta.loadedCount} Link public facilities loaded
+          {publicFacilityMeta.total ? ` of ${publicFacilityMeta.total}` : ""}
+          {publicFacilityMeta.pagesLoaded
+            ? ` • ${publicFacilityMeta.pagesLoaded} page${publicFacilityMeta.pagesLoaded === 1 ? "" : "s"}`
+            : ""}
+        </Text>
+      ) : null}
 
       {discoveredFacilities.length === 0 && !loading && !externalLoading ? (
         <Card style={styles.card}>
@@ -1041,6 +1087,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     fontWeight: "700",
     textTransform: "uppercase",
+  },
+  resultsSubcount: {
+    ...typography.caption,
+    color: palette.textMuted,
+    marginBottom: spacing.sm,
   },
   card: {
     gap: spacing.sm,
