@@ -4,8 +4,7 @@
  * Two modes controlled by AppLockContext state:
  *
  *   SETUP mode  (hasPinSet === false)
- *     Step 1: "Create a 4-digit PIN"  — enter new PIN
- *     Step 2: "Confirm your PIN"       — re-enter to confirm; saves on match
+ *     "Create a 4-digit PIN" — enter and save PIN in one step
  *
  *   UNLOCK mode (hasPinSet === true && isLocked === true)
  *     "Enter your PIN" + optional biometric button
@@ -29,12 +28,13 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAppLock } from '../context/AppLockContext';
+import { colors } from '../theme/tokens';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PIN_LENGTH = 4;
-const TEAL       = '#0f766e';
-const TEAL_DARK  = '#0d5c57';
+const TEAL       = colors.primary;
+const TEAL_DARK  = colors.primaryDark;
 const ERROR_RED  = '#dc2626';
 
 const KEYPAD_ROWS = [
@@ -55,10 +55,6 @@ export default function AppLockScreen() {
     unlock,
     unlockWithBiometrics,
   } = useAppLock();
-
-  // Setup mode: which step we're on
-  const [setupStep, setSetupStep]   = useState(1); // 1 = create, 2 = confirm
-  const [firstPin, setFirstPin]     = useState('');
 
   // Shared input state
   const [input, setInput]   = useState('');
@@ -117,25 +113,9 @@ export default function AppLockScreen() {
 
   // ── Setup flow ────────────────────────────────────────────────────────────
   const handleSetupInput = async (pin) => {
-    if (setupStep === 1) {
-      // Step 1: save first entry, move to confirmation
-      setFirstPin(pin);
-      setInput('');
-      setSetupStep(2);
-    } else {
-      // Step 2: confirm
-      if (pin === firstPin) {
-        setSuccess(true);
-        await setPin(pin);
-        // AppNavigator will re-render (hasPinSet becomes true, isLocked false)
-      } else {
-        triggerShake();
-        setError('PINs do not match. Please try again.');
-        setInput('');
-        setFirstPin('');
-        setSetupStep(1);
-      }
-    }
+    setSuccess(true);
+    await setPin(pin);
+    // AppNavigator will re-render (hasPinSet becomes true, isLocked false)
   };
 
   // ── Unlock flow ───────────────────────────────────────────────────────────
@@ -155,14 +135,10 @@ export default function AppLockScreen() {
   };
 
   // ── Labels ────────────────────────────────────────────────────────────────
-  const title = isSetupMode
-    ? (setupStep === 1 ? 'Create a PIN' : 'Confirm your PIN')
-    : 'Enter your PIN';
+  const title = isSetupMode ? 'Create a PIN' : 'Enter your PIN';
 
   const subtitle = isSetupMode
-    ? (setupStep === 1
-        ? 'Set a 4-digit PIN to protect patient data'
-        : 'Re-enter the same PIN to confirm')
+    ? 'Set a 4-digit PIN to protect patient data'
     : 'Required to access patient records';
 
   // ── Dots ──────────────────────────────────────────────────────────────────
@@ -242,13 +218,6 @@ export default function AppLockScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Setup step indicator */}
-      {isSetupMode && (
-        <View style={styles.stepIndicator}>
-          <View style={[styles.stepDot, setupStep >= 1 && styles.stepDotActive]} />
-          <View style={[styles.stepDot, setupStep >= 2 && styles.stepDotActive]} />
-        </View>
-      )}
     </SafeAreaView>
   );
 }
@@ -378,18 +347,4 @@ const styles = StyleSheet.create({
     color: TEAL,
   },
 
-  // Step dots
-  stepIndicator: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  stepDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  stepDotActive: {
-    backgroundColor: '#fff',
-  },
 });
