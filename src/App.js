@@ -13,6 +13,7 @@ import PatientConsentScreen from "./screens/PatientConsentScreen";
 import PatientHealthRecordsScreen from "./screens/PatientHealthRecordsScreen";
 import MeasurementTrendsScreen from "./screens/MeasurementTrendsScreen";
 import PatientVisitDetailsScreen from "./screens/PatientVisitDetailsScreen";
+import FacilityVerificationScreen from "./screens/FacilityVerificationScreen";
 
 import MainTabs from "./navigation/MainTabs";
 import HEWNavigator from "./navigation/HEWNavigator";
@@ -30,8 +31,12 @@ import {
 } from "./services/backgroundSyncService";
 import {
   initializeNotifications,
+  ensureNotificationPermission,
   isNotificationPermissionSupported,
+  notify,
 } from "./services/notificationService";
+
+const TEST_NOTIFICATION_INTERVAL_MS = 5000;
 
 const Stack = createNativeStackNavigator();
 const LoadingScreen = () => null;
@@ -65,6 +70,7 @@ const AppNavigator = () => {
   const { isLocked, hasPinSet, loading: lockLoading } = useAppLock();
   const { linkAgentMvp } = useFeatureFlags();
   const notificationPermissionRequested = React.useRef(false);
+  const notificationTestIntervalRef = React.useRef(null);
 
   const workspaceType = user?.workspace?.workspaceType || user?.workspace_type || null;
   const teamMode = user?.workspace?.teamMode || user?.team_mode || null;
@@ -104,21 +110,55 @@ const AppNavigator = () => {
       try {
         if (!isAuthenticated) {
           notificationPermissionRequested.current = false;
+          if (notificationTestIntervalRef.current) {
+            clearInterval(notificationTestIntervalRef.current);
+            notificationTestIntervalRef.current = null;
+          }
           return;
         }
         if (Platform.OS === "web") return;
-        if (!hasPinSet || isLocked) return;
+        if (!hasPinSet || isLocked) {
+          if (notificationTestIntervalRef.current) {
+            clearInterval(notificationTestIntervalRef.current);
+            notificationTestIntervalRef.current = null;
+          }
+          return;
+        }
         if (notificationPermissionRequested.current) return;
         if (!isNotificationPermissionSupported()) return;
 
         await initializeNotifications();
+        await ensureNotificationPermission();
         notificationPermissionRequested.current = true;
+
+        if (!notificationTestIntervalRef.current) {
+          notificationTestIntervalRef.current = setInterval(() => {
+            notify({
+              kind: "test_notification",
+              priority: "medium",
+              dedupeKey: `test:${Date.now()}`,
+              title: "Link test notification",
+              body: "This is a temporary 5-second notification loop for device testing.",
+              data: {
+                type: "test_notification",
+                emitted_at: new Date().toISOString(),
+              },
+            });
+          }, TEST_NOTIFICATION_INTERVAL_MS);
+        }
       } catch (error) {
         console.warn("[notifications] setup failed:", error?.message || error);
       }
     };
 
     configureNotifications();
+
+    return () => {
+      if (notificationTestIntervalRef.current) {
+        clearInterval(notificationTestIntervalRef.current);
+        notificationTestIntervalRef.current = null;
+      }
+    };
   }, [hasPinSet, isAuthenticated, isLocked]);
 
   // Show nothing while auth OR lock context is still initialising
@@ -201,6 +241,11 @@ const AppNavigator = () => {
           name="PatientConsent"
           component={PatientConsentScreen}
           options={{ title: "Consent Center" }}
+        />
+        <Stack.Screen
+          name="FacilityVerification"
+          component={FacilityVerificationScreen}
+          options={{ title: "Facility Verification" }}
         />
         <Stack.Screen
           name="PatientHealthRecords"

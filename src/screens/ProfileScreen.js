@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -44,9 +45,23 @@ const ChoiceChip = ({ label, active, onPress }) => (
   </Pressable>
 );
 
+const PreferenceTile = ({ icon, title, body, toneStyle, onPress }) => (
+  <Pressable onPress={onPress} style={styles.preferenceTile}>
+    <View style={[styles.preferenceIconWrap, toneStyle]}>
+      <Feather name={icon} size={20} color={palette.primary} />
+    </View>
+    <View style={styles.preferenceCopy}>
+      <Text style={styles.preferenceTitle}>{title}</Text>
+      <Text style={styles.preferenceBody}>{body}</Text>
+    </View>
+    <Feather name="chevron-right" size={18} color={palette.textMuted} />
+  </Pressable>
+);
+
 const toInputValue = (value) => (typeof value === "string" ? value : value ? String(value) : "");
 
 const ProfileScreen = () => {
+  const navigation = useNavigation();
   const { signOut, signInWithToken, token, user } = useAuth();
   const { showToast } = useToast();
 
@@ -343,24 +358,26 @@ const ProfileScreen = () => {
       </Card>
 
       <Card style={styles.preferencesCard}>
-        <View style={styles.preferenceTile}>
-          <View style={[styles.preferenceIconWrap, styles.preferenceBlue]}>
-            <Feather name="bell" size={20} color={palette.primary} />
-          </View>
-          <View style={styles.preferenceCopy}>
-            <Text style={styles.preferenceTitle}>Reminders</Text>
-            <Text style={styles.preferenceBody}>Manage medication and appointment alerts.</Text>
-          </View>
-        </View>
-        <View style={styles.preferenceTile}>
-          <View style={[styles.preferenceIconWrap, styles.preferenceGreen]}>
-            <Feather name="users" size={20} color={palette.primary} />
-          </View>
-          <View style={styles.preferenceCopy}>
-            <Text style={styles.preferenceTitle}>Caregivers</Text>
-            <Text style={styles.preferenceBody}>Authorized access for family members.</Text>
-          </View>
-        </View>
+        <Text style={styles.cardTitle}>Preferences</Text>
+        <PreferenceTile
+          icon="shield"
+          title="Facility verification"
+          body="See where your phone is verified and finish verification where results were detected."
+          toneStyle={styles.preferenceBlue}
+          onPress={() => navigation.navigate("FacilityVerification")}
+        />
+        <PreferenceTile
+          icon="bell"
+          title="Reminders"
+          body="Manage medication and appointment alerts."
+          toneStyle={styles.preferenceBlue}
+        />
+        <PreferenceTile
+          icon="users"
+          title="Caregivers"
+          body="Authorized access for family members."
+          toneStyle={styles.preferenceGreen}
+        />
       </Card>
 
       <View style={styles.actions}>

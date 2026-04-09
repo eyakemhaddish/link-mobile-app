@@ -431,6 +431,16 @@ export const getFacilities = async () => {
     }
 };
 
+export const getFacilityRegistrations = async () => {
+    try {
+        const response = await api.get("/patient-portal/facilities/registrations");
+        return response;
+    } catch (error) {
+        console.error("Failed to fetch facility registrations:", error);
+        throw error;
+    }
+};
+
 export const getPublicDirectoryFacilities = async (options = {}) => {
     try {
         const params = [];

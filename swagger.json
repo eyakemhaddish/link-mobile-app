@@ -12124,6 +12124,14 @@
             }
           },
           {
+            "name": "include_shared",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -12212,6 +12220,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "include_shared",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           },
           {
@@ -13628,6 +13644,18 @@
         }
       }
     },
+    "/api/v1/patient-portal/facilities/registrations": {
+      "get": {
+        "tags": [
+          "PatientPortal"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/patient-portal/consents/grant": {
       "post": {
         "tags": [
@@ -14896,6 +14924,155 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reception/patients/{patientId}/phone-verification/request-otp": {
+      "post": {
+        "tags": [
+          "ReceptionPatientPhoneVerification"
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceptionRequestPatientPhoneVerificationOtpDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceptionRequestPatientPhoneVerificationOtpDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceptionRequestPatientPhoneVerificationOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reception/patients/{patientId}/phone-verification/verify": {
+      "post": {
+        "tags": [
+          "ReceptionPatientPhoneVerification"
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceptionVerifyPatientPhoneVerificationOtpDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceptionVerifyPatientPhoneVerificationOtpDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceptionVerifyPatientPhoneVerificationOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reception/patients/{patientId}/phone-verification": {
+      "get": {
+        "tags": [
+          "ReceptionPatientPhoneVerification"
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reception/patients/{patientId}/phone-verification/resend-otp": {
+      "post": {
+        "tags": [
+          "ReceptionPatientPhoneVerification"
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceptionResendPatientPhoneVerificationOtpDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceptionResendPatientPhoneVerificationOtpDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceptionResendPatientPhoneVerificationOtpDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -22892,7 +23069,8 @@
           },
           "source_facility_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "requesting_facility_id": {
             "type": "string",
@@ -25104,6 +25282,52 @@
               "$ref": "#/components/schemas/AddReceivingInvoiceItemDto"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReceptionRequestPatientPhoneVerificationOtpDto": {
+        "type": "object",
+        "properties": {
+          "facility_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "phone_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReceptionResendPatientPhoneVerificationOtpDto": {
+        "type": "object",
+        "properties": {
+          "facility_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReceptionVerifyPatientPhoneVerificationOtpDto": {
+        "type": "object",
+        "properties": {
+          "challenge_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "otp": {
+            "type": "string",
+            "nullable": true
+          },
+          "facility_id": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "additionalProperties": false
