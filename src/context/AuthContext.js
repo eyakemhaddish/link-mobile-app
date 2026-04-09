@@ -10,6 +10,7 @@ import {
   clearAuthProfile,
   clearStoredPatientPhone,
 } from "../lib/auth";
+import { unregisterStoredPatientPushDevice } from "../services/notificationService";
 
 const AuthContext = React.createContext(null);
 
@@ -260,6 +261,11 @@ export const AuthProvider = ({ children }) => {
 
   // ── Sign out ──────────────────────────────────────────────────────────
   const signOut = async () => {
+    try {
+      await unregisterStoredPatientPushDevice();
+    } catch {
+      // Non-fatal: clear local auth state regardless.
+    }
     try {
       await api.post("/patient-auth/logout");
     } catch {

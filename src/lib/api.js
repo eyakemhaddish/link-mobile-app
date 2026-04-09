@@ -618,6 +618,25 @@ const WEB_MOCK_RESPONSES = {
   },
 
   // ── Patient Portal: Documents ───────────────────────────────────────────
+  "/patient-portal/devices/push-token": {
+    success: true,
+    devices: [
+      {
+        id: "pushdev-001",
+        provider: "expo",
+        platform: "android",
+        device_name: "LDPlayer",
+        device_id: "device-demo-001",
+        active: true,
+        updated_at: "2026-04-09T12:00:00Z",
+      },
+    ],
+  },
+  "/patient-portal/notifications/test": {
+    success: true,
+    sent: 1,
+    failed: 0,
+  },
   "/patient-portal/documents": {
     documents: [
       { id: "doc-001", document_type: "prescription", provider_name: "Dr. Abebe", document_date: "2026-02-20", description: "Antibiotic prescription for respiratory infection", tags: ["infection", "fever"], file_url: "https://example.com/doc-001.pdf", uploaded_at: "2026-02-21T10:00:00Z" },
@@ -865,6 +884,10 @@ export const api = useWebMock
         request(path, { ...options, method: "PUT", body }),
       patch: (path, body, options) =>
         request(path, { ...options, method: "PATCH", body }),
-      delete: (path, options) =>
-        request(path, { ...options, method: "DELETE" }),
+      delete: (path, bodyOrOptions, maybeOptions) => {
+        const hasBody = typeof maybeOptions !== "undefined";
+        const body = hasBody ? bodyOrOptions : undefined;
+        const options = hasBody ? maybeOptions : bodyOrOptions;
+        return request(path, { ...options, method: "DELETE", body });
+      },
     };

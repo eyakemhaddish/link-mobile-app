@@ -1,5 +1,6 @@
 import React from "react";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -31,12 +32,9 @@ import {
 } from "./services/backgroundSyncService";
 import {
   initializeNotifications,
-  ensureNotificationPermission,
   isNotificationPermissionSupported,
-  notify,
+  syncPatientPushRegistration,
 } from "./services/notificationService";
-
-const TEST_NOTIFICATION_INTERVAL_MS = 5000;
 
 const Stack = createNativeStackNavigator();
 const LoadingScreen = () => null;
@@ -70,7 +68,6 @@ const AppNavigator = () => {
   const { isLocked, hasPinSet, loading: lockLoading } = useAppLock();
   const { linkAgentMvp } = useFeatureFlags();
   const notificationPermissionRequested = React.useRef(false);
-  const notificationTestIntervalRef = React.useRef(null);
 
   const workspaceType = user?.workspace?.workspaceType || user?.workspace_type || null;
   const teamMode = user?.workspace?.teamMode || user?.team_mode || null;
@@ -108,57 +105,50 @@ const AppNavigator = () => {
   React.useEffect(() => {
     const configureNotifications = async () => {
       try {
-        if (!isAuthenticated) {
-          notificationPermissionRequested.current = false;
-          if (notificationTestIntervalRef.current) {
-            clearInterval(notificationTestIntervalRef.current);
-            notificationTestIntervalRef.current = null;
-          }
-          return;
-        }
         if (Platform.OS === "web") return;
-        if (!hasPinSet || isLocked) {
-          if (notificationTestIntervalRef.current) {
-            clearInterval(notificationTestIntervalRef.current);
-            notificationTestIntervalRef.current = null;
-          }
-          return;
-        }
-        if (notificationPermissionRequested.current) return;
         if (!isNotificationPermissionSupported()) return;
-
         await initializeNotifications();
-        await ensureNotificationPermission();
-        notificationPermissionRequested.current = true;
-
-        if (!notificationTestIntervalRef.current) {
-          notificationTestIntervalRef.current = setInterval(() => {
-            notify({
-              kind: "test_notification",
-              priority: "medium",
-              dedupeKey: `test:${Date.now()}`,
-              title: "Link test notification",
-              body: "This is a temporary 5-second notification loop for device testing.",
-              data: {
-                type: "test_notification",
-                emitted_at: new Date().toISOString(),
-              },
-            });
-          }, TEST_NOTIFICATION_INTERVAL_MS);
-        }
       } catch (error) {
         console.warn("[notifications] setup failed:", error?.message || error);
       }
     };
 
     configureNotifications();
+  }, []);
 
-    return () => {
-      if (notificationTestIntervalRef.current) {
-        clearInterval(notificationTestIntervalRef.current);
-        notificationTestIntervalRef.current = null;
+  React.useEffect(() => {
+    const registerPushDevice = async () => {
+      try {
+        if (Platform.OS === "web") return;
+        if (!isAuthenticated) {
+          notificationPermissionRequested.current = false;
+          return;
+        }
+        if (!hasPinSet || isLocked) return;
+        if (notificationPermissionRequested.current) return;
+        if (!isNotificationPermissionSupported()) return;
+
+        const appVersion =
+          Constants?.expoConfig?.version || Constants?.manifest?.version || "1.0.0";
+        const buildNumber =
+          String(
+            Constants?.expoConfig?.android?.versionCode ||
+              Constants?.expoConfig?.ios?.buildNumber ||
+              "1",
+          );
+
+        await syncPatientPushRegistration({
+          deviceName: "Link Mobile",
+          appVersion,
+          buildNumber,
+        });
+        notificationPermissionRequested.current = true;
+      } catch (error) {
+        console.warn("[notifications] registration failed:", error?.message || error);
       }
     };
+
+    registerPushDevice();
   }, [hasPinSet, isAuthenticated, isLocked]);
 
   // Show nothing while auth OR lock context is still initialising

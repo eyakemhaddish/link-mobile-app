@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import { log, warn } from "../lib/logger";
 
 let Notifications = null;
@@ -13,6 +14,11 @@ if (Platform.OS !== "web") {
 let configured = false;
 
 const getNotificationsModule = () => Notifications;
+
+const getExpoProjectId = () =>
+  Constants?.expoConfig?.extra?.eas?.projectId ||
+  Constants?.easConfig?.projectId ||
+  null;
 
 export const isSystemNotificationAvailable = () =>
   Platform.OS !== "web" && Boolean(getNotificationsModule());
@@ -65,6 +71,56 @@ export const requestNotificationPermission = async () => {
     available: true,
     status: requested.status,
   };
+};
+
+export const getSystemPushToken = async () => {
+  const module = getNotificationsModule();
+  if (!module) {
+    return { available: false, granted: false, token: null, provider: null, platform: Platform.OS };
+  }
+
+  const permission = await requestNotificationPermission();
+  if (!permission.granted) {
+    return { available: true, granted: false, token: null, provider: null, platform: Platform.OS };
+  }
+
+  const projectId = getExpoProjectId();
+
+  if (projectId) {
+    try {
+      const expoToken = await module.getExpoPushTokenAsync({ projectId });
+      const tokenValue = expoToken?.data || null;
+      if (tokenValue) {
+        return {
+          available: true,
+          granted: true,
+          token: tokenValue,
+          provider: "expo",
+          platform: Platform.OS,
+        };
+      }
+    } catch (error) {
+      warn("Expo push token fetch failed.", error?.message || error);
+    }
+  }
+
+  try {
+    const nativeToken = await module.getDevicePushTokenAsync();
+    const tokenValue = nativeToken?.data || null;
+    if (tokenValue) {
+      return {
+        available: true,
+        granted: true,
+        token: tokenValue,
+        provider: Platform.OS === "ios" ? "apns" : "fcm",
+        platform: Platform.OS,
+      };
+    }
+  } catch (error) {
+    warn("Native device push token fetch failed.", error?.message || error);
+  }
+
+  return { available: true, granted: true, token: null, provider: null, platform: Platform.OS };
 };
 
 export const sendSystemNotification = async (notification) => {

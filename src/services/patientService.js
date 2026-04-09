@@ -441,6 +441,42 @@ export const getFacilityRegistrations = async () => {
     }
 };
 
+export const registerPatientPushDevice = async (data = {}) => {
+    try {
+        return await api.post("/patient-portal/devices/push-token", data);
+    } catch (error) {
+        console.error("Failed to register patient push device:", error);
+        throw error;
+    }
+};
+
+export const unregisterPatientPushDevice = async (data = {}) => {
+    try {
+        return await api.delete("/patient-portal/devices/push-token", data, {});
+    } catch (error) {
+        console.error("Failed to unregister patient push device:", error);
+        throw error;
+    }
+};
+
+export const listPatientPushDevices = async () => {
+    try {
+        return await api.get("/patient-portal/devices/push-token");
+    } catch (error) {
+        console.error("Failed to list patient push devices:", error);
+        throw error;
+    }
+};
+
+export const sendPatientPushTestNotification = async (data = {}) => {
+    try {
+        return await api.post("/patient-portal/notifications/test", data);
+    } catch (error) {
+        console.error("Failed to send patient push test notification:", error);
+        throw error;
+    }
+};
+
 export const getPublicDirectoryFacilities = async (options = {}) => {
     try {
         const params = [];

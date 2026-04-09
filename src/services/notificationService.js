@@ -1,7 +1,14 @@
-import { getItem, setItem } from "../lib/storage";
+import { getItem, removeItem, setItem } from "../lib/storage";
 import { log, warn } from "../lib/logger";
 import { trackEvent } from "../lib/telemetry";
 import {
+  listPatientPushDevices,
+  registerPatientPushDevice,
+  sendPatientPushTestNotification,
+  unregisterPatientPushDevice,
+} from "./patientService";
+import {
+  getSystemPushToken,
   initializeNotificationTransport,
   isSystemNotificationAvailable,
   requestNotificationPermission,
@@ -9,6 +16,8 @@ import {
 } from "./notificationTransport";
 
 const NOTIFICATION_STATE_KEY = "patient_notification_state_v1";
+const PUSH_DEVICE_ID_KEY = "patient_push_device_id_v1";
+const PUSH_REGISTRATION_KEY = "patient_push_registration_v1";
 
 const defaultState = () => ({
   seenEvents: {},
@@ -55,6 +64,29 @@ const getNotificationState = async () => {
 
 const persistNotificationState = async (state) => {
   await setItem(NOTIFICATION_STATE_KEY, state);
+};
+
+const createLocalDeviceId = () =>
+  `device-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+
+const getOrCreatePushDeviceId = async () => {
+  const existing = await getItem(PUSH_DEVICE_ID_KEY, null);
+  if (typeof existing === "string" && existing.trim()) return existing.trim();
+
+  const nextDeviceId = createLocalDeviceId();
+  await setItem(PUSH_DEVICE_ID_KEY, nextDeviceId);
+  return nextDeviceId;
+};
+
+const getStoredPushRegistration = async () =>
+  (await getItem(PUSH_REGISTRATION_KEY, null)) || null;
+
+const persistPushRegistration = async (registration) => {
+  await setItem(PUSH_REGISTRATION_KEY, registration);
+};
+
+export const clearStoredPushRegistration = async () => {
+  await removeItem(PUSH_REGISTRATION_KEY);
 };
 
 const emitNotification = (notification) => {
@@ -111,6 +143,76 @@ export const isNotificationPermissionSupported = () =>
 
 export const ensureNotificationPermission = async () => {
   return requestNotificationPermission();
+};
+
+export const syncPatientPushRegistration = async ({
+  deviceName,
+  appVersion,
+  buildNumber,
+} = {}) => {
+  if (!isSystemNotificationAvailable()) {
+    return { registered: false, reason: "UNSUPPORTED_PLATFORM" };
+  }
+
+  await initializeNotifications();
+  const tokenInfo = await getSystemPushToken();
+  if (!tokenInfo?.granted || !tokenInfo?.token) {
+    return { registered: false, reason: "NO_PUSH_TOKEN", tokenInfo };
+  }
+
+  const deviceId = await getOrCreatePushDeviceId();
+  const previous = await getStoredPushRegistration();
+
+  if (
+    previous?.token === tokenInfo.token &&
+    previous?.provider === tokenInfo.provider &&
+    previous?.device_id === deviceId
+  ) {
+    return { registered: true, skipped: true, token: tokenInfo.token, provider: tokenInfo.provider };
+  }
+
+  const payload = {
+    token: tokenInfo.token,
+    provider: tokenInfo.provider,
+    platform: tokenInfo.platform,
+    device_name: deviceName,
+    app_version: appVersion,
+    build_number: buildNumber,
+    device_id: deviceId,
+  };
+
+  const response = await registerPatientPushDevice(payload);
+  await persistPushRegistration(payload);
+
+  return {
+    registered: true,
+    token: tokenInfo.token,
+    provider: tokenInfo.provider,
+    deviceId,
+    raw: response,
+  };
+};
+
+export const unregisterStoredPatientPushDevice = async () => {
+  const registration = await getStoredPushRegistration();
+  if (!registration?.device_id && !registration?.token) {
+    return { removed: false, reason: "NO_REGISTERED_DEVICE" };
+  }
+
+  const response = await unregisterPatientPushDevice({
+    device_id: registration?.device_id,
+    token: registration?.token,
+  });
+  await clearStoredPushRegistration();
+  return { removed: true, raw: response };
+};
+
+export const getRegisteredPatientPushDevices = async () => {
+  return listPatientPushDevices();
+};
+
+export const triggerPatientPushTestNotification = async (payload = {}) => {
+  return sendPatientPushTestNotification(payload);
 };
 
 export const processPatientFeedNotifications = async (
