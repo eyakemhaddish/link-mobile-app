@@ -90,12 +90,13 @@ export const getBluetoothConnectionPreset = (trackableItem) => {
     title: `${trackableItem.title} device connection`,
     steps: [
       "Turn on your Bluetooth device and keep it nearby.",
-      "Make sure the device is ready to pair.",
-      "Tap scan when Bluetooth scanning is enabled in the app.",
+      "Open nRF Connect and confirm the device advertises over BLE.",
+      "Check the device name, services, and readable characteristics in nRF Connect.",
+      "Use that information to map the device into Link when app-side BLE scanning is added.",
     ],
     status: "framework_ready",
     scanSupported: false,
     message:
-      "Bluetooth pairing UI is prepared here. Native device scanning can plug into this flow next.",
+      "Use the simulated device flow now. Native BLE scanning and parser support for real services and characteristics can plug into the same screen next.",
   };
 };

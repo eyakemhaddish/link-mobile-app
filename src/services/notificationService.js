@@ -151,12 +151,21 @@ export const syncPatientPushRegistration = async ({
   buildNumber,
 } = {}) => {
   if (!isSystemNotificationAvailable()) {
+    log("push_registration_skipped", "unsupported_platform");
     return { registered: false, reason: "UNSUPPORTED_PLATFORM" };
   }
 
   await initializeNotifications();
   const tokenInfo = await getSystemPushToken();
+  log("push_token_info", {
+    available: tokenInfo?.available,
+    granted: tokenInfo?.granted,
+    provider: tokenInfo?.provider,
+    hasToken: Boolean(tokenInfo?.token),
+    platform: tokenInfo?.platform,
+  });
   if (!tokenInfo?.granted || !tokenInfo?.token) {
+    warn("Push registration stopped before backend registration.", tokenInfo);
     return { registered: false, reason: "NO_PUSH_TOKEN", tokenInfo };
   }
 
@@ -168,6 +177,7 @@ export const syncPatientPushRegistration = async ({
     previous?.provider === tokenInfo.provider &&
     previous?.device_id === deviceId
   ) {
+    log("push_registration_skipped", "already_registered_locally");
     return { registered: true, skipped: true, token: tokenInfo.token, provider: tokenInfo.provider };
   }
 
@@ -181,7 +191,14 @@ export const syncPatientPushRegistration = async ({
     device_id: deviceId,
   };
 
+  log("push_registration_payload", {
+    provider: payload.provider,
+    platform: payload.platform,
+    device_id: payload.device_id,
+    hasToken: Boolean(payload.token),
+  });
   const response = await registerPatientPushDevice(payload);
+  log("push_registration_response", response);
   await persistPushRegistration(payload);
 
   return {

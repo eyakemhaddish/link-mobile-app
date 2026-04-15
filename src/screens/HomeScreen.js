@@ -281,10 +281,10 @@ const HomeScreen = () => {
   }, [medicationPromptItem, medicationStartTime, medicationTimesPerDay, showToast]);
 
   const patientName =
-    toDisplayText(patientData?.first_name) ||
+    toDisplayText(user?.full_name) ||
     toDisplayText(user?.first_name) ||
     toDisplayText(patientData?.full_name) ||
-    toDisplayText(user?.full_name) ||
+    toDisplayText(patientData?.first_name) ||
     "Patient";
   const primaryVisit = selectPrimaryVisit(activeVisits);
   const primaryVisitDisplay = primaryVisit ? formatVisitForDisplay(primaryVisit) : null;

@@ -20,6 +20,12 @@ import {
   getTrackableItemById,
 } from "../services/healthTrackingService";
 import {
+  buildMeasurementFromDevice,
+  connectMeasurementDevice,
+  getBluetoothRuntimeStatus,
+  scanMeasurementDevices,
+} from "../services/bluetoothMeasurementService";
+import {
   addMeasurementEntry,
   getMeasurementEntries,
 } from "../services/measurementStorageService";
@@ -160,6 +166,9 @@ const MeasurementTrendsScreen = ({ route }) => {
   const [refreshing, setRefreshing] = React.useState(false);
   const [showEntryModal, setShowEntryModal] = React.useState(initialMode === "manual_entry");
   const [form, setForm] = React.useState(defaultFormForTracker(trackerId));
+  const [bluetoothDevices, setBluetoothDevices] = React.useState([]);
+  const [scanningBluetooth, setScanningBluetooth] = React.useState(false);
+  const [connectingDeviceId, setConnectingDeviceId] = React.useState(null);
 
   const loadEntries = React.useCallback(async () => {
     const nextEntries = await getMeasurementEntries(trackerId);
@@ -179,6 +188,7 @@ const MeasurementTrendsScreen = ({ route }) => {
   const latestSummary = getLatestSummary(trackerId, entries);
   const chartEntries = entries.slice(0, 7).reverse();
   const chartMax = getChartMax(trackerId, chartEntries);
+  const bluetoothRuntime = React.useMemo(() => getBluetoothRuntimeStatus(), []);
 
   const saveEntry = React.useCallback(async () => {
     await addMeasurementEntry(trackerId, form);
@@ -187,6 +197,46 @@ const MeasurementTrendsScreen = ({ route }) => {
     setForm(defaultFormForTracker(trackerId));
     showToast(`${item?.title || "Measurement"} saved locally.`, "success");
   }, [form, item?.title, loadEntries, showToast, trackerId]);
+
+  const scanBluetoothDevices = React.useCallback(async () => {
+    try {
+      setScanningBluetooth(true);
+      const response = await scanMeasurementDevices(trackerId);
+      const nextDevices = Array.isArray(response?.devices) ? response.devices : [];
+      setBluetoothDevices(nextDevices);
+      if (!nextDevices.length) {
+        showToast("No Bluetooth devices found for this measurement yet.", "info");
+      }
+    } catch (error) {
+      showToast(error?.message || "Unable to scan for Bluetooth devices.", "error");
+    } finally {
+      setScanningBluetooth(false);
+    }
+  }, [showToast, trackerId]);
+
+  const importFromBluetoothDevice = React.useCallback(
+    async (device) => {
+      try {
+        setConnectingDeviceId(device.id);
+        const connectedDevice = await connectMeasurementDevice(trackerId, device.id);
+        const measurement = buildMeasurementFromDevice(trackerId, connectedDevice);
+        await addMeasurementEntry(trackerId, measurement);
+        await loadEntries();
+        showToast(`${item?.title || "Measurement"} imported from ${connectedDevice.name}.`, "success");
+      } catch (error) {
+        showToast(error?.message || "Unable to import from this device.", "error");
+      } finally {
+        setConnectingDeviceId(null);
+      }
+    },
+    [item?.title, loadEntries, showToast, trackerId],
+  );
+
+  React.useEffect(() => {
+    if (initialMode === "connect_bluetooth" && bluetoothPreset) {
+      scanBluetoothDevices();
+    }
+  }, [bluetoothPreset, initialMode, scanBluetoothDevices]);
 
   const renderManualFields = () => {
     if (trackerId === "blood_pressure") {
@@ -273,7 +323,6 @@ const MeasurementTrendsScreen = ({ route }) => {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.headerTitle}>{item?.title || "Measurement"}</Text>
-            <Text style={styles.headerSubtitle}>Saved on this device with recent logs and simple trends</Text>
           </View>
           <Pressable
             style={styles.entryButton}
@@ -288,13 +337,53 @@ const MeasurementTrendsScreen = ({ route }) => {
           <Card style={styles.connectCard}>
             <View style={styles.connectCopy}>
               <Text style={styles.connectTitle}>Automatic import</Text>
-              <Text style={styles.connectBody}>Sync from your home device when Bluetooth pairing is enabled for this measurement.</Text>
+              <Text style={styles.connectBody}>
+                {initialMode === "connect_bluetooth"
+                  ? "Scan for a simulated device now. This uses the same patient-portal flow that real BLE devices will use later."
+                  : "Sync from your home device when Bluetooth pairing is enabled for this measurement."}
+              </Text>
             </View>
             <Button
-              title="Connect device"
-              onPress={() => showToast("Bluetooth scanning will plug into this page next.", "success")}
+              title={scanningBluetooth ? "Scanning..." : "Scan devices"}
+              onPress={scanBluetoothDevices}
+              disabled={scanningBluetooth}
               style={styles.connectButton}
             />
+          </Card>
+        ) : null}
+
+        {bluetoothPreset ? (
+          <Card style={styles.summaryCard}>
+            <Text style={styles.sectionTitle}>Bluetooth devices</Text>
+            <Text style={styles.runtimeBanner}>{bluetoothRuntime.reason}</Text>
+            {bluetoothDevices.length === 0 ? (
+              <Text style={styles.emptyText}>
+                No devices listed yet. Tap scan to load the simulated Bluetooth device for this measurement.
+              </Text>
+            ) : (
+              bluetoothDevices.map((device) => (
+                <View key={device.id} style={styles.deviceRow}>
+                  <View style={styles.deviceCopy}>
+                    <Text style={styles.deviceTitle}>{device.name}</Text>
+                    <Text style={styles.deviceMeta}>
+                      {device.manufacturer || "Device"} · Signal {device.signal}
+                    </Text>
+                    <Text style={styles.deviceMeta}>
+                      Services: {Array.isArray(device.services) ? device.services.join(", ") : "--"}
+                    </Text>
+                  </View>
+                  <Pressable
+                    style={styles.deviceImportButton}
+                    onPress={() => importFromBluetoothDevice(device)}
+                    disabled={connectingDeviceId === device.id}
+                  >
+                    <Text style={styles.deviceImportButtonText}>
+                      {connectingDeviceId === device.id ? "Importing..." : "Import reading"}
+                    </Text>
+                  </Pressable>
+                </View>
+              ))
+            )}
           </Card>
         ) : null}
 
@@ -470,6 +559,12 @@ const styles = StyleSheet.create({
   connectButton: {
     paddingHorizontal: spacing.md,
   },
+  runtimeBanner: {
+    ...typography.caption,
+    color: palette.textMuted,
+    marginBottom: spacing.sm,
+    lineHeight: 18,
+  },
   heroCard: {
     marginBottom: spacing.md,
     backgroundColor: palette.surfaceLowest,
@@ -563,6 +658,36 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.body,
     color: palette.textMuted,
+  },
+  deviceRow: {
+    borderTopWidth: 1,
+    borderTopColor: palette.surfaceBorder,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+  },
+  deviceCopy: {
+    gap: 4,
+  },
+  deviceTitle: {
+    ...typography.body,
+    color: palette.text,
+    fontWeight: "700",
+  },
+  deviceMeta: {
+    ...typography.caption,
+    color: palette.textMuted,
+  },
+  deviceImportButton: {
+    alignSelf: "flex-start",
+    backgroundColor: palette.primary,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+  },
+  deviceImportButtonText: {
+    ...typography.caption,
+    color: palette.textOnDark,
+    fontWeight: "700",
   },
   logRow: {
     flexDirection: "row",

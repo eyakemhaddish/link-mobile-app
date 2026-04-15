@@ -12,6 +12,7 @@ import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import MedicationReminderSetupModal from "../components/patient/MedicationReminderSetupModal";
+import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { colors, radius, spacing, typography } from "../theme/tokens";
 import { patientPortalPalette } from "../theme/patientPortal";
@@ -132,6 +133,14 @@ const getStatusStyle = (status) => {
   return { backgroundColor: palette.blueBg, color: palette.blueText };
 };
 
+const areSameName = (left, right) =>
+  String(left || "")
+    .trim()
+    .toLowerCase() ===
+  String(right || "")
+    .trim()
+    .toLowerCase();
+
 const PatientVisitDetailsScreen = ({ route }) => {
   const visitId = route?.params?.visitId;
   const initialVisit = route?.params?.visit || null;
@@ -149,6 +158,7 @@ const PatientVisitDetailsScreen = ({ route }) => {
   const [savingMedicationReminder, setSavingMedicationReminder] = useState(false);
   const [medicationReminderError, setMedicationReminderError] = useState("");
   const { showToast } = useToast();
+  const { user } = useAuth();
 
   const loadData = useCallback(async () => {
     if (!visitId) {
@@ -211,6 +221,27 @@ const PatientVisitDetailsScreen = ({ route }) => {
       }),
     [medicationStartTime, medicationTimesPerDay],
   );
+  const appProfileName = useMemo(
+    () =>
+      toDisplayText(
+        user?.full_name || user?.fullName || user?.name || user?.first_name,
+        "",
+      ),
+    [user],
+  );
+  const registeredName = useMemo(
+    () =>
+      toDisplayText(
+        visit?.patient?.full_name ||
+          visit?.patient?.fullName ||
+          visit?.patient?.name ||
+          visit?.patient?.first_name,
+        "",
+      ),
+    [visit],
+  );
+  const showRegisteredName =
+    registeredName && (!appProfileName || !areSameName(appProfileName, registeredName));
 
   const openMedicationReminder = useCallback(
     (order) => {
@@ -313,6 +344,16 @@ const PatientVisitDetailsScreen = ({ route }) => {
           </View>
 
           <View style={styles.summaryGrid}>
+            <View style={styles.summaryCell}>
+              <Text style={styles.summaryLabel}>Patient</Text>
+              <Text style={styles.summaryValue}>{appProfileName || "Patient"}</Text>
+            </View>
+            {showRegisteredName ? (
+              <View style={styles.summaryCell}>
+                <Text style={styles.summaryLabel}>Registered name</Text>
+                <Text style={styles.summaryValue}>{registeredName}</Text>
+              </View>
+            ) : null}
             <View style={styles.summaryCell}>
               <Text style={styles.summaryLabel}>Provider</Text>
               <Text style={styles.summaryValue}>{formattedVisit?.provider || "Care team"}</Text>

@@ -7,6 +7,12 @@
       ...(appJson.expo.android ?? {}),
     },
     extra: {
+      eas: {
+        projectId:
+          process.env.EXPO_PUBLIC_EAS_PROJECT_ID ||
+          process.env.EAS_PROJECT_ID ||
+          "",
+      },
       EXPO_PUBLIC_API_BASE_URL:
         process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:5051/api/v1",
       EXPO_PUBLIC_MEDGEMMA_API_URL:

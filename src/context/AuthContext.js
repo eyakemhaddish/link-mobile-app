@@ -64,9 +64,9 @@ const normalizeProfilePayload = (payload) => {
       source.id,
     );
     const fullName = pickFirstTruthy(
-      source.name,
       source.full_name,
       source.fullName,
+      source.name,
     );
     const fallbackName = [source.first_name, source.last_name]
       .filter(Boolean)
@@ -144,7 +144,7 @@ const normalizePatientPayload = (payload) => {
     .join(" ")
     .trim();
   const fullName =
-    patient.name || patient.full_name || fallbackName || "Patient";
+    patient.full_name || patient.name || fallbackName || "Patient";
   const nameParts = fullName.split(/\s+/).filter(Boolean);
   const firstName = patient.first_name || nameParts[0] || "Patient";
   const lastName = patient.last_name || nameParts.slice(1).join(" ");
@@ -160,6 +160,44 @@ const normalizePatientPayload = (payload) => {
     last_name: lastName,
     phone: patient.phone || patient.phone_number || null,
     phone_number: patient.phone_number || patient.phone || null,
+  };
+};
+
+const mergePatientProfile = (serverProfile, cachedProfile) => {
+  if (!serverProfile || !cachedProfile) return serverProfile || cachedProfile || null;
+  if (serverProfile?.role !== "patient" || cachedProfile?.role !== "patient") {
+    return serverProfile;
+  }
+
+  const samePatient =
+    (serverProfile?.patient_id && cachedProfile?.patient_id && serverProfile.patient_id === cachedProfile.patient_id) ||
+    (serverProfile?.user_id && cachedProfile?.user_id && serverProfile.user_id === cachedProfile.user_id) ||
+    (serverProfile?.id && cachedProfile?.id && serverProfile.id === cachedProfile.id);
+
+  if (!samePatient) return serverProfile;
+
+  const preferredFullName = pickFirstTruthy(
+    cachedProfile?.full_name,
+    cachedProfile?.fullName,
+    cachedProfile?.name,
+  );
+  const [firstName, ...lastNameParts] = String(preferredFullName || "").trim().split(/\s+/).filter(Boolean);
+
+  return {
+    ...serverProfile,
+    full_name: preferredFullName || serverProfile.full_name,
+    name: preferredFullName || serverProfile.name,
+    first_name: cachedProfile?.first_name || firstName || serverProfile.first_name,
+    last_name:
+      cachedProfile?.last_name ||
+      (lastNameParts.length ? lastNameParts.join(" ") : serverProfile.last_name),
+    date_of_birth: cachedProfile?.date_of_birth || serverProfile.date_of_birth,
+    gender: cachedProfile?.gender || serverProfile.gender,
+    sex: cachedProfile?.sex || cachedProfile?.gender || serverProfile.sex,
+    emergency_contact_name:
+      cachedProfile?.emergency_contact_name || serverProfile.emergency_contact_name,
+    emergency_contact_phone:
+      cachedProfile?.emergency_contact_phone || serverProfile.emergency_contact_phone,
   };
 };
 
@@ -179,11 +217,11 @@ export const AuthProvider = ({ children }) => {
     [],
   );
 
-  const fetchProfile = React.useCallback(async () => {
+  const fetchProfile = React.useCallback(async (cachedProfile = null) => {
     try {
       const patientResponse = await api.get("/patient-auth/me");
       const normalizedPatient = normalizePatientPayload(patientResponse);
-      if (normalizedPatient) return normalizedPatient;
+      if (normalizedPatient) return mergePatientProfile(normalizedPatient, cachedProfile);
     } catch {
       // Fall through to user profile lookup.
     }
@@ -215,7 +253,7 @@ export const AuthProvider = ({ children }) => {
           setUser(normalizeAnyProfile(cachedProfile));
         }
 
-        const profile = await fetchProfile();
+        const profile = await fetchProfile(cachedProfile);
         if (active && profile) {
           setUser(profile);
           await setAuthProfile(profile);
@@ -242,10 +280,12 @@ export const AuthProvider = ({ children }) => {
     }
     setToken(nextToken);
 
+    const cachedProfile = await getAuthProfile();
+
     // Accept profile passed in (from LoginScreen) or fetch fresh
     const resolvedProfile = profile
       ? normalizeAnyProfile(profile)
-      : await fetchProfile();
+      : await fetchProfile(cachedProfile);
 
     if (resolvedProfile) {
       setUser(resolvedProfile);

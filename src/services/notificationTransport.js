@@ -57,11 +57,13 @@ export const requestNotificationPermission = async () => {
   await initializeNotificationTransport();
 
   const existing = await module.getPermissionsAsync();
+  log("push_permission_existing", existing);
   if (existing.granted || existing.ios?.status === module.IosAuthorizationStatus?.PROVISIONAL) {
     return { granted: true, available: true, status: existing.status };
   }
 
   const requested = await module.requestPermissionsAsync();
+  log("push_permission_requested", requested);
   const granted =
     requested.granted ||
     requested.ios?.status === module.IosAuthorizationStatus?.PROVISIONAL;
@@ -80,16 +82,19 @@ export const getSystemPushToken = async () => {
   }
 
   const permission = await requestNotificationPermission();
+  log("push_permission_result", permission);
   if (!permission.granted) {
     return { available: true, granted: false, token: null, provider: null, platform: Platform.OS };
   }
 
   const projectId = getExpoProjectId();
+  log("push_project_id", projectId || "missing");
 
   if (projectId) {
     try {
       const expoToken = await module.getExpoPushTokenAsync({ projectId });
       const tokenValue = expoToken?.data || null;
+      log("expo_push_token_result", tokenValue ? "received" : "empty");
       if (tokenValue) {
         return {
           available: true,
@@ -107,6 +112,7 @@ export const getSystemPushToken = async () => {
   try {
     const nativeToken = await module.getDevicePushTokenAsync();
     const tokenValue = nativeToken?.data || null;
+    log("native_push_token_result", tokenValue ? "received" : "empty");
     if (tokenValue) {
       return {
         available: true,

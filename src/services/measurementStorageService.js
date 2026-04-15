@@ -34,7 +34,7 @@ const toIsoDateTime = (date, time) => {
 };
 
 const normalizeEntry = (trackerId, input) => {
-  const occurredAt = toIsoDateTime(input?.date, input?.time);
+  const occurredAt = input?.occurred_at || toIsoDateTime(input?.date, input?.time);
   const base = {
     id: `measurement-${trackerId}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
     trackerId,
