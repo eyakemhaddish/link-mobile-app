@@ -419,6 +419,34 @@ export const getPatientRealtimeFeed = async (options = {}) => {
     }
 };
 
+export const getFamilyData = async ({ page = 1, limit = 25, patientId } = {}) => {
+    try {
+        const params = [];
+        if (patientId) params.push(`patient_id=${encodeURIComponent(patientId)}`);
+        if (!patientId) {
+            params.push(`page=${encodeURIComponent(page)}`);
+            params.push(`limit=${encodeURIComponent(limit)}`);
+        }
+
+        const path = `/patient-portal/family/data?${params.join("&")}`;
+        const response = await api.get(path);
+
+        return {
+            ...response,
+            items: Array.isArray(response?.items) ? response.items : [],
+            meta: {
+                page: Number(response?.meta?.page || page),
+                limit: Number(response?.meta?.limit || limit),
+                total: Number(response?.meta?.total || response?.items?.length || 0),
+                ...(response?.meta || {}),
+            },
+        };
+    } catch (error) {
+        console.error("Failed to fetch family data:", error);
+        throw error;
+    }
+};
+
 // ── Appointments ──────────────────────────────────────────────────────────
 
 export const getFacilities = async () => {

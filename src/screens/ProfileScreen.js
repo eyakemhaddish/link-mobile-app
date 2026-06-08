@@ -374,9 +374,10 @@ const ProfileScreen = () => {
         />
         <PreferenceTile
           icon="users"
-          title="Caregivers"
-          body="Authorized access for family members."
+          title="Family view"
+          body="View approved family summaries and shared records."
           toneStyle={styles.preferenceGreen}
+          onPress={() => navigation.navigate("FamilyView")}
         />
       </Card>
 

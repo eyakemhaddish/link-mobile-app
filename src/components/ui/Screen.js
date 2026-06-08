@@ -3,7 +3,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { colors, spacing } from "../../theme/tokens";
 
-const Screen = ({ children, variant = "default", style, backgroundColor, scrollable = true }) => {
+const Screen = ({
+  children,
+  variant = "default",
+  style,
+  backgroundColor,
+  scrollable = true,
+  refreshControl,
+}) => {
   const Container = scrollable ? ScrollView : View;
 
   return (
@@ -18,6 +25,7 @@ const Screen = ({ children, variant = "default", style, backgroundColor, scrolla
           style,
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={scrollable ? refreshControl : undefined}
       >
         {children}
       </Container>

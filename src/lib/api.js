@@ -545,6 +545,73 @@ const WEB_MOCK_RESPONSES = {
     total: 3,
   },
 
+  "/patient-portal/family/data": {
+    items: [
+      {
+        patient_id: "demo-family-patient-001",
+        patient_name: "Alemnesh Kebede",
+        relationship_type: "mother",
+        access_policy: {
+          scopes: ["visit_summary", "lab_results", "prescriptions"],
+          summary_granularity: "weekly",
+          detail_level: "summary_only",
+          allowed_since: "2026-06-01T00:00:00Z",
+          expires_at: null,
+        },
+        summaries: [],
+        snapshots: [
+          {
+            id: "demo-family-snapshot-001",
+            granularity: "weekly",
+            period_start: "2026-06-01T00:00:00Z",
+            period_end: "2026-06-07T00:00:00Z",
+            status: "published",
+            payload_json: "{\"visit_count\":2,\"lab_result_count\":1,\"prescription_count\":2}",
+            generated_at: "2026-06-08T08:00:00Z",
+            published_at: "2026-06-08T08:00:00Z",
+            seen_at: null,
+          },
+        ],
+        records: [],
+      },
+      {
+        patient_id: "demo-family-patient-002",
+        patient_name: "Dawit Kebede",
+        relationship_type: "father",
+        access_policy: {
+          scopes: ["visit_summary", "billing"],
+          summary_granularity: "full",
+          detail_level: "full_detail",
+          allowed_since: "2026-05-20T00:00:00Z",
+          expires_at: null,
+        },
+        summaries: [
+          {
+            id: "demo-family-summary-001",
+            type: "visit_summary",
+            title: "Recent visit",
+            body: "Follow-up completed. Blood pressure review planned for the next appointment.",
+          },
+        ],
+        snapshots: [],
+        records: [
+          {
+            id: "demo-family-record-001",
+            type: "billing",
+            status: "paid",
+            summary: "Medication and consultation payment cleared.",
+            created_at: "2026-06-06T12:30:00Z",
+          },
+        ],
+      },
+    ],
+    meta: {
+      page: 1,
+      limit: 25,
+      total: 2,
+    },
+  },
+
   // ── Patient Portal: Appointments ────────────────────────────────────────
   "/patient-portal/appointments": {
     appointments: [

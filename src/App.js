@@ -15,6 +15,7 @@ import PatientHealthRecordsScreen from "./screens/PatientHealthRecordsScreen";
 import MeasurementTrendsScreen from "./screens/MeasurementTrendsScreen";
 import PatientVisitDetailsScreen from "./screens/PatientVisitDetailsScreen";
 import FacilityVerificationScreen from "./screens/FacilityVerificationScreen";
+import FamilyViewScreen from "./screens/FamilyViewScreen";
 
 import MainTabs from "./navigation/MainTabs";
 import HEWNavigator from "./navigation/HEWNavigator";
@@ -236,6 +237,11 @@ const AppNavigator = () => {
           name="FacilityVerification"
           component={FacilityVerificationScreen}
           options={{ title: "Facility Verification" }}
+        />
+        <Stack.Screen
+          name="FamilyView"
+          component={FamilyViewScreen}
+          options={{ title: "Family View" }}
         />
         <Stack.Screen
           name="PatientHealthRecords"
